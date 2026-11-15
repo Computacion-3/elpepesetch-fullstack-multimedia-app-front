@@ -15,7 +15,6 @@ import type {
 } from '../../domain/entities/library-entry';
 import { LibraryEditorDialog } from './LibraryEditorDialog';
 import { LibraryEntryCard } from './LibraryEntryCard';
-import styles from './library.module.css';
 
 const baseQuery = {
   page: 1,
@@ -101,36 +100,40 @@ export function LibraryView() {
   const isLoading = library.status === 'idle' || library.status === 'loading';
 
   return (
-    <main className={styles.page}>
-      <div className={styles.shell}>
-        <div className={styles.topline}>
+    <main className="min-h-screen bg-base-200 px-4 py-6 text-base-content sm:px-6 sm:py-9">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-9 flex items-center justify-between gap-4">
           <Link
-            className={styles.brand}
+            className="flex items-center gap-3 font-bold"
             href="/"
             aria-label="Elpepesetch, inicio"
           >
-            <span className={styles.brandMark} aria-hidden="true">
+            <span className="grid size-9 place-items-center rounded-xl bg-primary text-primary-content">
               e
             </span>
             <span>elpepesetch</span>
           </Link>
-          <span className={styles.topNote}>
+          <span className="text-right text-sm text-base-content/60">
             Colección personal · datos de demostración
           </span>
         </div>
 
-        <header className={styles.hero}>
+        <header className="mb-8 flex flex-col items-start justify-between gap-5 sm:flex-row sm:items-end">
           <div>
-            <span className={styles.eyebrow}>Tu espacio multimedia</span>
-            <h1 className={styles.title}>Tu biblioteca</h1>
-            <p className={styles.subtitle}>
+            <span className="text-xs font-bold uppercase tracking-[0.13em] text-base-content/60">
+              Tu espacio multimedia
+            </span>
+            <h1 className="mt-2 text-4xl font-bold tracking-tight sm:text-5xl">
+              Tu biblioteca
+            </h1>
+            <p className="mt-3 max-w-2xl text-base-content/70">
               Juegos, películas y libros que estás descubriendo, disfrutando o
               guardando para después.
             </p>
           </div>
           <button
             type="button"
-            className={styles.primaryButton}
+            className="btn btn-primary"
             onClick={() => setIsAdding(true)}
           >
             <span aria-hidden="true">＋</span> Añadir elemento
@@ -138,17 +141,17 @@ export function LibraryView() {
         </header>
 
         <form
-          className={styles.filters}
+          className="mb-7 grid gap-3 rounded-box border border-base-300 bg-base-100 p-4 sm:grid-cols-2 xl:grid-cols-[minmax(220px,1.7fr)_repeat(3,minmax(140px,0.8fr))_auto_auto]"
           onSubmit={applyFilters}
           aria-label="Filtrar biblioteca"
         >
-          <label className={`${styles.searchWrap} ${styles.field}`}>
-            <span className={styles.searchIcon} aria-hidden="true">
+          <label className="input flex w-full items-center gap-2 xl:min-w-0">
+            <span aria-hidden="true" className="text-base-content/50">
               ⌕
             </span>
             <span className="sr-only">Buscar por título o creador</span>
             <input
-              className={`${styles.input} ${styles.searchInput}`}
+              className="grow"
               type="search"
               placeholder="Buscar por título o creador"
               value={search}
@@ -158,7 +161,7 @@ export function LibraryView() {
           <label>
             <span className="sr-only">Filtrar por estado</span>
             <select
-              className={styles.select}
+              className="select w-full"
               value={statusFilter}
               onChange={(event) =>
                 setStatusFilter(
@@ -176,7 +179,7 @@ export function LibraryView() {
           <label>
             <span className="sr-only">Filtrar por tipo</span>
             <select
-              className={styles.select}
+              className="select w-full"
               value={typeFilter}
               onChange={(event) =>
                 setTypeFilter(
@@ -193,12 +196,11 @@ export function LibraryView() {
           <label>
             <span className="sr-only">Ordenar por</span>
             <select
-              className={styles.select}
+              className="select w-full"
               value={sortBy}
               onChange={(event) => {
-                const value = event.target.value;
-                if (sortOptions.some((option) => option === value))
-                  setSortBy(value as LibrarySortBy);
+                if (sortOptions.some((option) => option === event.target.value))
+                  setSortBy(event.target.value as LibrarySortBy);
               }}
             >
               <option value="addedAt">Fecha de incorporación</option>
@@ -209,7 +211,7 @@ export function LibraryView() {
           </label>
           <button
             type="button"
-            className={styles.secondaryButton}
+            className="btn btn-outline"
             aria-label={`Orden ${sortOrder === 'ASC' ? 'ascendente' : 'descendente'}`}
             onClick={() =>
               setSortOrder((order) => (order === 'ASC' ? 'DESC' : 'ASC'))
@@ -217,27 +219,24 @@ export function LibraryView() {
           >
             {sortOrder === 'ASC' ? '↑ ASC' : '↓ DESC'}
           </button>
-          <button
-            type="submit"
-            className={`${styles.secondaryButton} ${styles.filterButton}`}
-          >
+          <button type="submit" className="btn btn-secondary">
             Aplicar
           </button>
         </form>
 
-        <div className={styles.sectionHeader}>
-          <h2 className={styles.sectionTitle}>Todos tus elementos</h2>
-          <span className={styles.count}>
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h2 className="font-bold">Todos tus elementos</h2>
+          <span className="text-sm text-base-content/60">
             {library.meta.total} en tu biblioteca
           </span>
         </div>
 
         {library.errorMessage && library.status === 'failed' ? (
-          <div className={styles.error} role="alert">
-            <p className={styles.errorText}>{library.errorMessage}</p>
+          <div className="alert alert-error" role="alert">
+            <span>{library.errorMessage}</span>
             <button
               type="button"
-              className={styles.secondaryButton}
+              className="btn btn-sm"
               onClick={() => library.reload()}
             >
               Intentar de nuevo
@@ -245,40 +244,50 @@ export function LibraryView() {
           </div>
         ) : isLoading ? (
           <div
-            className={styles.loadingGrid}
+            className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
             role="status"
             aria-label="Cargando tu biblioteca"
           >
             {Array.from({ length: 6 }, (_, index) => (
-              <div key={index} className={styles.skeleton} />
+              <div key={index} className="card bg-base-100">
+                <div className="skeleton h-40 w-full" />
+                <div className="card-body gap-3">
+                  <div className="skeleton h-5 w-3/4" />
+                  <div className="skeleton h-4 w-1/2" />
+                  <div className="skeleton h-8 w-full" />
+                </div>
+              </div>
             ))}
           </div>
         ) : library.items.length === 0 ? (
-          <section className={styles.empty} aria-labelledby="empty-title">
-            <span className={styles.emptyMark} aria-hidden="true">
+          <section
+            className="rounded-box border border-dashed border-base-300 bg-base-100 px-5 py-10 text-center"
+            aria-labelledby="empty-title"
+          >
+            <span
+              className="badge badge-primary badge-lg mb-4"
+              aria-hidden="true"
+            >
               ✳
             </span>
-            <h2 id="empty-title" className={styles.emptyTitle}>
+            <h2 id="empty-title" className="text-lg font-bold">
               Tu próxima historia empieza aquí
             </h2>
-            <p className={styles.emptyCopy}>
+            <p className="mx-auto mb-5 mt-2 max-w-lg text-sm text-base-content/70">
               No encontramos elementos con estos filtros. Prueba con otra
               búsqueda o añade algo a tu colección.
             </p>
-            <div
-              className={styles.actionGroup}
-              style={{ justifyContent: 'center' }}
-            >
+            <div className="flex flex-wrap justify-center gap-2">
               <button
                 type="button"
-                className={styles.secondaryButton}
+                className="btn btn-outline"
                 onClick={resetFilters}
               >
                 Limpiar filtros
               </button>
               <button
                 type="button"
-                className={styles.primaryButton}
+                className="btn btn-primary"
                 onClick={() => setIsAdding(true)}
               >
                 Añadir elemento
@@ -287,7 +296,7 @@ export function LibraryView() {
           </section>
         ) : (
           <>
-            <div className={styles.grid}>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {library.items.map((entry) => (
                 <LibraryEntryCard
                   key={entry.id}
@@ -300,12 +309,12 @@ export function LibraryView() {
               ))}
             </div>
             <nav
-              className={styles.pagination}
+              className="mt-6 flex items-center justify-center gap-4 text-sm"
               aria-label="Paginación de biblioteca"
             >
               <button
                 type="button"
-                className={styles.secondaryButton}
+                className="btn btn-outline btn-sm"
                 disabled={(library.meta.page ?? 1) <= 1 || isLoading}
                 onClick={() =>
                   library.reload({
@@ -322,7 +331,7 @@ export function LibraryView() {
               </span>
               <button
                 type="button"
-                className={styles.secondaryButton}
+                className="btn btn-outline btn-sm"
                 disabled={
                   library.meta.page >= library.meta.totalPages || isLoading
                 }
@@ -340,11 +349,11 @@ export function LibraryView() {
         )}
 
         {library.errorMessage && library.status !== 'failed' && (
-          <div className={styles.error} role="alert" style={{ marginTop: 18 }}>
-            <p className={styles.errorText}>{library.errorMessage}</p>
+          <div className="alert alert-warning mt-5" role="alert">
+            <span>{library.errorMessage}</span>
             <button
               type="button"
-              className={styles.secondaryButton}
+              className="btn btn-ghost btn-sm"
               onClick={library.clearError}
             >
               Cerrar aviso
@@ -352,7 +361,7 @@ export function LibraryView() {
           </div>
         )}
 
-        <p className={styles.todo}>
+        <p className="mt-7 border-t border-base-300 pt-4 text-xs leading-relaxed text-base-content/60">
           Modo de demostración: los cambios viven en memoria durante esta
           sesión. La autenticación, el transporte HTTP y el catálogo real se
           integrarán desde sus módulos compartidos.

@@ -21,7 +21,6 @@ const mediaOptions: LibraryMediaOptionDto[] = [
     releaseYear: 2017,
     cover: 'HK',
     genreIds: ['action', 'indie'],
-    progressMaximum: 32,
     averageRating: 9.0,
   },
   {
@@ -54,7 +53,6 @@ const mediaOptions: LibraryMediaOptionDto[] = [
     releaseYear: 2018,
     cover: 'CE',
     genreIds: ['platformer', 'indie'],
-    progressMaximum: 12,
     averageRating: 8.9,
   },
   {
@@ -226,12 +224,12 @@ export class LibraryMockDatasource
 
   async updateEntry(id: string, dto: UpdateLibraryEntryDto) {
     const current = this.entries.find((entry) => entry.id === id);
-    if (!current) return false;
+    if (!current) return null;
     const updated = { ...current, ...dto };
     this.entries = this.entries.map((entry) =>
       entry.id === id ? updated : entry,
     );
-    return true;
+    return updated;
   }
 
   async deleteEntry(id: string) {

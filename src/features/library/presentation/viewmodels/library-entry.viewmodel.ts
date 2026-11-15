@@ -11,6 +11,7 @@ export interface LibraryEntryViewModel {
   type: 'GAME' | 'MOVIE' | 'BOOK';
   releaseYear: number;
   cover: string;
+  coverUrl?: string | null;
   averageRating?: number;
   progressMaximum?: number;
   status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'DROPPED';
@@ -28,6 +29,7 @@ export interface LibraryMediaOptionViewModel {
   creator: string;
   releaseYear: number;
   cover: string;
+  coverUrl?: string | null;
   genreIds: string[];
   progressMaximum?: number;
   averageRating?: number;
@@ -43,6 +45,7 @@ export class LibraryEntryViewModelMapper {
       type: entry.media.type,
       releaseYear: entry.media.releaseYear,
       cover: entry.media.cover,
+      coverUrl: entry.media.coverUrl,
       averageRating: entry.media.averageRating,
       progressMaximum: entry.media.progressMaximum,
       status: entry.status,

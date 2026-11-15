@@ -55,6 +55,26 @@ describe('LibraryRepositoryImpl with the temporary datasource', () => {
     );
   });
 
+  it('uses the server-updated state returned by the datasource', async () => {
+    const datasource = new LibraryMockDatasource();
+    const current = await datasource.fetchEntry('entry-03');
+    if (!current) throw new Error('Expected fixture entry to exist.');
+    datasource.updateEntry = async () => ({
+      ...current,
+      status: 'COMPLETED',
+      progress: 300,
+    });
+    const repository = new LibraryRepositoryImpl(datasource);
+
+    const updated = await repository.update('entry-03', {
+      status: 'IN_PROGRESS',
+      progress: 300,
+    });
+
+    assert.equal(updated.status, 'COMPLETED');
+    assert.equal(updated.progress, 300);
+  });
+
   it('filters, sorts, and paginates the collection', async () => {
     const repository = new LibraryRepositoryImpl(new LibraryMockDatasource());
     const filtered = await repository.getAll({

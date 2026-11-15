@@ -15,6 +15,14 @@ export class NotFoundError extends DomainError {
   readonly code = 'NOT_FOUND';
 }
 
+export class UnauthorizedError extends DomainError {
+  readonly code = 'UNAUTHORIZED';
+}
+
+export class ConflictError extends DomainError {
+  readonly code = 'CONFLICT';
+}
+
 export function describeError(error: unknown, fallback: string): string {
   return error instanceof DomainError ? error.message : fallback;
 }

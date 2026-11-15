@@ -1,6 +1,6 @@
 import type {
   CreateLibraryEntryDto,
-  LibraryEntryMockDto,
+  LibraryEntryDto,
   LibraryMediaOptionDto,
   LibraryQueryDto,
   UpdateLibraryEntryDto,
@@ -8,18 +8,21 @@ import type {
 
 export interface LibraryDatasource {
   fetchEntries(query: LibraryQueryDto): Promise<{
-    data: LibraryEntryMockDto[];
+    data: LibraryEntryDto[];
     meta: { total: number; page: number; limit: number; totalPages: number };
   }>;
-  fetchEntry(id: string): Promise<LibraryEntryMockDto | null>;
+  fetchEntry(id: string): Promise<LibraryEntryDto | null>;
   createEntry(
     dto: CreateLibraryEntryDto,
   ): Promise<
-    | { kind: 'created'; entry: LibraryEntryMockDto }
+    | { kind: 'created'; entry: LibraryEntryDto }
     | { kind: 'duplicate' }
     | { kind: 'unavailable' }
   >;
-  updateEntry(id: string, dto: UpdateLibraryEntryDto): Promise<boolean>;
+  updateEntry(
+    id: string,
+    dto: UpdateLibraryEntryDto,
+  ): Promise<LibraryEntryDto | null>;
   deleteEntry(id: string): Promise<boolean>;
 }
 

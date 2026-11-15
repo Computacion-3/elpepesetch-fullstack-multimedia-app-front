@@ -11,6 +11,7 @@ export interface LibraryMediaReference {
   readonly creator: string;
   readonly releaseYear: number;
   readonly cover: string;
+  readonly coverUrl?: string | null;
   readonly genreIds: readonly string[];
   readonly progressMaximum?: number;
   readonly averageRating?: number;
