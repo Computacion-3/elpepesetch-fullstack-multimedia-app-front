@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 import { requireSession } from '@/src/lib/dal';
+import { AdminNav } from '@/app/(admin)/admin-nav';
 import { UserMenu } from '@/src/features/auth/presentation/components/UserMenu';
 
 async function Welcome() {
@@ -8,6 +9,9 @@ async function Welcome() {
         <>
             <h1 className="text-3xl font-semibold tracking-tight">Hola, {user.fullName ?? user.username}</h1>
             <p className="text-zinc-600 dark:text-zinc-400">Tu sesión está activa.</p>
+            <Suspense fallback={null}>
+                <AdminNav />
+            </Suspense>
             <UserMenu />
         </>
     );
