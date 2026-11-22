@@ -1,7 +1,7 @@
 'use server';
 
 import { createSession, deleteSession, readToken } from '@/src/lib/session';
-import type { ActionResult } from '@/src/shared/action-result';
+import type { ActionResult } from '@/src/shared/domain/action-result';
 import { describeError } from '@/src/shared/domain/errors';
 import { authContainer } from '../../di/auth.container';
 import type { LoginCredentials, RegisterDraft } from '../../domain/entities/user';

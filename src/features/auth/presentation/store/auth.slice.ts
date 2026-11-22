@@ -1,11 +1,9 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
+import type { ActionResult } from '@/src/shared/domain/action-result';
 import { describeError } from '@/src/shared/domain/errors';
 import type { LoginCredentials, RegisterDraft } from '../../domain/entities/user';
 import type { AuthUserViewModel } from '../viewmodels/auth.viewmodel';
-
-/** Structurally identical to ActionResult (src/shared): pres-store may not import `shared` per the lint config. */
-type ActionResult<T> = { ok: true; data: T } | { ok: false; message: string };
 
 /**
  * What the thunks need from the outside world, expressed with DOMAIN types only.
