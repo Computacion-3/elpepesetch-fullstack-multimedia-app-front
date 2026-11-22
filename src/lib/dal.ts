@@ -32,3 +32,9 @@ export async function requirePermission(permission: string): Promise<Session> {
     if (!session.user.hasPermission(permission)) forbidden();
     return session;
 }
+
+/** Session only when the user holds the permission; null otherwise (for Server Actions, which must not redirect). */
+export async function getAuthorizedSession(permission: string): Promise<Session | null> {
+    const session = await getSession();
+    return session?.user.hasPermission(permission) ? session : null;
+}
