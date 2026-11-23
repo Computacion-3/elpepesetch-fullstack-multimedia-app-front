@@ -9,7 +9,11 @@
     "lint": "eslint",
     "lint:clean": "eslint -c eslint.clean.config.mjs src app && node .claude/skills/clean-feature/scripts/clean-audit.mjs",
     "inventory:clean": "node .claude/skills/clean-feature/scripts/inventory.mjs",
-    "diagram:clean": "node .claude/skills/clean-feature/scripts/diagram.mjs"
+    "diagram:clean": "node .claude/skills/clean-feature/scripts/diagram.mjs",
+    "test:e2e": "playwright test",
+    "test:e2e:graphql": "node e2e/run.mjs graphql",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:report": "playwright show-report"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.13.0",
@@ -21,6 +25,7 @@
     "server-only": "^0.0.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
