@@ -35,52 +35,52 @@ bloques funcionales y técnicos.
 Organizar el proyecto por módulos de funcionalidad (Feature-First)
 siguiendo el diseño visto en clase:
 
--   **Dominio (`domain/`):** Entidades puras con validación de
+- **Dominio (`domain/`):** Entidades puras con validación de
     invariantes, puertos (interfaces de repositorio) y casos de uso
     orquestadores, sin dependencias de React, Next.js ni librerías HTTP.
--   **Infraestructura (`infrastructure/`):** Implementaciones de
+- **Infraestructura (`infrastructure/`):** Implementaciones de
     repositorio, DTOs de red, mappers bidireccionales y DataSources
     (REST, GraphQL, WebSockets).
--   **Presentación (`presentation/`):** Componentes visuales puros,
+- **Presentación (`presentation/`):** Componentes visuales puros,
     hooks fachada desacoplados y slices de estado en Redux.
 
 ### **2.2. Flujo Completo de Autenticación y Sesión JWT**
 
--   **Vistas dedicadas:** Interfaces adaptativas para Inicio de Sesión
+- **Vistas dedicadas:** Interfaces adaptativas para Inicio de Sesión
     (`/login`) y Registro (`/register`).
--   **Gestión de tokens:** Almacenar el JWT de forma segura y adjuntarlo
+- **Gestión de tokens:** Almacenar el JWT de forma segura y adjuntarlo
     como `Authorization: Bearer <token>` en todas las peticiones a rutas
     protegidas.
--   **Cierre de sesión (Logout):** Purgar el token de la persistencia
+- **Cierre de sesión (Logout):** Purgar el token de la persistencia
     local, resetear el store de Redux y redirigir a inicio.
 
 ### **2.3. Autorización y Control de Acceso por Permisos y Roles (Authorities)**
 
--   **Sistema de Authorities y Permisos:** Implementar un esquema de
+- **Sistema de Authorities y Permisos:** Implementar un esquema de
     autorización granular basado en roles y permisos (authorities),
     permitiendo verificar privilegios específicos del usuario
     autenticado.
--   **Restricción de Rutas y Vistas:** Restringir páginas y acciones
+- **Restricción de Rutas y Vistas:** Restringir páginas y acciones
     según los permisos y roles verificados en el token.
--   **Gestión de Privilegios:** Proveer una interfaz para auditar y
+- **Gestión de Privilegios:** Proveer una interfaz para auditar y
     gestionar los roles y permisos de los usuarios registrados.
 
 ### **2.4. Interfaz de Usuario y Experiencia (UI/UX)**
 
--   **Componentes Modulares Reutilizables:** Construir componentes
-    tipados en TypeScript con Tailwind CSS o Shadcn/UI (botones,
+- **Componentes Modulares Reutilizables:** Construir componentes
+    tipados en TypeScript con Tailwind CSS y daisyUI (botones,
     tarjetas, campos con validación visual, modales y tablas).
--   **Paginación y Filtrado:** Incorporar paginación (numérica o cursor)
+- **Paginación y Filtrado:** Incorporar paginación (numérica o cursor)
     y filtros de búsqueda reactivos.
--   **Validación y Feedback:** Validación de formularios robusta con
+- **Validación y Feedback:** Validación de formularios robusta con
     notificaciones toast, alertas o banners accesibles.
 
 ### **2.5. Gestión del Estado Centralizado con Redux y Hooks Fachada**
 
--   **Store Centralizado en Redux:** Administrar el estado global
+- **Store Centralizado en Redux:** Administrar el estado global
     exclusivamente con Redux Toolkit (sesión, permisos y colecciones de
     datos del dominio).
--   **Hooks Fachada:** Los componentes de React no acceden al store ni a
+- **Hooks Fachada:** Los componentes de React no acceden al store ni a
     la red directamente; consumen custom hooks (ej. `useRoutines`,
     `useAuth`) que encapsulan los dispatchers de Redux y los casos de
     uso.
@@ -90,11 +90,11 @@ siguiendo el diseño visto en clase:
 Incorporar al menos una funcionalidad reactiva en tiempo real
 (notificaciones, estados en vivo, chat o feed sincronizado):
 
--   **DataSource Socket:** El cliente socket reside en
+- **DataSource Socket:** El cliente socket reside en
     `infrastructure/datasources/` bajo una interfaz de contrato.
--   **Handshake con JWT:** Autenticar la conexión enviando el token JWT
+- **Handshake con JWT:** Autenticar la conexión enviando el token JWT
     en el protocolo de enlace.
--   **Sincronización Reactiva:** Despachar eventos entrantes
+- **Sincronización Reactiva:** Despachar eventos entrantes
     directamente al store de Redux sin requerir recargas de página.
 
 ### **2.7. Módulo Dual: Abstracción de Datos REST y GraphQL**
@@ -102,31 +102,31 @@ Incorporar al menos una funcionalidad reactiva en tiempo real
 Refactorizar un módulo completo para operar indistintamente contra
 endpoints REST y GraphQL:
 
--   **Puerto Único:** Una sola interfaz de repositorio en dominio para
+- **Puerto Único:** Una sola interfaz de repositorio en dominio para
     las operaciones requeridas.
--   **DataSources Duales:** Dos implementaciones (`RestDatasource` y
+- **DataSources Duales:** Dos implementaciones (`RestDatasource` y
     `GraphQLDatasource`) que retornan los mismos DTOs hacia el mapper.
--   **Selección por Configuración:** La fuente de datos activa se
+- **Selección por Configuración:** La fuente de datos activa se
     determina mediante la variable de entorno
     `NEXT_PUBLIC_DATA_SOURCE=rest|graphql`.
--   **Transparencia Total:** Cambiar la variable no altera Casos de Uso,
+- **Transparencia Total:** Cambiar la variable no altera Casos de Uso,
     Entidades, Slices de Redux ni Componentes de la interfaz.
 
 ### **2.8. Funcionalidades del Dominio de Negocio**
 
--   **Lógica Específica:** Implementar todas las historias de usuario y
+- **Lógica Específica:** Implementar todas las historias de usuario y
     requerimientos funcionales particulares del proyecto grupal.
--   **Persistencia Transaccional:** Integración completa de las
+- **Persistencia Transaccional:** Integración completa de las
     operaciones de negocio con los servicios del backend en NestJS.
 
 ### **2.9. Pruebas Automatizadas E2E, Despliegue Cloud y Calidad de Código**
 
--   **Pruebas E2E:** Suite automatizada en Cypress cubriendo flujos de
+- **Pruebas E2E:** Suite automatizada en Playwright cubriendo flujos de
     autenticación, control de acceso y tiempo real.
--   **Despliegue Cloud:** Frontend activo en Vercel y backend en
+- **Despliegue Cloud:** Frontend activo en Vercel y backend en
     Railway/Render/AWS con conectividad real en producción y sin errores
     CORS.
--   **README Técnico:** Código limpio y tipado. Documentación con guía
+- **README Técnico:** Código limpio y tipado. Documentación con guía
     de arranque, variables `.env.example`, enlaces cloud y comparativo
     REST vs. GraphQL.
 
@@ -141,9 +141,9 @@ repositorio y el desempeño individual durante la sustentación oral.
 Se evaluará el historial de commits en el repositorio para auditar la
 participación individual de cada integrante del equipo:
 
-1.  Frecuencia, consistencia y relevancia de los commits individuales a
+1. Frecuencia, consistencia y relevancia de los commits individuales a
     lo largo de las semanas.
-2.  Ausencia de commits masivos de última hora o monopolización del
+2. Ausencia de commits masivos de última hora o monopolización del
     repositorio por un único integrante.
 
 Una participación deficiente o asimétrica impactará negativamente la
@@ -153,87 +153,36 @@ nota individual sobre la calificación grupal del proyecto.
 
 Durante la sesión de revisión y sustentación del proyecto:
 
--   Cualquier integrante del equipo seleccionado aleatoriamente deberá
+- Cualquier integrante del equipo seleccionado aleatoriamente deberá
     estar en capacidad de explicar, depurar y defender cualquier
     componente, funcionalidad, hook, caso de uso o servicio de la
     aplicación.
--   Si un estudiante no demuestra dominio conceptual o no puede
+- Si un estudiante no demuestra dominio conceptual o no puede
     responder por el código entregado por su equipo, se le aplicará un
     factor multiplicativo reductor individual a su calificación final.
 
 ## **4. Criterios de Evaluación y Rúbrica de Aprendizaje**
 
-  ------------------------------------------------------------------------
-  **Criterio            **Descripción de                   **Ponderación**
-  evaluativo**          cumplimiento**        
-  --------------------- --------------------- ----------------------------
-  Clean Architecture y  Separación por capas                       **15%**
-  Modularidad           (Dominio,             
-                        Infraestructura,      
-                        Presentación) y       
-                        puertos desacoplados. 
-
-  Autenticación y       Login, Registro,                           **10%**
-  Sesión JWT            Logout y persistencia 
-                        segura de token.      
-
-  Autorización, Roles y Control de acceso                          **10%**
-  Authorities           basado en roles y     
-                        permisos              
-                        (authorities) en      
-                        vistas y acciones.    
-
-  Interfaz UI/UX y      Componentes                                **15%**
-  Componentes           modulares,            
-                        paginación, filtros y 
-                        validaciones          
-                        visuales.             
-
-  Gestión de Estado con Store global                               **10%**
-  Redux                 centralizado con      
-                        Redux Toolkit y hooks 
-                        fachada.              
-
-  Funcionalidad         Eventos en tiempo                          **10%**
-  WebSockets            real con JWT y        
-                        sincronización con    
-                        Redux.                
-
-  Módulo Dual: REST y   DataSources                                **10%**
-  GraphQL               intercambiables por   
-                        variable de entorno   
-                        sin modificar dominio 
-                        ni UI.                
-
-  Funcionalidades del   Historias de usuario                       **10%**
-  Dominio               del proyecto grupal   
-                        conectadas con el     
-                        backend NestJS.       
-
-  Pruebas E2E,          Pruebas en Cypress,                        **10%**
-  Despliegue y README   despliegue funcional  
-                        en la nube y          
-                        documentación         
-                        técnica.              
-
-  Trazabilidad Git      Historial equitativo     **Factor multiplicativo**
-  (Commits)             de commits y          
-                        colaboración          
-                        demostrable en el     
-                        repositorio.          
-
-  Sustentación Oral     Dominio conceptual y     **Factor multiplicativo**
-  Individual            defensa técnica       
-                        individual del código 
-                        desarrollado.         
-  ------------------------------------------------------------------------
+  | Criterio evaluativo | Descripción de cumplimiento | Ponderación |
+| --- | --- | ---: |
+| **Clean Architecture y Modularidad** | Separación por capas (Dominio, Infraestructura y Presentación) y puertos desacoplados. | **15%** |
+| **Autenticación y Sesión JWT** | Login, Registro, Logout y persistencia segura de token. | **10%** |
+| **Autorización, Roles y Authorities** | Control de acceso basado en roles y permisos (authorities) en vistas y acciones. | **10%** |
+| **Interfaz UI/UX y Componentes** | Componentes modulares, paginación, filtros y validaciones visuales. | **15%** |
+| **Gestión de Estado con Redux** | Store global centralizado con Redux Toolkit y hooks fachada. | **10%** |
+| **Funcionalidad WebSockets** | Eventos en tiempo real con JWT y sincronización con Redux. | **10%** |
+| **Módulo Dual: REST y GraphQL** | DataSources intercambiables por variable de entorno sin modificar dominio ni UI. | **10%** |
+| **Funcionalidades del Dominio** | Historias de usuario del proyecto grupal conectadas con el backend NestJS. | **10%** |
+| **Pruebas E2E, Despliegue y README** | Pruebas en Cypress, despliegue funcional en la nube y documentación técnica. | **10%** |
+| **Trazabilidad Git (Commits)** | Historial equitativo de commits y colaboración demostrable en el repositorio. | **Factor multiplicativo** |
+| **Sustentación Oral Individual** | Dominio conceptual y defensa técnica individual del código desarrollado. | **Factor multiplicativo** |
 
 ## **5. Metodología de Entrega y Recepción**
 
-1.  **Repositorio Oficial:** Entrega en la organización del curso en
+1. **Repositorio Oficial:** Entrega en la organización del curso en
     GitHub.
-2.  **Plazo de Entrega:** Jueves 26 de Noviembre de 2026. Commits
+2. **Plazo de Entrega:** Jueves 26 de Noviembre de 2026. Commits
     posteriores no serán calificados sin autorización.
-3.  **Sustentación:** Asistencia sincrónica obligatoria; cualquier
+3. **Sustentación:** Asistencia sincrónica obligatoria; cualquier
     integrante del equipo será evaluado individualmente sobre cualquier
     módulo.
