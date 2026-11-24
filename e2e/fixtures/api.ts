@@ -1,0 +1,200 @@
+import { request, type APIRequestContext } from '@playwright/test';
+import { ACCOUNTS, type Account } from './test-data';
+
+export type ApiUser = {
+    id: number;
+    username: string;
+    email: string;
+    fullName?: string | null;
+    isActive: boolean;
+    role: { id: number; name: string };
+};
+export type ApiRole = { id: number; name: string; description: string };
+export type ApiPermission = { id: number; name: string; description: string };
+type Paginated<T> = { data: T[]; meta: { total: number; page: number; limit: number; totalPages: number } };
+
+export function apiBaseUrl(): string {
+    return process.env.E2E_API_URL ?? 'http://localhost:3002';
+}
+
+/** POST /auth/login directo al backend; devuelve el JWT. */
+export async function apiLogin(ctx: APIRequestContext, account: Account): Promise<string> {
+    const res = await ctx.post('/auth/login', { data: { email: account.email, password: account.password } });
+    if (!res.ok()) throw new Error(`Login en el backend falló (${res.status()}): ${await res.text()}`);
+    return ((await res.json()) as { accessToken: string }).accessToken;
+}
+
+/**
+ * Cliente REST del backend con el token del administrador del seed.
+ * Lo usan las pruebas para preparar datos (arrange) y limpiar (cleanup) sin pasar por la interfaz,
+ * y para comprobar en el backend lo que la interfaz dice haber hecho.
+ */
+export class AdminApi {
+    private constructor(
+        private readonly ctx: APIRequestContext,
+        private readonly token: string,
+    ) {}
+
+    static async create(): Promise<AdminApi> {
+        const ctx = await request.newContext({ baseURL: apiBaseUrl() });
+        try {
+            return new AdminApi(ctx, await apiLogin(ctx, ACCOUNTS.admin));
+        } catch (err) {
+            await ctx.dispose();
+            throw new Error(
+                `No se pudo iniciar sesión como admin en ${apiBaseUrl()}. ¿Está corriendo el backend con el seed cargado?\n${String(err)}`,
+            );
+        }
+    }
+
+    async dispose(): Promise<void> {
+        await this.ctx.dispose();
+    }
+
+    private async call<T>(method: string, path: string, data?: unknown): Promise<T> {
+        const res = await this.ctx.fetch(path, {
+            method,
+            data,
+            headers: { Authorization: `Bearer ${this.token}` },
+        });
+        const text = await res.text();
+        if (!res.ok()) throw new Error(`${method} ${path} → ${res.status()} ${text}`);
+        return (text ? JSON.parse(text) : undefined) as T;
+    }
+
+    // ---- usuarios
+    createUser(body: {
+        username: string;
+        email: string;
+        password: string;
+        roleId: number;
+        fullName?: string;
+    }): Promise<ApiUser> {
+        return this.call('POST', '/users', body);
+    }
+
+    searchUsers(q: string, page = 1, limit = 50): Promise<Paginated<ApiUser>> {
+        const params = new URLSearchParams({ q, page: String(page), limit: String(limit) });
+        return this.call('GET', `/users?${params.toString()}`);
+    }
+
+    async findUser(username: string): Promise<ApiUser | undefined> {
+        const { data } = await this.searchUsers(username);
+        return data.find((u) => u.username === username);
+    }
+
+    setUserStatus(id: number, isActive: boolean): Promise<ApiUser> {
+        return this.call('PATCH', `/users/${id}/status`, { isActive });
+    }
+
+    async deleteUser(id: number): Promise<void> {
+        await this.call('DELETE', `/users/${id}`);
+    }
+
+    /** Borra todos los usuarios cuyo username empiece por `prefix`. */
+    async deleteUsersWithPrefix(prefix: string): Promise<void> {
+        for (;;) {
+            const { data } = await this.searchUsers(prefix);
+            const matches = data.filter((u) => u.username.startsWith(prefix));
+            if (matches.length === 0) return;
+            for (const u of matches) await this.deleteUser(u.id);
+        }
+    }
+
+    // ---- roles
+    listRoles(): Promise<ApiRole[]> {
+        return this.call('GET', '/roles');
+    }
+
+    async roleByName(name: string): Promise<ApiRole | undefined> {
+        return (await this.listRoles()).find((r) => r.name === name);
+    }
+
+    async roleId(name: string): Promise<number> {
+        const role = await this.roleByName(name);
+        if (!role) throw new Error(`El rol ${name} no existe en el backend`);
+        return role.id;
+    }
+
+    getRole(id: number): Promise<ApiRole & { rolePermissions?: { permission?: ApiPermission }[] }> {
+        return this.call('GET', `/roles/${id}`);
+    }
+
+    async rolePermissionNames(id: number): Promise<string[]> {
+        const role = await this.getRole(id);
+        return (role.rolePermissions ?? []).flatMap((rp) => (rp.permission ? [rp.permission.name] : [])).sort();
+    }
+
+    createRole(name: string, description = 'Rol temporal de E2E'): Promise<ApiRole> {
+        return this.call('POST', '/roles', { name, description });
+    }
+
+    async setRolePermissions(id: number, permissionIds: number[]): Promise<void> {
+        await this.call('PUT', `/roles/${id}/permissions`, { permissionIds });
+    }
+
+    async deleteRole(id: number): Promise<void> {
+        await this.call('DELETE', `/roles/${id}`);
+    }
+
+    // ---- permisos
+    listPermissions(): Promise<ApiPermission[]> {
+        return this.call('GET', '/permissions');
+    }
+
+    async permissionIds(names: string[]): Promise<number[]> {
+        const all = await this.listPermissions();
+        return names.map((name) => {
+            const found = all.find((p) => p.name === name);
+            if (!found) throw new Error(`El permiso ${name} no existe en el backend`);
+            return found.id;
+        });
+    }
+
+    async permissionByName(name: string): Promise<ApiPermission | undefined> {
+        return (await this.listPermissions()).find((p) => p.name === name);
+    }
+
+    createPermission(name: string, description = 'Permiso temporal de E2E'): Promise<ApiPermission> {
+        return this.call('POST', '/permissions', { name, description });
+    }
+
+    async deletePermission(id: number): Promise<void> {
+        await this.call('DELETE', `/permissions/${id}`);
+    }
+
+    // ---- limpieza
+    /** Usuarios, luego roles (sin permisos) y por último permisos con el prefijo dado. Mejor esfuerzo. */
+    async cleanup(prefix: { user: string; role: string; permission: string }): Promise<string[]> {
+        const problems: string[] = [];
+        const attempt = async (label: string, task: () => Promise<void>) => {
+            try {
+                await task();
+            } catch (err) {
+                problems.push(`${label}: ${String(err)}`);
+            }
+        };
+        await attempt('usuarios', () => this.deleteUsersWithPrefix(prefix.user));
+        for (const role of (await this.listRoles()).filter((r) => r.name.startsWith(prefix.role))) {
+            await attempt(`rol ${role.name}`, async () => {
+                await this.setRolePermissions(role.id, []);
+                await this.deleteRole(role.id);
+            });
+        }
+        for (const p of (await this.listPermissions()).filter((x) => x.name.startsWith(prefix.permission))) {
+            await attempt(`permiso ${p.name}`, () => this.deletePermission(p.id));
+        }
+        return problems;
+    }
+}
+
+/** GET /auth/me con un token cualquiera; devuelve el código HTTP. */
+export async function authMeStatus(token: string): Promise<number> {
+    const ctx = await request.newContext({ baseURL: apiBaseUrl() });
+    try {
+        const res = await ctx.get('/auth/me', { headers: { Authorization: `Bearer ${token}` } });
+        return res.status();
+    } finally {
+        await ctx.dispose();
+    }
+}
