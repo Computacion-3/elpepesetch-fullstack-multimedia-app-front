@@ -9,21 +9,23 @@
     "lint": "eslint",
     "lint:clean": "eslint -c eslint.clean.config.mjs src app && node .claude/skills/clean-feature/scripts/clean-audit.mjs",
     "inventory:clean": "node .claude/skills/clean-feature/scripts/inventory.mjs",
-    "diagram:clean": "node .claude/skills/clean-feature/scripts/diagram.mjs"
+    "diagram:clean": "node .claude/skills/clean-feature/scripts/diagram.mjs",
+    "test:e2e": "playwright test",
+    "test:e2e:graphql": "node e2e/run.mjs graphql",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:report": "playwright show-report"
   },
   "dependencies": {
-    "@reduxjs/toolkit": "^2.14.0",
-    "@tailwindcss/postcss": "^4.3.5",
+    "@reduxjs/toolkit": "^2.13.0",
     "jwt-decode": "^4.0.0",
     "next": "16.4.2",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "react-redux": "^9.3.1",
-    "server-only": "^0.0.1",
-    "zod": "^4.6.7"
+    "react-redux": "^9.3.0",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
-    "@playwright/test": "^1.65.1",
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -33,8 +35,8 @@
     "eslint-config-next": "16.4.2",
     "eslint-import-resolver-typescript": "^4.4.5",
     "eslint-plugin-boundaries": "^7.2.1",
-    "tailwindcss": "^4.3.5",
+    "tailwindcss": "^4",
     "typescript": "^5",
-    "typescript-eslint": "^8.72.2"
+    "typescript-eslint": "^8.72.0"
   }
 }

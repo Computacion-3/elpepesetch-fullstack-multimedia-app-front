@@ -32,6 +32,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -43,10 +44,9 @@ next-env.d.ts
 # clean-feature plans
 temp/
 
-# Playwright
-node_modules/
+# playwright (E2E)
 /test-results/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
-/playwright/.auth/
+/e2e/.auth/

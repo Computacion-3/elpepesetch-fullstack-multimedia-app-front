@@ -1,79 +1,74 @@
 import { defineConfig, devices } from '@playwright/test';
 
 /**
- * Read environment variables from file.
- * https://github.com/motdotla/dotenv
+ * E2E con Playwright contra el backend NestJS real (con el seed de db/seed.sql).
+ *
+ * Variables (todas opcionales):
+ * - E2E_DATA_SOURCE=rest|graphql  fuente de datos del front que se levanta (por defecto rest).
+ * - E2E_API_URL                   URL del backend; si falta se usa API_URL de .env.local o http://localhost:3002.
+ * - E2E_BASE_URL                  probar un front ya desplegado (por ejemplo Vercel); no se levanta servidor.
+ *
+ * Cada fuente usa su propio puerto (rest 3100, graphql 3101) para no reutilizar por error un
+ * servidor arrancado con la otra fuente.
  */
-// import dotenv from 'dotenv';
-// import path from 'path';
-// dotenv.config({ path: path.resolve(__dirname, '.env') });
+try {
+    process.loadEnvFile('.env.local');
+} catch {
+    // .env.local es opcional
+}
 
-/**
- * See https://playwright.dev/docs/test-configuration.
- */
+const dataSource = process.env.E2E_DATA_SOURCE === 'graphql' ? 'graphql' : 'rest';
+const port = dataSource === 'graphql' ? 3101 : 3100;
+const apiUrl = process.env.E2E_API_URL ?? process.env.API_URL ?? 'http://localhost:3002';
+const externalBaseUrl = process.env.E2E_BASE_URL;
+
+// Lo leen los helpers de e2e/fixtures (el proceso de cada worker hereda este entorno).
+process.env.E2E_API_URL = apiUrl;
+process.env.E2E_DATA_SOURCE = dataSource;
+
 export default defineConfig({
-  testDir: './tests',
-  /* Run tests in files in parallel */
-  fullyParallel: true,
-  /* Fail the build on CI if you accidentally left test.only in the source code. */
-  forbidOnly: !!process.env.CI,
-  /* Retry on CI only */
-  retries: process.env.CI ? 2 : 0,
-  /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 1 : undefined,
-  /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: 'html',
-  /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
-  use: {
-    /* Base URL to use in actions like `await page.goto('')`. */
-    // baseURL: 'http://localhost:3000',
-
-    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on-first-retry',
-  },
-
-  /* Configure projects for major browsers */
-  projects: [
-    {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+    testDir: './e2e',
+    outputDir: './test-results',
+    timeout: 60_000,
+    expect: { timeout: 15_000 },
+    fullyParallel: false,
+    forbidOnly: !!process.env.CI,
+    retries: process.env.CI ? 1 : 0,
+    // next dev compila cada ruta la primera vez: pocos workers evitan timeouts en equipos lentos.
+    workers: process.env.CI ? 1 : 2,
+    reporter: [['list'], ['html', { open: 'never' }]],
+    use: {
+        baseURL: externalBaseUrl ?? `http://localhost:${port}`,
+        locale: 'es-CO',
+        trace: 'retain-on-failure',
+        screenshot: 'only-on-failure',
+        video: 'retain-on-failure',
+        navigationTimeout: 30_000,
     },
-
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
-
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
-    },
-
-    /* Test against mobile viewports. */
-    // {
-    //   name: 'Mobile Chrome',
-    //   use: { ...devices['Pixel 5'] },
-    // },
-    // {
-    //   name: 'Mobile Safari',
-    //   use: { ...devices['iPhone 12'] },
-    // },
-
-    /* Test against branded browsers. */
-    // {
-    //   name: 'Microsoft Edge',
-    //   use: { ...devices['Desktop Edge'], channel: 'msedge' },
-    // },
-    // {
-    //   name: 'Google Chrome',
-    //   use: { ...devices['Desktop Chrome'], channel: 'chrome' },
-    // },
-  ],
-
-  /* Run your local dev server before starting the tests */
-  // webServer: {
-  //   command: 'npm run start',
-  //   url: 'http://localhost:3000',
-  //   reuseExistingServer: !process.env.CI,
-  // },
+    projects: [
+        { name: 'setup', testMatch: /auth\.setup\.ts/, teardown: 'cleanup' },
+        { name: 'cleanup', testMatch: /global\.teardown\.ts/ },
+        {
+            name: `chromium-${dataSource}`,
+            use: { ...devices['Desktop Chrome'] },
+            dependencies: ['setup'],
+            testIgnore: [/auth\.setup\.ts/, /global\.teardown\.ts/],
+        },
+    ],
+    webServer: externalBaseUrl
+        ? undefined
+        : {
+              command: `npm run dev -- --port ${port}`,
+              url: `http://localhost:${port}/login`,
+              timeout: 180_000,
+              reuseExistingServer: !process.env.CI,
+              stdout: 'ignore',
+              stderr: 'pipe',
+              env: {
+                  API_URL: apiUrl,
+                  NEXT_PUBLIC_DATA_SOURCE: dataSource,
+                  // Expone el store de Redux en window.__APP_STORE__ para comprobar su estado.
+                  NEXT_PUBLIC_E2E: 'true',
+              },
+          },
 });

@@ -40,6 +40,9 @@ export default defineConfig([
         { type: "pres-viewmodel", pattern: "src/features/*/presentation/viewmodels", capture: ["feature"] },
         { type: "pres-hook", pattern: "src/features/*/presentation/hooks", capture: ["feature"] },
         { type: "pres-component", pattern: "src/features/*/presentation/components", capture: ["feature"] },
+        // presentation/actions holds Server Actions (documented deviation D3/D4 of the auth plan).
+        // NOTE: `src/lib` is handled in T5.1 if lint:clean flags it.
+        { type: "pres-action", pattern: "src/features/*/presentation/actions", capture: ["feature"] },
         { type: "app-store", pattern: "src/store" },
         { type: "app", pattern: "app" },
       ],
@@ -94,9 +97,15 @@ export default defineConfig([
           { from: el("pres-component"), allow: { to: el("domain", SAME_FEATURE), dependency: { kind: "type" } } },
           { from: el("pres-component"), allow: { to: el("shared") } },
 
+          // Server Actions (deviation D3/D4): call own di container (server-only), domain types and viewmodels.
+          // Thunks reach them only through `extra` (injected in src/store/store.ts); hooks/components/store never import them.
+          { from: el("pres-action"), allow: { to: { element: { types: { anyOf: ["di", "pres-viewmodel"] }, captured: SAME_FEATURE } } } },
+          { from: el("pres-action"), allow: { to: el("domain", SAME_FEATURE), dependency: { kind: "type" } } },
+          { from: el("pres-action"), allow: { to: { element: { types: { anyOf: ["shared", "shared-domain"] } } } } },
+
           // Global store: combines feature slices and injects feature containers as thunk extraArgument.
           // It is the ONLY place (besides di) allowed to touch di.
-          { from: el("app-store"), allow: { to: { element: { types: { anyOf: ["app-store", "pres-store", "di"] } } } } },
+          { from: el("app-store"), allow: { to: { element: { types: { anyOf: ["app-store", "pres-store", "pres-action", "di"] } } } } },
 
           // Next.js routes: thin. Hooks, components and the StoreProvider only.
           { from: el("app"), allow: { to: { element: { types: { anyOf: ["app", "pres-hook", "pres-component", "app-store", "shared"] } } } } },
