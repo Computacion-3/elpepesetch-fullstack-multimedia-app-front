@@ -2,6 +2,7 @@ import { combineSlices, configureStore } from '@reduxjs/toolkit';
 import type { UnknownAction } from '@reduxjs/toolkit';
 // <clean:imports> — one slice import and one container import per feature (keep this marker).
 import {
+    getSocketTokenAction,
     loginAction,
     logoutAction,
     registerAction,
@@ -61,6 +62,7 @@ function createThunkExtra() {
             login: loginAction,
             register: registerAction,
             logout: logoutAction,
+            getSocketToken: getSocketTokenAction,
         } satisfies AuthDependencies,
         users: {
             list: listUsersAction,

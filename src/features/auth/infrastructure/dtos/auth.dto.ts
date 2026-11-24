@@ -25,6 +25,13 @@ export interface RegisterRequestDto {
     bio?: string;
 }
 
+/** Backend socket ticket (POST /auth/socket-token or mutation socketToken). */
+export interface SocketTokenResponseDto {
+    token: string;
+    /** Seconds until the ticket expires. */
+    expiresIn: number;
+}
+
 /** Backend user shape returned by register and me. */
 export interface UserResponseDto {
     id: number;

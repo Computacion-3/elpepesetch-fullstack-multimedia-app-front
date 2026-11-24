@@ -1,6 +1,7 @@
 import 'server-only';
 import { createFetchHttpClient } from '@/src/shared/infrastructure/http-client';
 import { GetCurrentUserUseCase } from '../domain/usecases/get-current-user.usecase';
+import { GetSocketTicketUseCase } from '../domain/usecases/get-socket-ticket.usecase';
 import { LoginUseCase } from '../domain/usecases/login.usecase';
 import { LogoutUseCase } from '../domain/usecases/logout.usecase';
 import { RegisterUseCase } from '../domain/usecases/register.usecase';
@@ -26,6 +27,7 @@ export function createAuthContainer() {
         register: new RegisterUseCase(repository),
         logout: new LogoutUseCase(repository),
         getCurrentUser: new GetCurrentUserUseCase(repository),
+        getSocketTicket: new GetSocketTicketUseCase(repository),
     };
 }
 

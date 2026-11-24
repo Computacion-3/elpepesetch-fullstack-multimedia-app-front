@@ -2,6 +2,7 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import type { ActionResult } from '@/src/shared/domain/action-result';
 import { describeError } from '@/src/shared/domain/errors';
+import type { SocketTicket } from '../../domain/entities/socket-ticket';
 import type { LoginCredentials, RegisterDraft } from '../../domain/entities/user';
 import type { AuthUserViewModel } from '../viewmodels/auth.viewmodel';
 
@@ -13,6 +14,8 @@ export interface AuthDependencies {
     login: (input: LoginCredentials) => Promise<ActionResult<AuthUserViewModel>>;
     register: (draft: RegisterDraft) => Promise<ActionResult<null>>;
     logout: () => Promise<void>;
+    /** Ticket del WebSocket. Lo usa el módulo de tiempo real (P3) desde sus thunks: `extra.auth.getSocketToken()`. */
+    getSocketToken: () => Promise<ActionResult<SocketTicket>>;
 }
 
 export type RequestStatus = 'idle' | 'loading' | 'succeeded' | 'failed';

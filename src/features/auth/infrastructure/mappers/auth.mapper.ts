@@ -1,6 +1,7 @@
+import type { SocketTicket } from '../../domain/entities/socket-ticket';
 import { User } from '../../domain/entities/user';
 import type { RegisterDraft } from '../../domain/entities/user';
-import type { RegisterRequestDto, UserResponseDto } from '../dtos/auth.dto';
+import type { RegisterRequestDto, SocketTokenResponseDto, UserResponseDto } from '../dtos/auth.dto';
 
 /** Translates between backend DTOs and domain entities. */
 export class AuthMapper {
@@ -9,6 +10,10 @@ export class AuthMapper {
             rp.permission ? [rp.permission.name] : [],
         );
         return new User(dto.id, dto.username, dto.email, dto.fullName ?? null, dto.role.name, permissions);
+    }
+
+    static toSocketTicket(dto: SocketTokenResponseDto): SocketTicket {
+        return { token: dto.token, expiresInSeconds: dto.expiresIn };
     }
 
     static toRegisterRequest(draft: RegisterDraft): RegisterRequestDto {

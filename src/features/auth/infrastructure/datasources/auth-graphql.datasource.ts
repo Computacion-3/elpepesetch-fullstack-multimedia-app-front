@@ -1,10 +1,17 @@
 import { HttpError, type HttpClient } from '@/src/shared/infrastructure/http-client';
-import type { LoginRequestDto, LoginResponseDto, RegisterRequestDto, UserResponseDto } from '../dtos/auth.dto';
+import type {
+    LoginRequestDto,
+    LoginResponseDto,
+    RegisterRequestDto,
+    SocketTokenResponseDto,
+    UserResponseDto,
+} from '../dtos/auth.dto';
 import type { AuthDatasource } from './auth.datasource';
 
 const LOGIN = `mutation Login($input: LoginInput!) { login(input: $input) { accessToken tokenType user { id username email role } } }`;
 const REGISTER = `mutation Register($input: RegisterInput!) { register(input: $input) { id username email fullName bio role { id name } } }`;
 const LOGOUT = `mutation { logout }`;
+const SOCKET_TOKEN = `mutation { socketToken { token expiresIn } }`;
 const ME = `{ me { id username email fullName bio role { id name rolePermissions { id permission { id name description } } } } }`;
 
 interface GraphQLResponse<T> {
@@ -30,6 +37,10 @@ export class AuthGraphQLDatasource implements AuthDatasource {
 
     async me(token: string): Promise<UserResponseDto> {
         return (await this.execute<{ me: UserResponseDto }>(ME, undefined, token)).me;
+    }
+
+    async socketToken(token: string): Promise<SocketTokenResponseDto> {
+        return (await this.execute<{ socketToken: SocketTokenResponseDto }>(SOCKET_TOKEN, undefined, token)).socketToken;
     }
 
     private async execute<T>(query: string, variables?: object, token?: string): Promise<T> {

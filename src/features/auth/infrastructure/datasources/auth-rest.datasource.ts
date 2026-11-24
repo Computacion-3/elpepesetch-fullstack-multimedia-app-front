@@ -1,5 +1,11 @@
 import type { HttpClient } from '@/src/shared/infrastructure/http-client';
-import type { LoginRequestDto, LoginResponseDto, RegisterRequestDto, UserResponseDto } from '../dtos/auth.dto';
+import type {
+    LoginRequestDto,
+    LoginResponseDto,
+    RegisterRequestDto,
+    SocketTokenResponseDto,
+    UserResponseDto,
+} from '../dtos/auth.dto';
 import type { AuthDatasource } from './auth.datasource';
 
 /** REST implementation of the auth datasource. */
@@ -20,5 +26,9 @@ export class AuthRestDatasource implements AuthDatasource {
 
     me(token: string): Promise<UserResponseDto> {
         return this.http.get<UserResponseDto>('/auth/me', token);
+    }
+
+    socketToken(token: string): Promise<SocketTokenResponseDto> {
+        return this.http.post<SocketTokenResponseDto>('/auth/socket-token', undefined, token);
     }
 }

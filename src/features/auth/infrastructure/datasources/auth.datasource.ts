@@ -1,4 +1,10 @@
-import type { LoginRequestDto, LoginResponseDto, RegisterRequestDto, UserResponseDto } from '../dtos/auth.dto';
+import type {
+    LoginRequestDto,
+    LoginResponseDto,
+    RegisterRequestDto,
+    SocketTokenResponseDto,
+    UserResponseDto,
+} from '../dtos/auth.dto';
 
 /** Transport-agnostic contract implemented by the REST and GraphQL datasources. */
 export interface AuthDatasource {
@@ -6,4 +12,5 @@ export interface AuthDatasource {
     register(body: RegisterRequestDto): Promise<UserResponseDto>;
     logout(token: string): Promise<void>;
     me(token: string): Promise<UserResponseDto>;
+    socketToken(token: string): Promise<SocketTokenResponseDto>;
 }
