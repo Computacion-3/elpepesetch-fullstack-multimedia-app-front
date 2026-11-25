@@ -9,33 +9,33 @@ import type {
 } from '../../domain/repositories/library.repository';
 
 /** Temporary in-memory shape; kept separate from the confirmed API response. */
-export interface LibraryEntryMockDto extends LibraryEntryProps {}
+export type LibraryEntryMockDto = LibraryEntryProps;
 
 export interface LibraryMediaGenreResponseDto {
   id: string;
   name: string;
-  description: string | null;
+  description?: string | null;
 }
 
 export interface LibraryMediaItemResponseDto {
   id: string;
   title: string;
   type: LibraryMediaReference['type'];
-  description: string | null;
+  description?: string | null;
   releaseYear: number;
   creator: string;
-  coverUrl: string | null;
-  platform: string | null;
-  durationMinutes: number | null;
-  pages: number | null;
-  isbn: string | null;
-  approvalStatus: string;
-  rejectionReason: string | null;
-  averageRating: number;
-  ratingsCount: number;
+  coverUrl?: string | null;
+  platform?: string | null;
+  durationMinutes?: number | null;
+  pages?: number | null;
+  isbn?: string | null;
+  approvalStatus?: string;
+  rejectionReason?: string | null;
+  averageRating?: number | string;
+  ratingsCount?: number;
   genres?: LibraryMediaGenreResponseDto[];
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 /** Confirmed LibraryEntry response fields consumed by this feature. */
@@ -46,10 +46,10 @@ export interface LibraryEntryResponseDto {
   rating: number | null;
   isFavorite: boolean;
   notes: string | null;
-  startedAt: string | null;
-  completedAt: string | null;
+  startedAt?: string | null;
+  completedAt?: string | null;
   addedAt: string;
-  updatedAt: string;
+  updatedAt?: string;
   mediaItem: LibraryMediaItemResponseDto;
 }
 
@@ -67,8 +67,8 @@ export interface LibraryApiErrorDto {
 
 export type LibraryEntryDto = LibraryEntryMockDto | LibraryEntryResponseDto;
 
-/** Request DTOs confirmed by the backend contract. */
-export interface CreateLibraryEntryDto extends AddLibraryEntryParams {}
-export interface UpdateLibraryEntryDto extends LibraryEntryChanges {}
+/** DTOs de entrada compartidos por las operaciones REST y GraphQL. */
+export type CreateLibraryEntryDto = AddLibraryEntryParams;
+export type UpdateLibraryEntryDto = LibraryEntryChanges;
 export type LibraryQueryDto = LibraryQuery;
 export type LibraryMediaOptionDto = LibraryMediaReference;

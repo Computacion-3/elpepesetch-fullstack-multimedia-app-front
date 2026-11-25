@@ -5,7 +5,10 @@ interface GraphQLResponse<T> {
     data?: T;
     errors?: {
         message: string;
-        extensions?: { originalError?: { statusCode?: number; message?: string | string[] } };
+        extensions?: {
+            status?: number;
+            originalError?: { statusCode?: number; message?: string | string[] };
+        };
     }[];
 }
 
@@ -24,7 +27,7 @@ export function createGraphQLClient(http: HttpClient): GraphQLClient {
                 const error = response.errors[0];
                 const original = error.extensions?.originalError;
                 throw new HttpError(
-                    original?.statusCode ?? 500,
+                    original?.statusCode ?? error.extensions?.status ?? 500,
                     [original?.message ?? error.message].flat().join('. '),
                     response,
                 );

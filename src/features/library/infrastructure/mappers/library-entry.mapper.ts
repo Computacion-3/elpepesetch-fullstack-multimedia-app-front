@@ -41,7 +41,7 @@ export class LibraryEntryMapper {
         coverUrl: mediaItem.coverUrl,
         genreIds: mediaItem.genres?.map((genre) => genre.id) ?? [],
         ...(progressMaximum !== null ? { progressMaximum } : {}),
-        averageRating: mediaItem.averageRating,
+        averageRating: Number(mediaItem.averageRating ?? 0),
       },
     });
   }

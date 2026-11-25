@@ -6,10 +6,10 @@ import type {
   UpdateLibraryEntryDto,
 } from '../dtos/library.dto';
 import type { LibraryDatasource } from './library.datasource';
+import type { HttpClient } from '@/src/shared/infrastructure/http-client';
 
 /**
- * Narrow port to be implemented by the app's authenticated shared HTTP client.
- * It should reject API failures with `statusCode` and `message` from Nest's body.
+ * Adapta el cliente HTTP compartido al contrato pequeño usado por Biblioteca.
  */
 export interface LibraryApiClient {
   request<T>(
@@ -20,6 +20,29 @@ export interface LibraryApiClient {
       body?: unknown;
     },
   ): Promise<T>;
+}
+
+/** Reenvía las peticiones REST con el token de la sesión actual. */
+export class SharedLibraryApiClient implements LibraryApiClient {
+  constructor(private readonly client: HttpClient, private readonly token: string) {}
+
+  async request<T>(
+    path: string,
+    options: {
+      method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
+      query?: URLSearchParams;
+      body?: unknown;
+    } = {},
+  ): Promise<T> {
+    const query = options.query?.toString();
+    const url = query ? `${path}?${query}` : path;
+    const method = options.method ?? 'GET';
+
+    if (method === 'GET') return this.client.get<T>(url, this.token);
+    if (method === 'POST') return this.client.post<T>(url, options.body, this.token);
+    if (method === 'PATCH') return this.client.patch<T>(url, options.body, this.token);
+    return this.client.delete<T>(url, this.token);
+  }
 }
 
 export class LibraryHttpDatasource implements LibraryDatasource {

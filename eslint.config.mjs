@@ -11,8 +11,28 @@ const eslintConfig = defineConfig([
     ".next/**",
     "out/**",
     "build/**",
+    "temp/**",
     "next-env.d.ts",
   ]),
+  {
+    files: ["src/features/library/domain/**/*.{ts,tsx}", "src/features/library/presentation/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": ["error", {
+        patterns: [{
+          group: [
+            "**/datasources/**",
+            "**/graphql-client*",
+            "graphql-request",
+          ],
+          message: "Usa ILibraryRepository; el transporte pertenece a infraestructura.",
+        }],
+      }],
+      "no-restricted-globals": ["error", {
+        name: "fetch",
+        message: "La capa de presentación y el dominio deben usar ILibraryRepository.",
+      }],
+    },
+  },
 ]);
 
 export default eslintConfig;

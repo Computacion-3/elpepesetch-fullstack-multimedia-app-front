@@ -3,7 +3,7 @@ import { ValidationError } from '../../../../shared/domain/errors';
 export type LibraryStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'DROPPED';
 export type MediaType = 'GAME' | 'MOVIE' | 'BOOK';
 
-/** Descriptive fields are supplied by the temporary catalog fixture until Media is integrated. */
+/** Datos del elemento multimedia que se muestran junto a una entrada personal. */
 export interface LibraryMediaReference {
   readonly id: string;
   readonly title: string;

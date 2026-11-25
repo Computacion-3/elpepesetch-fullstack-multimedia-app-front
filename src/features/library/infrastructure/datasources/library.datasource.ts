@@ -29,3 +29,27 @@ export interface LibraryDatasource {
 export interface LibraryCatalogDatasource {
   fetchSelectableItems(): Promise<LibraryMediaOptionDto[]>;
 }
+
+/** Puerto mínimo para adaptar el catálogo autenticado a opciones de biblioteca. */
+export interface LibraryMediaCatalogPort {
+  fetchAll(token: string, query: {
+    page: number;
+    limit: number;
+    sortBy: 'title';
+    order: 'ASC';
+  }): Promise<{
+    data: {
+      id: string;
+      title: string;
+      type: LibraryMediaOptionDto['type'];
+      creator: string;
+      releaseYear: number;
+      coverUrl?: string | null;
+      averageRating?: number | string;
+      genres?: { id: string }[];
+      pages?: number | null;
+      durationMinutes?: number | null;
+    }[];
+    meta: { totalPages: number };
+  }>;
+}
