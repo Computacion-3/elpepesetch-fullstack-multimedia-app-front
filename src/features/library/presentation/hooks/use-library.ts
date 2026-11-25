@@ -13,19 +13,19 @@ import {
   clearSelectedLibraryEntry,
   fetchLibrary,
   fetchLibraryEntry,
-  fetchLibraryMediaOptions,
+  fetchLibraryMediaItemIds,
   removeLibraryEntry,
   updateLibraryEntry,
 } from '../store/library.slice';
 import {
   selectLibraryDetailStatus,
   selectLibraryEntry,
+  selectLibraryExistingMediaItemIds,
+  selectLibraryExistingIdsStatus,
   selectLibraryError,
   selectLibraryItems,
-  selectLibraryMediaOptions,
   selectLibraryMeta,
   selectLibraryMutationStatus,
-  selectLibraryOptionsStatus,
   selectLibraryQuery,
   selectLibraryStatus,
 } from '../store/library.selectors';
@@ -34,22 +34,18 @@ export function useLibrary() {
   const dispatch = useAppDispatch();
   const items = useAppSelector(selectLibraryItems);
   const selectedEntry = useAppSelector(selectLibraryEntry);
-  const mediaOptions = useAppSelector(selectLibraryMediaOptions);
+  const existingMediaItemIds = useAppSelector(selectLibraryExistingMediaItemIds);
+  const existingIdsStatus = useAppSelector(selectLibraryExistingIdsStatus);
   const meta = useAppSelector(selectLibraryMeta);
   const query = useAppSelector(selectLibraryQuery);
   const status = useAppSelector(selectLibraryStatus);
   const detailStatus = useAppSelector(selectLibraryDetailStatus);
-  const optionsStatus = useAppSelector(selectLibraryOptionsStatus);
   const mutationStatus = useAppSelector(selectLibraryMutationStatus);
   const errorMessage = useAppSelector(selectLibraryError);
 
   useEffect(() => {
     if (status === 'idle') dispatch(fetchLibrary(query));
   }, [dispatch, query, status]);
-
-  useEffect(() => {
-    if (optionsStatus === 'idle') dispatch(fetchLibraryMediaOptions());
-  }, [dispatch, optionsStatus]);
 
   const reload = useCallback(
     (nextQuery: LibraryQuery = query) => {
@@ -68,6 +64,11 @@ export function useLibrary() {
 
   const closeEntry = useCallback(() => {
     dispatch(clearSelectedLibraryEntry());
+  }, [dispatch]);
+
+  const loadExistingMediaItemIds = useCallback(async () => {
+    const result = await dispatch(fetchLibraryMediaItemIds());
+    return fetchLibraryMediaItemIds.fulfilled.match(result);
   }, [dispatch]);
 
   const addEntry = useCallback(
@@ -119,18 +120,19 @@ export function useLibrary() {
   return {
     items,
     selectedEntry,
-    mediaOptions,
+    existingMediaItemIds,
+    existingIdsStatus,
     meta,
     query,
     status,
     detailStatus,
-    optionsStatus,
     isMutating: mutationStatus === 'loading',
     mutationStatus,
     errorMessage,
     reload,
     openEntry,
     closeEntry,
+    loadExistingMediaItemIds,
     addEntry,
     updateEntry,
     deleteEntry,

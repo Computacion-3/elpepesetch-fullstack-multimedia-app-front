@@ -1,18 +1,15 @@
-import type {
-  LibraryEntryMockDto,
-  LibraryMediaOptionDto,
-} from '../dtos/library.dto';
-import type {
-  LibraryDatasource,
-  LibraryCatalogDatasource,
-} from './library.datasource';
+import type { LibraryEntryProps } from '../../../domain/entities/library-entry';
+import type { LibraryDatasource } from '../library.datasource';
+import { ConflictError, NotFoundError } from '../../../../../shared/domain/errors';
 import type {
   CreateLibraryEntryDto,
+  LibraryRestEntryDto,
   LibraryQueryDto,
   UpdateLibraryEntryDto,
-} from '../dtos/library.dto';
+} from '../../dtos/library.dto';
 
-const mediaOptions: LibraryMediaOptionDto[] = [
+type LibraryEntryMockDto = LibraryEntryProps;
+const mediaOptions: LibraryEntryProps['media'][] = [
   {
     id: 'media-game-01',
     title: 'Hollow Knight',
@@ -89,7 +86,8 @@ const initialEntries: LibraryEntryMockDto[] = [
     rating: null,
     isFavorite: true,
     notes: 'Explorar el mapa del lago.',
-    addedAt: '2026-10-20T12:00:00.000Z',
+    startedAt: '2026-10-21T12:00:00.000Z', completedAt: null,
+    addedAt: '2026-10-20T12:00:00.000Z', updatedAt: '2026-10-21T12:00:00.000Z',
   },
   {
     id: 'entry-02',
@@ -100,7 +98,8 @@ const initialEntries: LibraryEntryMockDto[] = [
     rating: 9,
     isFavorite: false,
     notes: null,
-    addedAt: '2026-10-18T12:00:00.000Z',
+    startedAt: '2026-10-18T12:00:00.000Z', completedAt: '2026-10-18T13:56:00.000Z',
+    addedAt: '2026-10-18T12:00:00.000Z', updatedAt: '2026-10-18T13:56:00.000Z',
   },
   {
     id: 'entry-03',
@@ -111,7 +110,8 @@ const initialEntries: LibraryEntryMockDto[] = [
     rating: null,
     isFavorite: false,
     notes: null,
-    addedAt: '2026-10-15T12:00:00.000Z',
+    startedAt: null, completedAt: null,
+    addedAt: '2026-10-15T12:00:00.000Z', updatedAt: '2026-10-15T12:00:00.000Z',
   },
   {
     id: 'entry-04',
@@ -122,7 +122,8 @@ const initialEntries: LibraryEntryMockDto[] = [
     rating: null,
     isFavorite: false,
     notes: 'Retomar cuando tenga más tiempo.',
-    addedAt: '2026-10-10T12:00:00.000Z',
+    startedAt: '2026-10-11T12:00:00.000Z', completedAt: null,
+    addedAt: '2026-10-10T12:00:00.000Z', updatedAt: '2026-10-11T12:00:00.000Z',
   },
   {
     id: 'entry-05',
@@ -133,13 +134,14 @@ const initialEntries: LibraryEntryMockDto[] = [
     rating: 8,
     isFavorite: true,
     notes: null,
-    addedAt: '2026-10-05T12:00:00.000Z',
+    startedAt: '2026-10-06T12:00:00.000Z', completedAt: null,
+    addedAt: '2026-10-05T12:00:00.000Z', updatedAt: '2026-10-06T12:00:00.000Z',
   },
 ];
 
-/** In-memory demo data only; replace in the container after shared HTTP/auth integration exists. */
+/** In-memory datasource used only by repository tests. */
 export class LibraryMockDatasource
-  implements LibraryDatasource, LibraryCatalogDatasource
+  implements LibraryDatasource
 {
   private entries = initialEntries.map((entry) => ({
     ...entry,
@@ -193,33 +195,37 @@ export class LibraryMockDatasource
     const limit = Math.min(50, Math.max(1, query.limit ?? 10));
     const start = (page - 1) * limit;
     return {
-      data: entries.slice(start, start + limit),
+      data: entries.slice(start, start + limit).map(toResponseDto),
       meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
     };
   }
 
   async fetchEntry(id: string) {
-    return this.entries.find((entry) => entry.id === id) ?? null;
+    const entry = this.entries.find((item) => item.id === id);
+    return entry ? toResponseDto(entry) : null;
   }
 
   async createEntry(dto: CreateLibraryEntryDto) {
     if (this.entries.some((entry) => entry.mediaItemId === dto.mediaItemId))
-      return { kind: 'duplicate' as const };
+      throw new ConflictError('Este elemento ya está en tu biblioteca.');
     const media = mediaOptions.find((option) => option.id === dto.mediaItemId);
-    if (!media) return { kind: 'unavailable' as const };
+    if (!media) throw new NotFoundError('No se encontró un elemento multimedia disponible.');
     const entry: LibraryEntryMockDto = {
       id: `entry-${String(this.nextId++).padStart(2, '0')}`,
       mediaItemId: dto.mediaItemId,
       media,
-      status: dto.status ?? 'PENDING',
-      progress: dto.progress ?? 0,
-      rating: dto.rating ?? null,
-      isFavorite: dto.isFavorite ?? false,
-      notes: dto.notes ?? null,
+      status: 'PENDING',
+      progress: 0,
+      rating: null,
+      isFavorite: false,
+      notes: null,
+      startedAt: null,
+      completedAt: null,
       addedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
     this.entries = [...this.entries, entry];
-    return { kind: 'created' as const, entry };
+    return { kind: 'created' as const, entry: toResponseDto(entry) };
   }
 
   async updateEntry(id: string, dto: UpdateLibraryEntryDto) {
@@ -229,7 +235,7 @@ export class LibraryMockDatasource
     this.entries = this.entries.map((entry) =>
       entry.id === id ? updated : entry,
     );
-    return updated;
+    return toResponseDto(updated);
   }
 
   async deleteEntry(id: string) {
@@ -238,11 +244,40 @@ export class LibraryMockDatasource
     this.entries = next;
     return true;
   }
+}
 
-  async fetchSelectableItems() {
-    return mediaOptions.filter(
-      (option) =>
-        !this.entries.some((entry) => entry.mediaItemId === option.id),
-    );
-  }
+function toResponseDto(entry: LibraryEntryProps): LibraryRestEntryDto {
+  const media = entry.media;
+  return {
+    id: entry.id,
+    status: entry.status,
+    progress: entry.progress,
+    rating: entry.rating,
+    isFavorite: entry.isFavorite,
+    notes: entry.notes,
+    startedAt: entry.startedAt,
+    completedAt: entry.completedAt,
+    addedAt: entry.addedAt,
+    updatedAt: entry.updatedAt,
+    mediaItem: {
+      id: media.id,
+      title: media.title,
+      type: media.type,
+      description: media.description ?? null,
+      releaseYear: media.releaseYear,
+      creator: media.creator,
+      coverUrl: media.coverUrl ?? null,
+      platform: media.platform ?? null,
+      durationMinutes: media.durationMinutes ?? null,
+      pages: media.pages ?? null,
+      isbn: media.isbn ?? null,
+      approvalStatus: 'APPROVED',
+      rejectionReason: null,
+      averageRating: media.averageRating ?? 0,
+      ratingsCount: media.ratingsCount ?? 0,
+      genres: (media.genres ?? []).map(({ id, name }) => ({ id, name, description: null })),
+      createdAt: entry.addedAt,
+      updatedAt: entry.updatedAt,
+    },
+  };
 }

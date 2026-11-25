@@ -43,6 +43,16 @@ export type ApiGlobalStats = {
 };
 type Paginated<T> = { data: T[]; meta: { total: number; page: number; limit: number; totalPages: number } };
 
+export type ApiLibraryEntry = {
+    id: string;
+    status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'DROPPED';
+    progress: number;
+    rating: number | null;
+    isFavorite: boolean;
+    notes: string | null;
+    mediaItem: { id: string; title: string };
+};
+
 export function apiBaseUrl(): string {
     return process.env.E2E_API_URL ?? 'http://localhost:3002';
 }
@@ -300,4 +310,9 @@ export function createReportAs(
 /** Consulta GET /stats/me autenticado como la cuenta indicada para contrastar los KPIs en UI. */
 export function getPersonalStatsAs(account: Account): Promise<ApiPersonalStats> {
     return callAsAccount(account, 'GET', '/stats/me');
+}
+
+/** Consulta la biblioteca de una cuenta para verificar lo persistido después del flujo UI. */
+export function getLibraryAs(account: Account): Promise<Paginated<ApiLibraryEntry>> {
+    return callAsAccount(account, 'GET', '/library?page=1&limit=50');
 }

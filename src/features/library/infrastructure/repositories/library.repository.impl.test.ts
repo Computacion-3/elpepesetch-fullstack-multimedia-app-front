@@ -5,10 +5,10 @@ import {
   NotFoundError,
   ConflictError,
 } from '../../../../shared/domain/errors';
-import { LibraryMockDatasource } from '../datasources/library-mock.datasource';
+import { LibraryMockDatasource } from '../datasources/__fixtures__/library-mock.datasource';
 import { LibraryRepositoryImpl } from './library.repository.impl';
 
-describe('LibraryRepositoryImpl with the temporary datasource', () => {
+describe('LibraryRepositoryImpl with an in-memory test fixture', () => {
   it('does not persist an invalid update', async () => {
     const datasource = new LibraryMockDatasource();
     const repository = new LibraryRepositoryImpl(datasource);
@@ -37,7 +37,7 @@ describe('LibraryRepositoryImpl with the temporary datasource', () => {
     assert.equal(after.meta.total, before.meta.total);
   });
 
-  it('adds an available media item and removes it from the selector options', async () => {
+  it('adds an available media item to the personal collection', async () => {
     const datasource = new LibraryMockDatasource();
     const repository = new LibraryRepositoryImpl(datasource);
     const added = await repository.add({ mediaItemId: 'media-movie-02' });
@@ -46,12 +46,6 @@ describe('LibraryRepositoryImpl with the temporary datasource', () => {
     assert.equal(
       (await repository.getAll({ page: 1, limit: 50 })).meta.total,
       6,
-    );
-    assert.equal(
-      (await datasource.fetchSelectableItems()).some(
-        (item) => item.id === 'media-movie-02',
-      ),
-      false,
     );
   });
 
