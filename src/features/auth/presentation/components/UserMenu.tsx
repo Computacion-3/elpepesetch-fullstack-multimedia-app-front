@@ -4,6 +4,8 @@ import { useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/src/shared/ui/Button';
 import { useAuth } from '../hooks/use-auth';
+import { NotificationBell } from '@/src/features/notifications/presentation/components/NotificationBell';
+import { RealtimeStatus } from '@/src/features/realtime/presentation/components/RealtimeStatus';
 
 const subscribeNoop = () => () => {};
 
@@ -26,9 +28,11 @@ export function UserMenu() {
 
     return (
         <div className="flex items-center gap-3">
+            <NotificationBell />
             <div className="flex flex-col text-right text-sm">
                 <span className="font-medium">{user.displayName}</span>
                 <span className="text-gray-500">{user.role}</span>
+                <RealtimeStatus />
             </div>
             <Button variant="secondary" onClick={handleLogout}>
                 Cerrar sesión

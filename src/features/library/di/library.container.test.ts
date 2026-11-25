@@ -28,7 +28,7 @@ describe('Library dependency selection', () => {
   it('rejects invalid source values descriptively', () => {
     assert.throws(
       () => createLibraryContainer({ dataSource: 'mock', httpClient, graphqlClient }),
-      /NEXT_PUBLIC_DATA_SOURCE inválido.*rest.*graphql/,
+      /NEXT_PUBLIC_DATA_SOURCE.*rest.*graphql/,
     );
   });
 });

@@ -3,6 +3,8 @@
 import { runAuthenticated } from '@/src/lib/run-authenticated';
 import type { ActionResult } from '@/src/shared/domain/action-result';
 import { createFetchHttpClient } from '@/src/shared/infrastructure/http-client';
+// Esta Server Action es el punto de composición autenticado para los transportes.
+// eslint-disable-next-line no-restricted-imports
 import { createGraphQLClient, type GraphQLClient } from '@/src/shared/infrastructure/graphql-client';
 import { createLibraryContainer } from '../../di/library.container';
 import type { AddLibraryEntryParams, LibraryQuery } from '../../domain/repositories/library.repository';

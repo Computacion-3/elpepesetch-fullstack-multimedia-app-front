@@ -15,6 +15,7 @@ import {
     selectAuthStatus,
     selectAuthUser,
     selectIsAuthenticated,
+    selectSessionEndedReason,
 } from '../store/auth.selectors';
 import type { AuthUserViewModel } from '../viewmodels/auth.viewmodel';
 
@@ -25,6 +26,7 @@ export function useAuth() {
     const isAuthenticated = useAppSelector(selectIsAuthenticated);
     const status = useAppSelector(selectAuthStatus);
     const errorMessage = useAppSelector(selectAuthError);
+    const sessionEndedReason = useAppSelector(selectSessionEndedReason);
 
     const login = useCallback(
         async (credentials: LoginCredentials): Promise<boolean> =>
@@ -63,6 +65,7 @@ export function useAuth() {
         isAuthenticated,
         isLoading: status === 'loading',
         errorMessage,
+        sessionEndedReason,
         login,
         register,
         logout,

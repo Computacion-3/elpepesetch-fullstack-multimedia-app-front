@@ -138,6 +138,24 @@ export const mediaSlice = createSlice({
     name: 'media',
     initialState,
     reducers: {
+        /** Actualiza el promedio que envía el backend para un elemento abierto o listado. */
+        applyMediaRating: (state, action: PayloadAction<{ mediaItemId: string; averageRating: number; ratingsCount: number }>) => {
+            const update = (item: MediaItemViewModel) => item.id === action.payload.mediaItemId
+                ? { ...item, averageRating: action.payload.averageRating, ratingsCount: action.payload.ratingsCount }
+                : item;
+            state.items = state.items.map(update);
+            state.pendingItems = state.pendingItems.map(update);
+            if (state.selectedItem) state.selectedItem = update(state.selectedItem);
+        },
+        /** Refleja el resultado de moderación sin volver a cargar la página. */
+        applyMediaModeration: (state, action: PayloadAction<{ mediaItemId: string; approvalStatus: 'APPROVED' | 'REJECTED'; rejectionReason?: string }>) => {
+            const update = (item: MediaItemViewModel) => item.id === action.payload.mediaItemId
+                ? { ...item, approvalStatus: action.payload.approvalStatus, rejectionReason: action.payload.rejectionReason ?? null }
+                : item;
+            state.items = state.items.map(update);
+            state.pendingItems = state.pendingItems.filter((item) => item.id !== action.payload.mediaItemId).map(update);
+            if (state.selectedItem) state.selectedItem = update(state.selectedItem);
+        },
         /** Al cambiar un filtro se vuelve a la primera página para evitar páginas vacías. */
         setMediaQuery: (state, action: PayloadAction<Partial<MediaQuery>>) => {
             state.query = { ...state.query, ...action.payload, page: action.payload.page ?? 1 };
@@ -223,4 +241,4 @@ export const mediaSlice = createSlice({
     },
 });
 
-export const { setMediaQuery, clearSelectedMedia, clearMediaError } = mediaSlice.actions;
+export const { setMediaQuery, clearSelectedMedia, clearMediaError, applyMediaRating, applyMediaModeration } = mediaSlice.actions;

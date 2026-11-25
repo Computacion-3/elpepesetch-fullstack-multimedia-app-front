@@ -5,6 +5,10 @@ import { useEffect } from 'react';
 import { useMedia } from '../hooks/use-media';
 import { Alert } from '@/src/shared/ui/Alert';
 import { Button } from '@/src/shared/ui/Button';
+import { useAuth } from '@/src/features/auth/presentation/hooks/use-auth';
+import { PERMISSIONS } from '@/src/shared/permissions';
+import { MediaReviewsPanel } from './MediaReviewsPanel';
+import { useRealtime } from '@/src/features/realtime/presentation/hooks/use-realtime';
 
 const TYPE_LABELS = { GAME: 'Videojuego', MOVIE: 'Película', BOOK: 'Libro' };
 
@@ -15,24 +19,29 @@ type MediaDetailScreenProps = {
 
 /** Carga un detalle y muestra solo opciones de edición que también autoriza el servidor. */
 export function MediaDetailScreen({ id, canEditProposal }: MediaDetailScreenProps) {
-    const media = useMedia();
+    const { selectedItem, detailStatus, errorMessage, getById, clearDetail } = useMedia();
+    const auth = useAuth();
+    const { subscribeToMedia, unsubscribeFromMedia } = useRealtime();
 
     useEffect(() => {
-        void media.getById(id);
+        void getById(id);
+        subscribeToMedia(id);
         // Limpia el detalle al salir para no conservar el elemento al navegar.
         return () => {
-            media.clearDetail();
+            unsubscribeFromMedia(id);
+            clearDetail();
         };
-    }, [id, media.getById, media.clearDetail]);
+    }, [id, getById, clearDetail, subscribeToMedia, unsubscribeFromMedia]);
 
-    const item = media.selectedItem?.id === id ? media.selectedItem : null;
+    const item = selectedItem?.id === id ? selectedItem : null;
 
     return (
         <section className="space-y-6">
             <Link href="/catalog" className="text-sm font-medium text-brand hover:underline">← Volver al catálogo</Link>
-            {media.detailStatus === 'loading' && <p role="status">Cargando detalle…</p>}
-            {media.errorMessage && <Alert variant="error">{media.errorMessage}</Alert>}
+            {detailStatus === 'loading' && <p role="status">Cargando detalle…</p>}
+            {errorMessage && <Alert variant="error">{errorMessage}</Alert>}
             {item && (
+                <>
                 <article className="grid gap-6 md:grid-cols-[minmax(0,1fr)_2fr]">
                     <div
                         role="img"
@@ -62,10 +71,12 @@ export function MediaDetailScreen({ id, canEditProposal }: MediaDetailScreenProp
                         )}
                         <div>
                             {/* Vuelve a consultar el elemento abierto para mostrar su estado más reciente. */}
-                            <Button variant="secondary" onClick={() => void media.getById(id)}>Actualizar detalle</Button>
+                            <Button variant="secondary" onClick={() => void getById(id)}>Actualizar detalle</Button>
                         </div>
                     </div>
                 </article>
+                <MediaReviewsPanel mediaItemId={id} canCreate={auth.hasPermission(PERMISSIONS.REVIEWS_CREATE)} />
+                </>
             )}
         </section>
     );

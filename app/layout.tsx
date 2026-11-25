@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { Suspense } from 'react';
+import type { ReactNode } from 'react';
 import { StoreProvider } from '@/src/store/StoreProvider';
 import { SessionHydrator } from '@/src/features/auth/presentation/components/SessionHydrator';
+import { RealtimeSessionManager } from '@/src/features/realtime/presentation/components/RealtimeSessionManager';
 import './globals.css';
 
 const geistSans = Geist({
@@ -20,7 +22,7 @@ export const metadata: Metadata = {
     description: 'Plataforma multimedia',
 };
 
-export default function RootLayout({ children }: LayoutProps<'/'>) {
+export default function RootLayout({ children }: { children: ReactNode }) {
     return (
         <html lang="es" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
             <body className="min-h-full flex flex-col">
@@ -29,6 +31,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
                     <Suspense fallback={null}>
                         <SessionHydrator />
                     </Suspense>
+                    <RealtimeSessionManager />
                 </StoreProvider>
             </body>
         </html>

@@ -8,6 +8,8 @@ import { Alert } from '@/src/shared/ui/Alert';
 import { Pagination } from '@/src/shared/ui/Pagination';
 import { MediaFilters } from './MediaFilters';
 import { MediaApprovalCard } from './MediaApprovalCard';
+import { useAppSelector } from '@/src/store/hooks';
+import { selectModerationQueueCounts } from '@/src/features/realtime/presentation/store/realtime.selectors';
 
 const INITIAL_QUERY: MediaQuery = { page: 1, limit: 12, sortBy: 'title', order: 'ASC' };
 
@@ -16,6 +18,7 @@ export function MediaApprovalScreen() {
     const media = useMedia();
     const [query, setQuery] = useState(INITIAL_QUERY);
     const loadPending = media.loadPending;
+    const queueCounts = useAppSelector(selectModerationQueueCounts);
 
     useEffect(() => {
         loadPending(query);
@@ -35,6 +38,11 @@ export function MediaApprovalScreen() {
                 <h1 className="text-3xl font-bold">Propuestas pendientes</h1>
                 <p className="mt-2 text-gray-600">Revisa cada propuesta y apruébala o indica el motivo del rechazo.</p>
             </header>
+            {queueCounts && (
+                <p className="rounded-md border border-gray-300 px-4 py-3 text-sm text-gray-600" role="status">
+                    Cola en vivo: {queueCounts.pendingMedia} propuestas y {queueCounts.openReports} reportes abiertos.
+                </p>
+            )}
             <MediaFilters query={query} onChange={setFilters}>
                 <GenreFilter value={query.genreId ?? ''} onChange={(genreId) => setFilters({ genreId: genreId || undefined })} />
             </MediaFilters>

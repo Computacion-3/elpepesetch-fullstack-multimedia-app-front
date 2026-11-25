@@ -145,6 +145,13 @@ export const reviewsSlice = createSlice({
     name: 'reviews',
     initialState,
     reducers: {
+        /** Refleja el ocultamiento recibido por WebSocket en el elemento actualmente abierto. */
+        hideReviewFromSocket: (state, action: PayloadAction<{ reviewId: string; mediaItemId: string; hiddenReason: string }>) => {
+            if (state.selectedMediaId !== action.payload.mediaItemId) return;
+            state.items = state.items.map((review) => review.id === action.payload.reviewId
+                ? { ...review, isHidden: true, hiddenReason: action.payload.hiddenReason }
+                : review);
+        },
         setSelectedMediaId: (state, action: PayloadAction<string>) => {
             state.selectedMediaId = action.payload;
             state.page = 1;
@@ -241,4 +248,4 @@ export const reviewsSlice = createSlice({
     },
 });
 
-export const { setSelectedMediaId, setReviewsPage, clearReviewsFeedback } = reviewsSlice.actions;
+export const { hideReviewFromSocket, setSelectedMediaId, setReviewsPage, clearReviewsFeedback } = reviewsSlice.actions;
