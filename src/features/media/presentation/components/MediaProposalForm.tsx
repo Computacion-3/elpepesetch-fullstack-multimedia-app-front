@@ -42,7 +42,10 @@ export function MediaProposalForm({ mediaId }: MediaProposalFormProps) {
     useEffect(() => {
         if (mediaId) void media.getById(mediaId);
         else media.clearDetail();
-        return media.clearDetail;
+        // Limpia el detalle al salir para no reutilizarlo al navegar desde el formulario.
+        return () => {
+            media.clearDetail();
+        };
     }, [mediaId, media.getById, media.clearDetail]);
 
     useEffect(() => {

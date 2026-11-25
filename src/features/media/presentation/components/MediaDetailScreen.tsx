@@ -19,7 +19,10 @@ export function MediaDetailScreen({ id, canEditProposal }: MediaDetailScreenProp
 
     useEffect(() => {
         void media.getById(id);
-        return media.clearDetail;
+        // Limpia el detalle al salir para no conservar el elemento al navegar.
+        return () => {
+            media.clearDetail();
+        };
     }, [id, media.getById, media.clearDetail]);
 
     const item = media.selectedItem?.id === id ? media.selectedItem : null;
