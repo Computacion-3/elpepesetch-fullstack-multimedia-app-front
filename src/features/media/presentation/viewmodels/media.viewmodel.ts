@@ -1,5 +1,4 @@
 import type { MediaItem, MediaQuery } from '../../domain/entities/media-item';
-import type { Page } from '@/src/shared/domain/page';
 
 /** Vista serializable que puede cruzar Server Actions y guardarse en Redux. */
 export interface MediaItemViewModel {
@@ -25,7 +24,13 @@ export interface MediaItemViewModel {
 }
 
 /** Metadatos de paginación con elementos ya adaptados para la UI. */
-export type MediaPageViewModel = Page<MediaItemViewModel>;
+export interface MediaPageViewModel {
+    items: MediaItemViewModel[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+}
 
 /** Consulta serializable que usa el estado de filtros del catálogo. */
 export type MediaQueryViewModel = MediaQuery;
@@ -36,7 +41,7 @@ export class MediaViewModelMapper {
         return { ...item.props, genres: item.props.genres.map((genre) => ({ ...genre })) };
     }
 
-    static toPage(page: Page<MediaItem>): MediaPageViewModel {
+    static toPage(page: { items: MediaItem[]; total: number; page: number; limit: number; totalPages: number }): MediaPageViewModel {
         return { ...page, items: page.items.map(MediaViewModelMapper.toViewModel) };
     }
 }

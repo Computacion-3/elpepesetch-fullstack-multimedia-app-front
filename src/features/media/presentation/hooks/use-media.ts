@@ -55,9 +55,9 @@ export function useMedia() {
         dispatch(fetchMedia(nextQuery));
     }, [dispatch, query]);
 
-    const loadPending = useCallback((nextQuery: MediaQuery = query) => {
+    const loadPending = useCallback((nextQuery: MediaQuery) => {
         dispatch(fetchPendingMedia(nextQuery));
-    }, [dispatch, query]);
+    }, [dispatch]);
 
     const getById = useCallback(async (id: string): Promise<boolean> => {
         return fetchMediaItem.fulfilled.match(await dispatch(fetchMediaItem(id)));
@@ -81,10 +81,14 @@ export function useMedia() {
         return succeeded;
     }, [dispatch, query]);
 
-    const decide = useCallback(async (id: string, decision: MediaApprovalDraft): Promise<boolean> => {
+    const decide = useCallback(async (
+        id: string,
+        decision: MediaApprovalDraft,
+        pendingQuery: MediaQuery = query,
+    ): Promise<boolean> => {
         const succeeded = setMediaApproval.fulfilled.match(await dispatch(setMediaApproval({ id, decision })));
         if (succeeded) {
-            await dispatch(fetchPendingMedia(query));
+            await dispatch(fetchPendingMedia(pendingQuery));
             await dispatch(fetchMedia(query));
         }
         return succeeded;
