@@ -74,6 +74,9 @@ type ReduxSnapshot = {
     users: { items: unknown[] };
     roles: { items: unknown[]; selected: unknown };
     permissions: { items: unknown[] };
+    reviews?: { items: unknown[]; selectedMediaId: string };
+    reports?: { items: unknown[] };
+    stats?: { personal: unknown; global: unknown };
 };
 
 /** true si el front se levantó con NEXT_PUBLIC_E2E=true (expone window.__APP_STORE__). */
