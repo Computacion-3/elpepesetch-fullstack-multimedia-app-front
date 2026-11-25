@@ -62,6 +62,24 @@ import { rolesSlice } from '@/src/features/users/presentation/store/roles.slice'
 import type { RolesDependencies } from '@/src/features/users/presentation/store/roles.slice';
 import { usersSlice } from '@/src/features/users/presentation/store/users.slice';
 import type { UsersDependencies } from '@/src/features/users/presentation/store/users.slice';
+import {
+    createMediaItemAction,
+    getMediaItemAction,
+    listMediaAction,
+    listPendingMediaAction,
+    setMediaItemApprovalAction,
+    updateMediaItemAction,
+} from '@/src/features/media/presentation/actions/media.actions';
+import { mediaSlice } from '@/src/features/media/presentation/store/media.slice';
+import type { MediaDependencies } from '@/src/features/media/presentation/store/media.slice';
+import {
+    createGenreAction,
+    deleteGenreAction,
+    listGenresAction,
+    updateGenreAction,
+} from '@/src/features/genres/presentation/actions/genres.actions';
+import { genresSlice } from '@/src/features/genres/presentation/store/genres.slice';
+import type { GenresDependencies } from '@/src/features/genres/presentation/store/genres.slice';
 
 /**
  * Store global de Redux Toolkit: combina los slices de todas las features e inyecta
@@ -78,6 +96,8 @@ const appReducer = combineSlices(
     reviewsSlice,
     reportsSlice,
     statsSlice,
+    mediaSlice,
+    genresSlice,
 );
 
 /** Reinicia TODOS los slices a su estado inicial cuando `logoutMutation` termina con éxito. */
@@ -133,6 +153,20 @@ function createThunkExtra() {
             getPersonal: getPersonalStatsAction,
             getGlobal: getGlobalStatsAction,
         } satisfies StatsDependencies,
+        media: {
+            list: listMediaAction,
+            listPending: listPendingMediaAction,
+            getById: getMediaItemAction,
+            create: createMediaItemAction,
+            update: updateMediaItemAction,
+            setApproval: setMediaItemApprovalAction,
+        } satisfies MediaDependencies,
+        genres: {
+            list: listGenresAction,
+            create: createGenreAction,
+            update: updateGenreAction,
+            remove: deleteGenreAction,
+        } satisfies GenresDependencies,
     };
 }
 
