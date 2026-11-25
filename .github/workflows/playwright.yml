@@ -1,27 +1,126 @@
-name: Playwright Tests
+name: Playwright E2E
+
+# Las E2E corren contra el backend real: este workflow levanta PostgreSQL, clona y arranca el
+# backend (repo Computacion-3/elpepesetch-fullstack-multimedia-app-back), carga el seed y después
+# ejecuta Playwright, una vez con la fuente de datos REST y otra con GraphQL.
 on:
   push:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
+  workflow_dispatch:
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
 jobs:
-  test:
-    timeout-minutes: 60
+  e2e:
+    name: E2E (${{ matrix.data-source }})
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        data-source: [ rest, graphql ]
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: elpepesetch_e2e
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      # Backend
+      PORT: 3002
+      DB_HOST: localhost
+      DB_SSL: 'false'
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: elpepesetch_e2e
+      SALT_QTY: 4
+      JWT_SECRET: e2e-only-secret
+      JWT_EXPIRES_IN: 3600s
+      # Frontend / Playwright
+      E2E_API_URL: http://localhost:3002
+      E2E_DATA_SOURCE: ${{ matrix.data-source }}
+
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: lts/*
-    - name: Install dependencies
-      run: npm ci
-    - name: Install Playwright Browsers
-      run: npx playwright install --with-deps
-    - name: Run Playwright tests
-      run: npx playwright test
-    - uses: actions/upload-artifact@v4
-      if: ${{ !cancelled() }}
-      with:
-        name: playwright-report
-        path: playwright-report/
-        retention-days: 30
+      - name: Clonar frontend
+        uses: actions/checkout@v4
+
+      - name: Clonar backend
+        uses: actions/checkout@v4
+        with:
+          repository: Computacion-3/elpepesetch-fullstack-multimedia-app-back
+          ref: master
+          path: backend
+          # Si el repo del backend es privado, crea el secret BACKEND_REPO_TOKEN (token con permiso de lectura)
+          token: ${{ secrets.BACKEND_REPO_TOKEN || github.token }}
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            backend/package-lock.json
+
+      - name: Compilar y arrancar el backend
+        working-directory: backend
+        run: |
+          npm ci
+          npm run build
+          nohup node dist/main.js > ../backend.log 2>&1 &
+          # TypeORM crea las tablas al arrancar (synchronize): esperar a que la API responda
+          for i in $(seq 1 60); do
+            if curl -sf -o /dev/null http://localhost:3002/api/docs; then echo "Backend listo"; exit 0; fi
+            sleep 2
+          done
+          echo "::error::El backend no arrancó en 2 minutos"; cat ../backend.log; exit 1
+
+      - name: Cargar el seed
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -d elpepesetch_e2e -v ON_ERROR_STOP=1 -q -f backend/db/seed.sql
+
+      - name: Instalar dependencias del frontend
+        run: npm ci
+
+      - name: Instalar Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Ejecutar Playwright (${{ matrix.data-source }})
+        run: npx playwright test
+
+      - name: Subir reporte de Playwright
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report-${{ matrix.data-source }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+
+      - name: Subir log del backend
+        uses: actions/upload-artifact@v4
+        if: ${{ failure() }}
+        with:
+          name: backend-log-${{ matrix.data-source }}
+          path: backend.log
+          retention-days: 7
