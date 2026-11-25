@@ -8,6 +8,7 @@ import {
     alertWithText,
     expect,
     loginViaUi,
+    statusWithText,
     test,
     waitForHydration,
 } from '../fixtures/test';
@@ -40,7 +41,9 @@ test.describe('Reseñas — consulta y reglas de autoría', () => {
 
         const ownTitle = page.getByRole('heading', { name: 'Una aventura inolvidable' });
         await expect(ownTitle).toBeVisible();
-        await expect(page.getByText('El mundo abierto y la exploración hacen que cada partida se sienta especial.')).toBeVisible();
+        await expect(
+            page.getByText(/El mundo abierto y la exploraci.+hacen que cada partida se sienta especial\./),
+        ).toBeVisible();
 
         await expect(page.getByRole('button', { name: 'Editar reseña de user' })).toBeVisible();
         await expect(page.getByRole('button', { name: 'Eliminar reseña de user' })).toBeVisible();
@@ -79,14 +82,14 @@ test.describe('Reseñas — flujo completo CRUD y validaciones de dominio', () =
             await page.getByRole('button', { name: 'Nueva reseña' }).click();
             await waitForHydration(page, 'dialog form');
             await page.getByLabel('Título (opcional)').fill(initialTitle);
-            await page.getByLabel('Reseña').fill('Corto');
+            await page.getByLabel('Reseña', { exact: true }).fill('Corto');
             await page.getByRole('button', { name: 'Publicar reseña' }).click();
             await expect(alertWithText(page, MESSAGES.reviewContentTooShort)).toBeVisible();
 
             // 2. Creación válida y verificación en backend
-            await page.getByLabel('Reseña').fill(initialContent);
+            await page.getByLabel('Reseña', { exact: true }).fill(initialContent);
             await page.getByRole('button', { name: 'Publicar reseña' }).click();
-            await expect(alertWithText(page, MESSAGES.reviewCreated)).toBeVisible();
+            await expect(statusWithText(page, MESSAGES.reviewCreated)).toBeVisible();
             await expect(page.getByRole('heading', { name: initialTitle })).toBeVisible();
 
             let backendReviews = await api.listReviewsByMedia(SEEDED_MEDIA.hades.id);
@@ -96,9 +99,9 @@ test.describe('Reseñas — flujo completo CRUD y validaciones de dominio', () =
             await page.getByRole('button', { name: `Editar reseña de ${userData.username}` }).click();
             await waitForHydration(page, 'dialog form');
             await page.getByLabel('Título (opcional)').fill(updatedTitle);
-            await page.getByLabel('Reseña').fill(updatedContent);
+            await page.getByLabel('Reseña', { exact: true }).fill(updatedContent);
             await page.getByRole('button', { name: 'Guardar cambios' }).click();
-            await expect(alertWithText(page, MESSAGES.reviewUpdated)).toBeVisible();
+            await expect(statusWithText(page, MESSAGES.reviewUpdated)).toBeVisible();
             await expect(page.getByRole('heading', { name: updatedTitle })).toBeVisible();
 
             backendReviews = await api.listReviewsByMedia(SEEDED_MEDIA.hades.id);
@@ -107,7 +110,7 @@ test.describe('Reseñas — flujo completo CRUD y validaciones de dominio', () =
             // 4. Eliminación con confirmación y verificación en backend
             await page.getByRole('button', { name: `Eliminar reseña de ${userData.username}` }).click();
             await page.getByRole('dialog').getByRole('button', { name: 'Eliminar' }).click();
-            await expect(alertWithText(page, MESSAGES.reviewDeleted)).toBeVisible();
+            await expect(statusWithText(page, MESSAGES.reviewDeleted)).toBeVisible();
             await expect(page.getByRole('heading', { name: updatedTitle })).toHaveCount(0);
 
             backendReviews = await api.listReviewsByMedia(SEEDED_MEDIA.hades.id);
@@ -137,7 +140,7 @@ test.describe('Reseñas — flujo completo CRUD y validaciones de dominio', () =
 
             await page.getByRole('button', { name: `Eliminar reseña de ${userData.username}` }).click();
             await page.getByRole('dialog').getByRole('button', { name: 'Eliminar' }).click();
-            await expect(alertWithText(page, MESSAGES.reviewDeleted)).toBeVisible();
+            await expect(statusWithText(page, MESSAGES.reviewDeleted)).toBeVisible();
             await expect(page.getByRole('heading', { name: `Reseña ajena ${tag}` })).toHaveCount(0);
         } finally {
             await api.deleteUser(createdUser.id).catch(() => undefined);

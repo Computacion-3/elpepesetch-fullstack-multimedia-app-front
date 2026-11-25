@@ -2,7 +2,7 @@
 
 Suite de extremo a extremo del frontend. Corre en un Chrome real contra el **backend NestJS real** con el seed (`db/seed.sql`), así que cubre el camino completo: interfaz → Redux → Server Actions → backend → base de datos.
 
-> El enunciado del taller pide Cypress; el equipo eligió **Playwright**. Es una desviación registrada en el plan de la Parte 1 y está pendiente de confirmar con el profesor.
+> El enunciado del taller pide Cypress; el equipo eligió **Playwright**. Es una desviación registrada en la documentación técnica del proyecto.
 
 ## Requisitos
 
@@ -27,7 +27,7 @@ La URL del backend se toma de `E2E_API_URL`, si no de `API_URL` en `.env.local`,
 | Comando | Qué hace |
 |---|---|
 | `npm run test:e2e` | Toda la suite con `NEXT_PUBLIC_DATA_SOURCE=rest` |
-| `npm run test:e2e:graphql` | La misma suite con `NEXT_PUBLIC_DATA_SOURCE=graphql` (módulo dual de auth) |
+| `npm run test:e2e:graphql` | La misma suite con `NEXT_PUBLIC_DATA_SOURCE=graphql` |
 | `npm run test:e2e:ui` | Modo interactivo de Playwright (ver cada paso, repetir una prueba) |
 | `npm run test:e2e:report` | Abre el reporte HTML de la última ejecución |
 | `npx playwright test e2e/auth` | Solo una carpeta (o un archivo, o `-g "AC4"` para filtrar por nombre) |
@@ -41,30 +41,33 @@ e2e/
   auth.setup.ts          proyecto "setup": inicia sesión por la UI como ADMIN, MODERATOR y USER y guarda e2e/.auth/<rol>.json
   global.teardown.ts     proyecto "cleanup": borra lo que quede con prefijo e2e_ / E2E_ / e2e:
   fixtures/
-    test.ts              `test` con el fixture `api` + helpers (loginViaUi, waitForHydration, alertWithText, reduxState…)
+    test.ts              `test` con el fixture `api` + helpers (loginViaUi, waitForHydration, alertWithText, statusWithText, reduxState…)
     api.ts               cliente REST del backend como admin: prepara datos y verifica en el backend lo que dice la UI
     test-data.ts         cuentas del seed, prefijos, generadores de datos únicos y mensajes esperados
-  auth/                  Persona 1 · autenticación y sesión JWT
-  users/                 Persona 1 · autorización, usuarios, roles y permisos
-  reviews/               Persona 4 · reseñas por elemento multimedia (CRUD y validaciones)
-  reports/               Persona 4 · reportes de reseñas y moderación (HIDE / DISMISS)
-  stats/                 Persona 4 · estadísticas personales y globales
+  auth/                  Autenticación y sesión JWT
+  users/                 Autorización, usuarios, roles y permisos
+  catalog/               Catálogo multimedia, filtros, detalle y propuestas pendientes
+  genres/                Gestión de géneros
+  library/               Biblioteca personal (agregar, filtrar, editar, eliminar)
+  reviews/               Reseñas por elemento multimedia (CRUD y validaciones)
+  reports/               Reportes de reseñas y moderación (HIDE / DISMISS)
+  stats/                 Estadísticas personales y globales
   run.mjs                ejecuta la suite con una fuente de datos (multiplataforma)
 ```
 
 Principios:
 
-- **Datos aislados:** cada prueba crea sus propios usuarios/roles/permisos por API con nombres únicos y los borra al terminar. Se puede correr muchas veces sobre la misma base, también en paralelo.
+- **Datos aislados:** cada prueba crea sus propios usuarios/roles/permisos/géneros por API con nombres únicos y los borra al terminar. Se puede correr muchas veces sobre la misma base, también en paralelo.
 - **Se verifica en dos lados:** lo que la interfaz muestra y lo que quedó en el backend (por ejemplo, tras cambiar un rol se consulta `GET /users`).
 - **Sesiones reutilizadas solo para leer:** ninguna prueba cierra sesión con las sesiones de `auth.setup.ts` (el logout revoca el token). Las de logout inician su propia sesión.
 - **Hidratación:** antes de escribir en un formulario se espera a que React lo hidrate (`waitForHydration`), si no React vacía los inputs controlados.
-- **Avisos:** se buscan por texto (`alertWithText`) porque Next monta su propio `role="alert"` (anunciador de rutas).
+- **Avisos:** los de error se buscan con `alertWithText` (`role="alert"`) y los de confirmación con `statusWithText` (`role="status"`), porque Next monta su propio `role="alert"` (anunciador de rutas).
 
 ## Store de Redux en las pruebas
 
 `playwright.config.ts` levanta el front con `NEXT_PUBLIC_E2E=true`. Solo con esa variable, `src/store/StoreProvider.tsx` expone el store en `window.__APP_STORE__` para comprobar que el logout lo deja vacío. En cualquier otro build no hace nada.
 
-## Cobertura · Persona 1
+## Cobertura · Autenticación y usuarios
 
 | Archivo | Criterios |
 |---|---|
@@ -78,7 +81,15 @@ Principios:
 | `users/roles-admin.spec.ts` | AC7 crear, 409, editar, asignar/reemplazar permisos, eliminar, 409 con usuarios asignados |
 | `users/permissions-admin.spec.ts` | AC8 crear, 409, editar, eliminar |
 
-## Cobertura · Persona 4
+## Cobertura · Catálogo, géneros y biblioteca
+
+| Archivo | Criterios |
+|---|---|
+| `catalog/catalog.spec.ts` | Protección de `/catalog`, `/catalog/proponer` y `/media/pending`; navegación `Catálogo` según permisos; listado, filtros por tipo y texto, detalle en `/catalog/[id]` y acceso a `/media/pending` |
+| `genres/genres.spec.ts` | Protección de `/genres`, acceso denegado para `USER`/`MODERATOR` y CRUD completo como `ADMIN` con verificación en backend |
+| `library/library.spec.ts` | Protección de `/library`, estado vacío, agregar desde catálogo, filtros, edición de estado/progreso/calificación/favorito/notas, eliminación y diseño móvil |
+
+## Cobertura · Reseñas, reportes y estadísticas
 
 | Archivo | Criterios |
 |---|---|
@@ -91,4 +102,3 @@ Para agregar las pruebas de otro módulo: crear `e2e/<modulo>/*.spec.ts`, import
 ## Limitaciones conocidas
 
 - "Acceso denegado" responde HTTP 200 (no 403) por el streaming de `cacheComponents`; por eso las pruebas comprueban el contenido y no el código HTTP.
-- El tiempo real (WebSockets) es de la Persona 3; sus pruebas van en `e2e/<su-modulo>/`.

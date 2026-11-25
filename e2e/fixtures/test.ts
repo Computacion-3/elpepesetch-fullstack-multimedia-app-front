@@ -65,6 +65,11 @@ export function alertWithText(page: Page, text: string | RegExp) {
     return page.getByRole('alert').filter({ hasText: text });
 }
 
+/** Busca un aviso de éxito role="status" por su texto (Alert con variant="success"). */
+export function statusWithText(page: Page, text: string | RegExp) {
+    return page.getByRole('status').filter({ hasText: text });
+}
+
 export async function sessionCookie(context: BrowserContext) {
     return (await context.cookies()).find((c) => c.name === SESSION_COOKIE);
 }

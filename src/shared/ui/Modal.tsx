@@ -26,7 +26,9 @@ export function Modal({ open, title, onClose, children }: ModalProps) {
         <dialog
             ref={ref}
             aria-labelledby={titleId}
-            onClose={onClose}
+            onClose={() => {
+                if (open) onClose();
+            }}
             className="m-auto w-full max-w-lg rounded-md border border-gray-400 p-6 backdrop:bg-black/40"
         >
             <h2 id={titleId} className="mb-4 text-lg font-semibold">

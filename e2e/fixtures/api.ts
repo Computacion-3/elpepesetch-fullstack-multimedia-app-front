@@ -11,6 +11,7 @@ export type ApiUser = {
 };
 export type ApiRole = { id: number; name: string; description: string };
 export type ApiPermission = { id: number; name: string; description: string };
+export type ApiGenre = { id: string; name: string; description?: string | null };
 export type ApiReview = {
     id: string;
     title: string | null;
@@ -203,6 +204,23 @@ export class AdminApi {
         await this.call('DELETE', `/permissions/${id}`);
     }
 
+    // ---- géneros (Persona 2; compatible con /genres y fallback /genre)
+    async listGenres(): Promise<ApiGenre[]> {
+        try {
+            return await this.call('GET', '/genres');
+        } catch {
+            return this.call('GET', '/genre');
+        }
+    }
+
+    async deleteGenre(id: string): Promise<void> {
+        try {
+            await this.call('DELETE', `/genres/${id}`);
+        } catch {
+            await this.call('DELETE', `/genre/${id}`);
+        }
+    }
+
     // ---- reseñas, reportes y estadísticas (Persona 4)
     listReviewsByMedia(mediaItemId: string, page = 1, limit = 50): Promise<Paginated<ApiReview>> {
         return this.call('GET', `/media/${mediaItemId}/reviews?page=${page}&limit=${limit}`);
@@ -246,6 +264,9 @@ export class AdminApi {
         }
         for (const p of (await this.listPermissions()).filter((x) => x.name.startsWith(prefix.permission))) {
             await attempt(`permiso ${p.name}`, () => this.deletePermission(p.id));
+        }
+        for (const genre of (await this.listGenres()).filter((g) => g.name.startsWith(prefix.user))) {
+            await attempt(`género ${genre.name}`, () => this.deleteGenre(genre.id));
         }
         return problems;
     }
