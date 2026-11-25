@@ -3,7 +3,7 @@ import type { PayloadAction } from '@reduxjs/toolkit';
 import type { ActionResult } from '@/src/shared/domain/action-result';
 import { describeError } from '@/src/shared/domain/errors';
 import type { MediaApprovalDraft, MediaItemChanges, MediaItemDraft, MediaQuery } from '../../domain/entities/media-item';
-import type { MediaItemViewModel, MediaPageViewModel } from '../viewmodels/media.viewmodel';
+import type { MediaItemViewModel, MediaPageViewModel, MediaQueryViewModel } from '../viewmodels/media.viewmodel';
 
 /** Dependencias externas inyectadas por el store: solo Server Actions serializables. */
 export interface MediaDependencies {
@@ -22,7 +22,8 @@ export interface MediaState {
     items: MediaItemViewModel[];
     selectedItem: MediaItemViewModel | null;
     pendingItems: MediaItemViewModel[];
-    query: MediaQuery;
+    /** Consulta serializable que conserva los filtros activos de la interfaz en Redux. */
+    query: MediaQueryViewModel;
     meta: { total: number; page: number; limit: number; totalPages: number };
     pendingMeta: { total: number; page: number; limit: number; totalPages: number };
     listStatus: MediaRequestStatus;
