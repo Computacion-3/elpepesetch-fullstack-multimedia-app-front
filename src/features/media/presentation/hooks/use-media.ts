@@ -28,7 +28,7 @@ import {
     selectSelectedMedia,
 } from '../store/media.selectors';
 
-/** Hook fachada que concentra carga inicial, filtros y recarga pesimista. */
+/** Hook fachada que sincroniza el catálogo con la consulta activa y expone acciones pesimistas. */
 export function useMedia() {
     const dispatch = useAppDispatch();
     const items = useAppSelector(selectMediaItems);
@@ -44,8 +44,9 @@ export function useMedia() {
     const errorMessage = useAppSelector(selectMediaError);
 
     useEffect(() => {
-        if (listStatus === 'idle') dispatch(fetchMedia(query));
-    }, [dispatch, listStatus, query]);
+        // Consulta la página activa al montar el catálogo y al cambiar cualquiera de sus filtros.
+        dispatch(fetchMedia(query));
+    }, [dispatch, query]);
 
     const setFilters = useCallback((changes: Partial<MediaQuery>) => {
         dispatch(setMediaQuery(changes));
