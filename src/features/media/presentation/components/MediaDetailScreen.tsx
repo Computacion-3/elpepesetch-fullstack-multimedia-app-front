@@ -58,7 +58,8 @@ export function MediaDetailScreen({ id, canEditProposal }: MediaDetailScreenProp
                             </Link>
                         )}
                         <div>
-                            <Button variant="secondary" onClick={() => media.reload()}>Actualizar detalle</Button>
+                            {/* Vuelve a consultar el elemento abierto para mostrar su estado más reciente. */}
+                            <Button variant="secondary" onClick={() => void media.getById(id)}>Actualizar detalle</Button>
                         </div>
                     </div>
                 </article>
