@@ -2,17 +2,32 @@ import { ValidationError } from '../../../../shared/domain/errors';
 
 export type LibraryStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'DROPPED';
 export type MediaType = 'GAME' | 'MOVIE' | 'BOOK';
+export type MediaApprovalStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 
-/** Descriptive fields are supplied by the temporary catalog fixture until Media is integrated. */
 export interface LibraryMediaReference {
   readonly id: string;
   readonly title: string;
   readonly type: MediaType;
   readonly creator: string;
   readonly releaseYear: number;
+  readonly description?: string | null;
   readonly cover: string;
   readonly coverUrl?: string | null;
+  readonly pages?: number | null;
+  readonly durationMinutes?: number | null;
+  readonly platform?: string | null;
+  readonly isbn?: string | null;
+  readonly ratingsCount?: number;
+  readonly approvalStatus?: MediaApprovalStatus;
+  readonly rejectionReason?: string | null;
+  readonly createdAt?: string;
+  readonly updatedAt?: string;
   readonly genreIds: readonly string[];
+  readonly genres?: readonly {
+    id: string;
+    name: string;
+    description?: string | null;
+  }[];
   readonly progressMaximum?: number;
   readonly averageRating?: number;
 }
@@ -26,7 +41,10 @@ export interface LibraryEntryProps {
   readonly rating: number | null;
   readonly isFavorite: boolean;
   readonly notes: string | null;
+  readonly startedAt: string | null;
+  readonly completedAt: string | null;
   readonly addedAt: string;
+  readonly updatedAt: string;
 }
 
 export type LibraryEntryChanges = Partial<
@@ -45,7 +63,10 @@ export class LibraryEntry implements LibraryEntryProps {
   readonly rating: number | null;
   readonly isFavorite: boolean;
   readonly notes: string | null;
+  readonly startedAt: string | null;
+  readonly completedAt: string | null;
   readonly addedAt: string;
+  readonly updatedAt: string;
 
   constructor(props: LibraryEntryProps) {
     this.assertValid(props);
@@ -57,7 +78,10 @@ export class LibraryEntry implements LibraryEntryProps {
     this.rating = props.rating;
     this.isFavorite = props.isFavorite;
     this.notes = props.notes;
+    this.startedAt = props.startedAt;
+    this.completedAt = props.completedAt;
     this.addedAt = props.addedAt;
+    this.updatedAt = props.updatedAt;
   }
 
   withChanges(changes: LibraryEntryChanges): LibraryEntry {

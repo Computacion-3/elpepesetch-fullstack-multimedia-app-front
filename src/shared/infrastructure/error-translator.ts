@@ -1,11 +1,12 @@
 import {
     ConflictError,
     DomainError,
+    ForbiddenError,
     NotFoundError,
     UnauthorizedError,
     UnexpectedError,
     ValidationError,
-} from '@/src/shared/domain/errors';
+} from '../domain/errors';
 import { HttpError } from './http-client';
 
 /**
@@ -17,10 +18,11 @@ export function toDomainError(err: unknown): DomainError {
 
     if (err instanceof HttpError) {
         if (err.status === 400 || err.status === 422) return new ValidationError(err.message);
-        if (err.status === 401 || err.status === 403) return new UnauthorizedError(err.message);
+        if (err.status === 401) return new UnauthorizedError(err.message);
+        if (err.status === 403) return new ForbiddenError('No tienes permiso para realizar esta operación.');
         if (err.status === 404) return new NotFoundError(err.message);
         if (err.status === 409) return new ConflictError(err.message);
     }
 
-    return new UnexpectedError('Unexpected error while contacting the server.');
+    return new UnexpectedError('Error inesperado al comunicarse con el servidor.');
 }

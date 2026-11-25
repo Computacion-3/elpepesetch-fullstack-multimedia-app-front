@@ -9,9 +9,15 @@ import {
 } from '@/src/features/auth/presentation/actions/auth.actions';
 import { authSlice, logoutMutation } from '@/src/features/auth/presentation/store/auth.slice';
 import type { AuthDependencies } from '@/src/features/auth/presentation/store/auth.slice';
-import { createLibraryContainer } from '@/src/features/library/di/library.container';
 import { librarySlice } from '@/src/features/library/presentation/store/library.slice';
-import type { LibraryDependencies } from '@/src/features/library/presentation/store/library.slice';
+import {
+    addLibraryEntryAction,
+    getLibraryEntryAction,
+    getLibraryMediaItemIdsAction,
+    listLibraryAction,
+    removeLibraryEntryAction,
+    updateLibraryEntryAction,
+} from '@/src/features/library/presentation/actions/library.actions';
 import {
     createReviewReportAction,
     listReviewReportsAction,
@@ -136,7 +142,14 @@ function createThunkExtra() {
             update: updatePermissionAction,
             remove: deletePermissionAction,
         } satisfies PermissionsDependencies,
-        library: createLibraryContainer() satisfies LibraryDependencies,
+        library: {
+            getLibrary: { execute: listLibraryAction },
+            getLibraryEntry: { execute: getLibraryEntryAction },
+            getLibraryMediaItemIds: { execute: getLibraryMediaItemIdsAction },
+            addLibraryEntry: { execute: addLibraryEntryAction },
+            updateLibraryEntry: { execute: updateLibraryEntryAction },
+            removeLibraryEntry: { execute: removeLibraryEntryAction },
+        },
         reviews: {
             listMediaOptions: listReviewMediaOptionsAction,
             listByMedia: listReviewsByMediaAction,

@@ -1,7 +1,6 @@
 import type {
   CreateLibraryEntryDto,
   LibraryEntryDto,
-  LibraryMediaOptionDto,
   LibraryQueryDto,
   UpdateLibraryEntryDto,
 } from '../dtos/library.dto';
@@ -14,18 +13,10 @@ export interface LibraryDatasource {
   fetchEntry(id: string): Promise<LibraryEntryDto | null>;
   createEntry(
     dto: CreateLibraryEntryDto,
-  ): Promise<
-    | { kind: 'created'; entry: LibraryEntryDto }
-    | { kind: 'duplicate' }
-    | { kind: 'unavailable' }
-  >;
+  ): Promise<{ kind: 'created'; entry: LibraryEntryDto }>;
   updateEntry(
     id: string,
     dto: UpdateLibraryEntryDto,
   ): Promise<LibraryEntryDto | null>;
   deleteEntry(id: string): Promise<boolean>;
-}
-
-export interface LibraryCatalogDatasource {
-  fetchSelectableItems(): Promise<LibraryMediaOptionDto[]>;
 }

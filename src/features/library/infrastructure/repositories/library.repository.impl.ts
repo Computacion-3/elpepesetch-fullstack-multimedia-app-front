@@ -1,15 +1,11 @@
-import { ConflictError, NotFoundError } from '../../../../shared/domain/errors';
+import { NotFoundError } from '../../../../shared/domain/errors';
 import type {
   AddLibraryEntryParams,
   LibraryQuery,
   LibraryRepository,
-  MediaCatalogRepository,
 } from '../../domain/repositories/library.repository';
 import type { LibraryEntryChanges } from '../../domain/entities/library-entry';
-import type {
-  LibraryCatalogDatasource,
-  LibraryDatasource,
-} from '../datasources/library.datasource';
+import type { LibraryDatasource } from '../datasources/library.datasource';
 import { LibraryEntryMapper } from '../mappers/library-entry.mapper';
 import { toLibraryDomainError } from '../mappers/library-api-error.mapper';
 
@@ -33,12 +29,6 @@ export class LibraryRepositoryImpl implements LibraryRepository {
   async add(params: AddLibraryEntryParams) {
     return this.run(async () => {
       const result = await this.datasource.createEntry(params);
-      if (result.kind === 'duplicate')
-        throw new ConflictError('Este elemento ya está en tu biblioteca.');
-      if (result.kind === 'unavailable')
-        throw new NotFoundError(
-          'No se encontró el elemento multimedia de ejemplo.',
-        );
       return LibraryEntryMapper.toDomain(result.entry);
     });
   }
@@ -67,13 +57,5 @@ export class LibraryRepositoryImpl implements LibraryRepository {
     } catch (error) {
       throw toLibraryDomainError(error);
     }
-  }
-}
-
-export class LibraryCatalogRepositoryImpl implements MediaCatalogRepository {
-  constructor(private readonly datasource: LibraryCatalogDatasource) {}
-
-  getSelectableItems() {
-    return this.datasource.fetchSelectableItems();
   }
 }

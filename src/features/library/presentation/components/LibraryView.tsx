@@ -49,11 +49,16 @@ export function LibraryView() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<LibraryStatus | ''>('');
   const [typeFilter, setTypeFilter] = useState<MediaType | ''>('');
+  const [favoriteOnly, setFavoriteOnly] = useState(false);
+  const [genreFilter, setGenreFilter] = useState('');
+  const [yearFilter, setYearFilter] = useState('');
   const [sortBy, setSortBy] = useState<LibrarySortBy>('addedAt');
   const [sortOrder, setSortOrder] = useState<'ASC' | 'DESC'>('DESC');
   const [isAdding, setIsAdding] = useState(false);
+  const [isPreparingAdd, setIsPreparingAdd] = useState(false);
   const [activeEntryId, setActiveEntryId] = useState<string | null>(null);
   const [openingEntry, setOpeningEntry] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const activeEntry =
     library.selectedEntry?.id === activeEntryId ? library.selectedEntry : null;
 
@@ -64,6 +69,9 @@ export function LibraryView() {
       q: search.trim() || undefined,
       status: statusFilter || undefined,
       type: typeFilter || undefined,
+      isFavorite: favoriteOnly ? true : undefined,
+      genreId: genreFilter || undefined,
+      year: yearFilter ? Number(yearFilter) : undefined,
       sortBy,
       order: sortOrder,
     };
@@ -74,6 +82,9 @@ export function LibraryView() {
     setSearch('');
     setStatusFilter('');
     setTypeFilter('');
+    setFavoriteOnly(false);
+    setGenreFilter('');
+    setYearFilter('');
     setSortBy('addedAt');
     setSortOrder('DESC');
     library.reload(baseQuery);
@@ -96,11 +107,32 @@ export function LibraryView() {
     await library.updateEntry(entry.id, { isFavorite: !entry.isFavorite });
   }
 
+  async function addEntry(params: { mediaItemId: string }) {
+    const added = await library.addEntry(params);
+    if (added) setSuccessMessage('Elemento agregado a tu biblioteca.');
+    return added;
+  }
+
+  async function openAddDialog() {
+    setIsPreparingAdd(true);
+    const ready = await library.loadExistingMediaItemIds();
+    setIsPreparingAdd(false);
+    if (ready) setIsAdding(true);
+  }
+
   const editorOpen = isAdding || activeEntryId !== null;
   const isLoading = library.status === 'idle' || library.status === 'loading';
+  const summary = [
+    { label: 'En esta página', value: library.items.length },
+    { label: 'Pendientes', value: library.items.filter((entry) => entry.status === 'PENDING').length },
+    { label: 'En progreso', value: library.items.filter((entry) => entry.status === 'IN_PROGRESS').length },
+    { label: 'Completados', value: library.items.filter((entry) => entry.status === 'COMPLETED').length },
+    { label: 'Favoritos', value: library.items.filter((entry) => entry.isFavorite).length },
+  ];
+  const genres = Array.from(new Map(library.items.flatMap((entry) => entry.genres).map((genre) => [genre.id, genre])).values());
 
   return (
-    <main className="min-h-screen bg-base-200 px-4 py-6 text-base-content sm:px-6 sm:py-9">
+    <main className="min-h-screen bg-[#17132b] px-4 py-6 text-[#f3f0ff] sm:px-6 sm:py-9">
       <div className="mx-auto max-w-7xl">
         <div className="mb-9 flex items-center justify-between gap-4">
           <Link
@@ -108,50 +140,51 @@ export function LibraryView() {
             href="/"
             aria-label="Elpepesetch, inicio"
           >
-            <span className="grid size-9 place-items-center rounded-xl bg-primary text-primary-content">
+            <span className="grid size-9 place-items-center rounded-xl bg-[#3fd0c0] text-[#17132b]">
               e
             </span>
             <span>elpepesetch</span>
           </Link>
-          <span className="text-right text-sm text-base-content/60">
-            Colección personal · datos de demostración
+          <span className="text-right text-sm text-[#a8a1cf]">
+            Tu colección multimedia
           </span>
         </div>
 
         <header className="mb-8 flex flex-col items-start justify-between gap-5 sm:flex-row sm:items-end">
           <div>
-            <span className="text-xs font-bold uppercase tracking-[0.13em] text-base-content/60">
+            <span className="text-xs font-bold uppercase tracking-[0.13em] text-[#a8a1cf]">
               Tu espacio multimedia
             </span>
             <h1 className="mt-2 text-4xl font-bold tracking-tight sm:text-5xl">
-              Tu biblioteca
+              Mi biblioteca
             </h1>
-            <p className="mt-3 max-w-2xl text-base-content/70">
+            <p className="mt-3 max-w-2xl text-[#a8a1cf]">
               Juegos, películas y libros que estás descubriendo, disfrutando o
               guardando para después.
             </p>
           </div>
           <button
             type="button"
-            className="btn btn-primary"
-            onClick={() => setIsAdding(true)}
+            className="min-h-11 rounded-xl bg-[#3fd0c0] px-5 font-bold text-[#17132b] transition hover:bg-[#67dfd1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b9b3ff]"
+            onClick={openAddDialog}
+            disabled={isPreparingAdd}
           >
-            <span aria-hidden="true">＋</span> Añadir elemento
+          <span aria-hidden="true">＋</span> {isPreparingAdd ? 'Preparando catálogo…' : 'Agregar elemento'}
           </button>
         </header>
 
         <form
-          className="mb-7 grid gap-3 rounded-box border border-base-300 bg-base-100 p-4 sm:grid-cols-2 xl:grid-cols-[minmax(220px,1.7fr)_repeat(3,minmax(140px,0.8fr))_auto_auto]"
+          className="mb-7 grid gap-3 rounded-2xl border border-white/10 bg-[#241f42] p-4 sm:grid-cols-2 xl:grid-cols-4"
           onSubmit={applyFilters}
           aria-label="Filtrar biblioteca"
         >
-          <label className="input flex w-full items-center gap-2 xl:min-w-0">
-            <span aria-hidden="true" className="text-base-content/50">
+          <label className="flex min-h-11 w-full items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-3 xl:col-span-2">
+            <span aria-hidden="true" className="text-[#a8a1cf]">
               ⌕
             </span>
             <span className="sr-only">Buscar por título o creador</span>
             <input
-              className="grow"
+              className="w-full bg-transparent text-[#f3f0ff] outline-none placeholder:text-[#a8a1cf]"
               type="search"
               placeholder="Buscar por título o creador"
               value={search}
@@ -161,7 +194,7 @@ export function LibraryView() {
           <label>
             <span className="sr-only">Filtrar por estado</span>
             <select
-              className="select w-full"
+              className="min-h-11 w-full rounded-xl border border-white/15 bg-[#17132b] px-3 text-[#f3f0ff]"
               value={statusFilter}
               onChange={(event) =>
                 setStatusFilter(
@@ -179,7 +212,7 @@ export function LibraryView() {
           <label>
             <span className="sr-only">Filtrar por tipo</span>
             <select
-              className="select w-full"
+              className="min-h-11 w-full rounded-xl border border-white/15 bg-[#17132b] px-3 text-[#f3f0ff]"
               value={typeFilter}
               onChange={(event) =>
                 setTypeFilter(
@@ -196,7 +229,7 @@ export function LibraryView() {
           <label>
             <span className="sr-only">Ordenar por</span>
             <select
-              className="select w-full"
+              className="min-h-11 w-full rounded-xl border border-white/15 bg-[#17132b] px-3 text-[#f3f0ff]"
               value={sortBy}
               onChange={(event) => {
                 if (sortOptions.some((option) => option === event.target.value))
@@ -209,9 +242,23 @@ export function LibraryView() {
               <option value="averageRating">Calificación</option>
             </select>
           </label>
+          <label>
+            <span className="sr-only">Filtrar por género</span>
+            <select className="min-h-11 w-full rounded-xl border border-white/15 bg-[#17132b] px-3 text-[#f3f0ff]" value={genreFilter} onChange={(event) => setGenreFilter(event.target.value)}>
+              <option value="">Todos los géneros</option>
+              {genres.map((genre) => <option key={genre.id} value={genre.id}>{genre.name}</option>)}
+            </select>
+          </label>
+          <label className="flex min-h-11 items-center gap-2 rounded-xl border border-white/15 bg-[#17132b] px-3 text-sm">
+            <input type="checkbox" checked={favoriteOnly} onChange={(event) => setFavoriteOnly(event.target.checked)} /> Favoritos
+          </label>
+          <label>
+            <span className="sr-only">Filtrar por año</span>
+            <input className="min-h-11 w-full rounded-xl border border-white/15 bg-[#17132b] px-3 text-[#f3f0ff]" type="number" min="1900" max="2100" placeholder="Año" value={yearFilter} onChange={(event) => setYearFilter(event.target.value)} />
+          </label>
           <button
             type="button"
-            className="btn btn-outline"
+            className="min-h-11 rounded-xl border border-white/20 px-4"
             aria-label={`Orden ${sortOrder === 'ASC' ? 'ascendente' : 'descendente'}`}
             onClick={() =>
               setSortOrder((order) => (order === 'ASC' ? 'DESC' : 'ASC'))
@@ -219,17 +266,23 @@ export function LibraryView() {
           >
             {sortOrder === 'ASC' ? '↑ ASC' : '↓ DESC'}
           </button>
-          <button type="submit" className="btn btn-secondary">
+          <button type="submit" className="min-h-11 rounded-xl bg-[#b9b3ff] px-4 font-bold text-[#17132b]">
             Aplicar
           </button>
         </form>
 
+        <section className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5" aria-label="Resumen de la página actual">
+          {summary.map((stat) => <div key={stat.label} className="rounded-2xl border border-white/10 bg-[#241f42] p-4"><p className="text-2xl font-bold">{stat.value}</p><p className="mt-1 text-xs text-[#a8a1cf]">{stat.label}</p></div>)}
+        </section>
+
         <div className="mb-4 flex items-center justify-between gap-3">
-          <h2 className="font-bold">Todos tus elementos</h2>
-          <span className="text-sm text-base-content/60">
-            {library.meta.total} en tu biblioteca
+          <h2 className="font-bold">Tus elementos</h2>
+          <span className="text-sm text-[#a8a1cf]">
+            {library.meta.total} en total
           </span>
         </div>
+
+        {successMessage && <p className="mb-4 text-sm text-[#72e6d9]" role="status">{successMessage}</p>}
 
         {library.errorMessage && library.status === 'failed' ? (
           <div className="alert alert-error" role="alert">
@@ -288,7 +341,8 @@ export function LibraryView() {
               <button
                 type="button"
                 className="btn btn-primary"
-                onClick={() => setIsAdding(true)}
+                onClick={openAddDialog}
+                disabled={isPreparingAdd}
               >
                 Añadir elemento
               </button>
@@ -361,26 +415,17 @@ export function LibraryView() {
           </div>
         )}
 
-        <p className="mt-7 border-t border-base-300 pt-4 text-xs leading-relaxed text-base-content/60">
-          Modo de demostración: los cambios viven en memoria durante esta
-          sesión. La autenticación, el transporte HTTP y el catálogo real se
-          integrarán desde sus módulos compartidos.
-        </p>
       </div>
 
       {editorOpen && (isAdding || activeEntry) && (
         <LibraryEditorDialog
           key={isAdding ? 'new' : activeEntry!.id}
           entry={isAdding ? null : activeEntry}
-          options={library.mediaOptions}
-          optionsLoading={
-            library.optionsStatus === 'loading' ||
-            library.optionsStatus === 'idle'
-          }
+          existingMediaItemIds={library.existingMediaItemIds}
           busy={library.isMutating}
           error={library.errorMessage}
           onClose={closeEditor}
-          onAdd={library.addEntry}
+          onAdd={addEntry}
           onSave={library.updateEntry}
           onDelete={library.deleteEntry}
         />

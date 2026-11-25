@@ -5,7 +5,11 @@ interface GraphQLResponse<T> {
     data?: T;
     errors?: {
         message: string;
-        extensions?: { originalError?: { statusCode?: number; message?: string | string[] } };
+        extensions?: {
+            code?: string;
+            status?: number;
+            originalError?: { statusCode?: number; message?: string | string[] };
+        };
     }[];
 }
 
@@ -23,8 +27,9 @@ export function createGraphQLClient(http: HttpClient): GraphQLClient {
             if (response.errors?.length) {
                 const error = response.errors[0];
                 const original = error.extensions?.originalError;
+                const status = error.extensions?.status ?? original?.statusCode ?? statusForCode(error.extensions?.code);
                 throw new HttpError(
-                    original?.statusCode ?? 500,
+                    status,
                     [original?.message ?? error.message].flat().join('. '),
                     response,
                 );
@@ -33,4 +38,15 @@ export function createGraphQLClient(http: HttpClient): GraphQLClient {
             return response.data;
         },
     };
+}
+
+function statusForCode(code?: string): number {
+    switch (code) {
+        case 'BAD_REQUEST': return 400;
+        case 'UNAUTHENTICATED': return 401;
+        case 'FORBIDDEN': return 403;
+        case 'NOT_FOUND': return 404;
+        case 'CONFLICT': return 409;
+        default: return 500;
+    }
 }
