@@ -9,6 +9,7 @@ import { LibraryApiClient, LibraryHttpDatasource } from '../infrastructure/datas
 import type { LibraryDatasource } from '../infrastructure/datasources/library.datasource';
 import { LibraryRepositoryImpl } from '../infrastructure/repositories/library.repository.impl';
 import { UnexpectedError } from '../../../shared/domain/errors';
+import { getLibraryDataSourceMode } from '../infrastructure/datasources/library-data-source.factory';
 
 export interface LibraryContainerOptions {
   libraryDatasource?: LibraryDatasource;
@@ -31,7 +32,9 @@ export function createLibraryContainer(options: LibraryContainerOptions) {
 }
 
 function createDatasource(options: LibraryContainerOptions): LibraryDatasource {
-  const dataSource = options.dataSource ?? process.env.NEXT_PUBLIC_DATA_SOURCE ?? 'rest';
+  const dataSource = getLibraryDataSourceMode(
+    options.dataSource ?? process.env.NEXT_PUBLIC_DATA_SOURCE,
+  );
   switch (dataSource) {
     case 'rest':
       if (!options.httpClient) throw new UnexpectedError('Library REST requiere el cliente HTTP compartido.');
@@ -39,8 +42,6 @@ function createDatasource(options: LibraryContainerOptions): LibraryDatasource {
     case 'graphql':
       if (!options.graphqlClient) throw new UnexpectedError('Library GraphQL requiere el cliente GraphQL compartido.');
       return new LibraryGraphQLDatasource(options.graphqlClient);
-    default:
-      throw new UnexpectedError(`NEXT_PUBLIC_DATA_SOURCE inválido: ${String(dataSource)}. Usa "rest" o "graphql".`);
   }
 }
 

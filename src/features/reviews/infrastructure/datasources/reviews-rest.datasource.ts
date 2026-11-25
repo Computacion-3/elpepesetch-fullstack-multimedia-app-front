@@ -1,4 +1,4 @@
-import { HttpError, type HttpClient } from '@/src/shared/infrastructure/http-client';
+import { HttpError, type HttpClient } from '../../../../shared/infrastructure/http-client';
 import type {
     CatalogMediaDto,
     CreateReviewRequestDto,

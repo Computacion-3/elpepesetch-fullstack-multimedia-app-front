@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test:unit": "tsc -p tsconfig.unit.json && node --test \"temp/unit-tests/src/**/*.test.js\"",
     "lint:clean": "eslint -c eslint.clean.config.mjs src app && node .claude/skills/clean-feature/scripts/clean-audit.mjs",
     "inventory:clean": "node .claude/skills/clean-feature/scripts/inventory.mjs",
     "diagram:clean": "node .claude/skills/clean-feature/scripts/diagram.mjs",
@@ -23,7 +24,8 @@
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "react-redux": "^9.3.0",
-    "server-only": "^0.0.1"
+    "server-only": "^0.0.1",
+    "socket.io-client": "^4.8.4"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",

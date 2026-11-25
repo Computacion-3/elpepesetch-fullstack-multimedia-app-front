@@ -34,6 +34,12 @@ export function LoginForm() {
             {searchParams.get('registered') === '1' && (
                 <Alert variant="success">Cuenta creada. Ya puedes iniciar sesión.</Alert>
             )}
+            {searchParams.get('reason') === 'account-deactivated' && (
+                <Alert variant="error">Tu cuenta fue desactivada. Contacta con un administrador si crees que es un error.</Alert>
+            )}
+            {searchParams.get('reason') === 'session-ended' && (
+                <Alert variant="success">Tu sesión se cerró. Inicia sesión para continuar.</Alert>
+            )}
             {errorMessage && <Alert variant="error">{errorMessage}</Alert>}
             <TextField
                 id="email"

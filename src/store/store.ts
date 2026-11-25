@@ -6,8 +6,10 @@ import {
     loginAction,
     logoutAction,
     registerAction,
+    refreshCurrentUserAction,
+    expireSessionAction,
 } from '@/src/features/auth/presentation/actions/auth.actions';
-import { authSlice, logoutMutation } from '@/src/features/auth/presentation/store/auth.slice';
+import { accountSessionEnded, authSlice, forceLogoutMutation, logoutMutation } from '@/src/features/auth/presentation/store/auth.slice';
 import type { AuthDependencies } from '@/src/features/auth/presentation/store/auth.slice';
 import { librarySlice } from '@/src/features/library/presentation/store/library.slice';
 import {
@@ -86,6 +88,13 @@ import {
 } from '@/src/features/genres/presentation/actions/genres.actions';
 import { genresSlice } from '@/src/features/genres/presentation/store/genres.slice';
 import type { GenresDependencies } from '@/src/features/genres/presentation/store/genres.slice';
+import type { LibraryDependencies } from '@/src/features/library/presentation/store/library.slice';
+import { listNotificationsAction, markNotificationReadAction } from '@/src/features/notifications/presentation/actions/notifications.actions';
+import { notificationsSlice } from '@/src/features/notifications/presentation/store/notifications.slice';
+import type { NotificationsDependencies } from '@/src/features/notifications/presentation/store/notifications.slice';
+import { createRealtimeContainer } from '@/src/features/realtime/infrastructure/repositories/realtime.container';
+import { realtimeSlice } from '@/src/features/realtime/presentation/store/realtime.slice';
+import type { RealtimeDependencies } from '@/src/features/realtime/presentation/store/realtime.slice';
 
 /**
  * Store global de Redux Toolkit: combina los slices de todas las features e inyecta
@@ -104,13 +113,21 @@ const appReducer = combineSlices(
     statsSlice,
     mediaSlice,
     genresSlice,
+    notificationsSlice,
+    realtimeSlice,
 );
 
 /** Reinicia TODOS los slices a su estado inicial cuando `logoutMutation` termina con éxito. */
 const rootReducer = (state: ReturnType<typeof appReducer> | undefined, action: UnknownAction) =>
-    appReducer(logoutMutation.fulfilled.match(action) ? undefined : state, action);
+    appReducer(
+        logoutMutation.fulfilled.match(action) || forceLogoutMutation.fulfilled.match(action) || accountSessionEnded.match(action)
+            ? undefined
+            : state,
+        action,
+    );
 
 function createThunkExtra() {
+    const realtimeContainer = createRealtimeContainer();
     return {
         // <clean:extra> — e.g. routines: createRoutineContainer(),
         // Se inyectan Server Actions en módulos conectados a API_URL para mantener server-only los contenedores.
@@ -119,6 +136,8 @@ function createThunkExtra() {
             register: registerAction,
             logout: logoutAction,
             getSocketToken: getSocketTokenAction,
+            refreshCurrentUser: refreshCurrentUserAction,
+            expireSession: expireSessionAction,
         } satisfies AuthDependencies,
         users: {
             list: listUsersAction,
@@ -149,7 +168,7 @@ function createThunkExtra() {
             addLibraryEntry: { execute: addLibraryEntryAction },
             updateLibraryEntry: { execute: updateLibraryEntryAction },
             removeLibraryEntry: { execute: removeLibraryEntryAction },
-        },
+        } satisfies LibraryDependencies,
         reviews: {
             listMediaOptions: listReviewMediaOptionsAction,
             listByMedia: listReviewsByMediaAction,
@@ -180,6 +199,22 @@ function createThunkExtra() {
             update: updateGenreAction,
             remove: deleteGenreAction,
         } satisfies GenresDependencies,
+        notifications: {
+            list: listNotificationsAction,
+            markRead: markNotificationReadAction,
+        } satisfies NotificationsDependencies,
+        realtime: {
+            connect: (getTicket) => realtimeContainer.connect.execute(getTicket),
+            disconnect: () => realtimeContainer.disconnect.execute(),
+            on: (event, handler) => realtimeContainer.repository.on(event, handler),
+            off: (event) => realtimeContainer.repository.off(event),
+            onStatus: (handler) => realtimeContainer.repository.onStatus(handler),
+            clearStatusHandlers: () => realtimeContainer.repository.clearStatusHandlers(),
+            emit: (event, payload) => realtimeContainer.repository.emit(event, payload),
+            subscribeEvents: (events, handler) => realtimeContainer.subscribeEvents.execute(events, handler),
+            getTicket: getSocketTokenAction,
+            expireSession: expireSessionAction,
+        } satisfies RealtimeDependencies,
     };
 }
 
