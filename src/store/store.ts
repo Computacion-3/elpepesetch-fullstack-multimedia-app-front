@@ -9,6 +9,31 @@ import {
 } from '@/src/features/auth/presentation/actions/auth.actions';
 import { authSlice, logoutMutation } from '@/src/features/auth/presentation/store/auth.slice';
 import type { AuthDependencies } from '@/src/features/auth/presentation/store/auth.slice';
+import { createLibraryContainer } from '@/src/features/library/di/library.container';
+import { librarySlice } from '@/src/features/library/presentation/store/library.slice';
+import type { LibraryDependencies } from '@/src/features/library/presentation/store/library.slice';
+import {
+    createReviewReportAction,
+    listReviewReportsAction,
+    resolveReviewReportAction,
+} from '@/src/features/reports/presentation/actions/reports.actions';
+import { reportsSlice } from '@/src/features/reports/presentation/store/reports.slice';
+import type { ReportsDependencies } from '@/src/features/reports/presentation/store/reports.slice';
+import {
+    createReviewAction,
+    deleteReviewAction,
+    listReviewMediaOptionsAction,
+    listReviewsByMediaAction,
+    updateReviewAction,
+} from '@/src/features/reviews/presentation/actions/reviews.actions';
+import { reviewsSlice } from '@/src/features/reviews/presentation/store/reviews.slice';
+import type { ReviewsDependencies } from '@/src/features/reviews/presentation/store/reviews.slice';
+import {
+    getGlobalStatsAction,
+    getPersonalStatsAction,
+} from '@/src/features/stats/presentation/actions/stats.actions';
+import { statsSlice } from '@/src/features/stats/presentation/store/stats.slice';
+import type { StatsDependencies } from '@/src/features/stats/presentation/store/stats.slice';
 import {
     createPermissionAction,
     deletePermissionAction,
@@ -57,8 +82,9 @@ import { genresSlice } from '@/src/features/genres/presentation/store/genres.sli
 import type { GenresDependencies } from '@/src/features/genres/presentation/store/genres.slice';
 
 /**
- * Global store: combines feature slices and injects feature use cases as the thunk extraArgument.
- * This and the feature di/ folders are the only places that know concrete implementations.
+ * Store global de Redux Toolkit: combina los slices de todas las features e inyecta
+ * sus casos de uso o Server Actions mediante `extraArgument` de los thunks.
+ * Este archivo y las carpetas `di/` son los únicos puntos que conocen implementaciones concretas.
  */
 const appReducer = combineSlices(
     // <clean:slices> — e.g. routinesSlice,
@@ -66,18 +92,22 @@ const appReducer = combineSlices(
     usersSlice,
     rolesSlice,
     permissionsSlice,
+    librarySlice,
+    reviewsSlice,
+    reportsSlice,
+    statsSlice,
     mediaSlice,
     genresSlice,
 );
 
-/** Resets ALL slices to their initial state when logout succeeds, so no user data survives it. */
+/** Reinicia TODOS los slices a su estado inicial cuando `logoutMutation` termina con éxito. */
 const rootReducer = (state: ReturnType<typeof appReducer> | undefined, action: UnknownAction) =>
     appReducer(logoutMutation.fulfilled.match(action) ? undefined : state, action);
 
 function createThunkExtra() {
     return {
         // <clean:extra> — e.g. routines: createRoutineContainer(),
-        // Server Actions are injected; the server-only container is never imported here.
+        // Se inyectan Server Actions en módulos conectados a API_URL para mantener server-only los contenedores.
         auth: {
             login: loginAction,
             register: registerAction,
@@ -106,6 +136,23 @@ function createThunkExtra() {
             update: updatePermissionAction,
             remove: deletePermissionAction,
         } satisfies PermissionsDependencies,
+        library: createLibraryContainer() satisfies LibraryDependencies,
+        reviews: {
+            listMediaOptions: listReviewMediaOptionsAction,
+            listByMedia: listReviewsByMediaAction,
+            create: createReviewAction,
+            update: updateReviewAction,
+            remove: deleteReviewAction,
+        } satisfies ReviewsDependencies,
+        reports: {
+            createReport: createReviewReportAction,
+            listReports: listReviewReportsAction,
+            resolveReport: resolveReviewReportAction,
+        } satisfies ReportsDependencies,
+        stats: {
+            getPersonal: getPersonalStatsAction,
+            getGlobal: getGlobalStatsAction,
+        } satisfies StatsDependencies,
         media: {
             list: listMediaAction,
             listPending: listPendingMediaAction,

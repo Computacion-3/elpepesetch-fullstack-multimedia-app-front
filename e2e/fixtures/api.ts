@@ -11,6 +11,36 @@ export type ApiUser = {
 };
 export type ApiRole = { id: number; name: string; description: string };
 export type ApiPermission = { id: number; name: string; description: string };
+export type ApiReview = {
+    id: string;
+    title: string | null;
+    content: string;
+    isHidden: boolean;
+    hiddenReason: string | null;
+    user?: { id: number; username: string };
+    mediaItem?: { id: string; title: string };
+};
+export type ApiReviewReport = {
+    id: string;
+    reason: 'SPOILER' | 'OFFENSIVE' | 'SPAM' | 'OTHER';
+    comment: string | null;
+    status: 'OPEN' | 'RESOLVED' | 'DISMISSED';
+    review?: ApiReview;
+    reporter?: { id: number; username: string };
+};
+export type ApiPersonalStats = {
+    entriesByType: Record<'GAME' | 'MOVIE' | 'BOOK', number>;
+    entriesByStatus: Record<'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'DROPPED', number>;
+    topGenres: Array<{ id: string; name: string; count: number }>;
+    completedByMonth: Array<{ month: string; count: number }>;
+    averageRating: number;
+};
+export type ApiGlobalStats = {
+    users: number;
+    mediaItemsByType: Record<'GAME' | 'MOVIE' | 'BOOK', number>;
+    libraryEntries: number;
+    reviews: number;
+};
 type Paginated<T> = { data: T[]; meta: { total: number; page: number; limit: number; totalPages: number } };
 
 export function apiBaseUrl(): string {
@@ -163,6 +193,29 @@ export class AdminApi {
         await this.call('DELETE', `/permissions/${id}`);
     }
 
+    // ---- reseñas, reportes y estadísticas (Persona 4)
+    listReviewsByMedia(mediaItemId: string, page = 1, limit = 50): Promise<Paginated<ApiReview>> {
+        return this.call('GET', `/media/${mediaItemId}/reviews?page=${page}&limit=${limit}`);
+    }
+
+    async deleteReview(id: string): Promise<void> {
+        await this.call('DELETE', `/reviews/${id}`);
+    }
+
+    listReports(status?: 'OPEN' | 'RESOLVED' | 'DISMISSED', page = 1, limit = 50): Promise<Paginated<ApiReviewReport>> {
+        const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+        if (status) params.set('status', status);
+        return this.call('GET', `/reports?${params.toString()}`);
+    }
+
+    resolveReport(id: string, body: { action: 'HIDE' | 'DISMISS'; reason?: string }): Promise<ApiReviewReport> {
+        return this.call('PATCH', `/reports/${id}/resolve`, body);
+    }
+
+    getGlobalStats(): Promise<ApiGlobalStats> {
+        return this.call('GET', '/stats/global');
+    }
+
     // ---- limpieza
     /** Usuarios, luego roles (sin permisos) y por último permisos con el prefijo dado. Mejor esfuerzo. */
     async cleanup(prefix: { user: string; role: string; permission: string }): Promise<string[]> {
@@ -197,4 +250,54 @@ export async function authMeStatus(token: string): Promise<number> {
     } finally {
         await ctx.dispose();
     }
+}
+
+/** Ejecuta una petición REST autenticada como la cuenta indicada (útil para preparar reseñas/reportes ajenos). */
+async function callAsAccount<T>(account: Account, method: string, path: string, data?: unknown): Promise<T> {
+    const ctx = await request.newContext({ baseURL: apiBaseUrl() });
+    try {
+        const token = await apiLogin(ctx, account);
+        const res = await ctx.fetch(path, {
+            method,
+            data,
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        const text = await res.text();
+        if (!res.ok()) throw new Error(`${method} ${path} → ${res.status()} ${text}`);
+        return (text ? JSON.parse(text) : undefined) as T;
+    } finally {
+        await ctx.dispose();
+    }
+}
+
+/** Agrega un elemento a la biblioteca de la cuenta indicada para habilitar la creación de reseñas. */
+export function addLibraryEntryAs(
+    account: Account,
+    mediaItemId: string,
+    status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'DROPPED' = 'IN_PROGRESS',
+): Promise<{ id: string }> {
+    return callAsAccount(account, 'POST', '/library', { mediaItemId, status });
+}
+
+/** Crea una reseña directamente en el backend autenticado como la cuenta indicada. */
+export function createReviewAs(
+    account: Account,
+    mediaItemId: string,
+    body: { title?: string; content: string },
+): Promise<ApiReview> {
+    return callAsAccount(account, 'POST', `/media/${mediaItemId}/reviews`, body);
+}
+
+/** Crea un reporte sobre una reseña directamente en el backend autenticado como la cuenta indicada. */
+export function createReportAs(
+    account: Account,
+    reviewId: string,
+    body: { reason: 'SPOILER' | 'OFFENSIVE' | 'SPAM' | 'OTHER'; comment?: string },
+): Promise<ApiReviewReport> {
+    return callAsAccount(account, 'POST', `/reviews/${reviewId}/report`, body);
+}
+
+/** Consulta GET /stats/me autenticado como la cuenta indicada para contrastar los KPIs en UI. */
+export function getPersonalStatsAs(account: Account): Promise<ApiPersonalStats> {
+    return callAsAccount(account, 'GET', '/stats/me');
 }

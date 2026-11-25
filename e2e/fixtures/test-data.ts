@@ -64,6 +64,30 @@ export function newUserData(tag = '') {
     };
 }
 
+/** Elementos multimedia fijos creados por db/seed.sql en el backend. */
+export const SEEDED_MEDIA = {
+    zelda: {
+        id: '10000000-0000-4000-8000-000000000001',
+        title: 'The Legend of Zelda: Breath of the Wild',
+    },
+    hades: {
+        id: '10000000-0000-4000-8000-000000000002',
+        title: 'Hades',
+    },
+    matrix: {
+        id: '10000000-0000-4000-8000-000000000006',
+        title: 'The Matrix',
+    },
+    chihiro: {
+        id: '10000000-0000-4000-8000-000000000007',
+        title: 'El viaje de Chihiro',
+    },
+    cienAnos: {
+        id: '10000000-0000-4000-8000-000000000011',
+        title: 'Cien años de soledad',
+    },
+} as const;
+
 /** Mensajes que la interfaz debe mostrar (vienen del dominio del front o del backend). */
 export const MESSAGES = {
     invalidCredentials: 'Credenciales inválidas',
@@ -79,4 +103,13 @@ export const MESSAGES = {
     permissionConflict: 'Ya existe un permiso con ese nombre',
     forbiddenAction: 'No tienes permiso para realizar esta acción',
     forbiddenPage: 'Acceso denegado',
+    reviewContentTooShort: 'El contenido de la reseña debe tener al menos 10 caracteres',
+    reviewCreated: 'Reseña publicada correctamente.',
+    reviewUpdated: 'Reseña actualizada correctamente.',
+    reviewDeleted: 'Reseña eliminada correctamente.',
+    reportSent: 'Reporte enviado correctamente para moderación.',
+    reportConflict: 'Ya reportaste esta reseña',
+    reportHideReasonRequired: 'El motivo es obligatorio para ocultar una reseña',
+    reportResolvedHide: 'Reseña ocultada y reporte marcado como resuelto.',
+    reportResolvedDismiss: 'Reporte descartado; la reseña permanece visible.',
 } as const;
