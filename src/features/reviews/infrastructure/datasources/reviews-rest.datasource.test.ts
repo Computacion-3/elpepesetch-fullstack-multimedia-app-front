@@ -15,7 +15,7 @@ describe('ReviewsRestDatasource', () => {
       },
     } as unknown as HttpClient;
 
-    await new ReviewsRestDatasource(http, 'session').fetchByMedia('media-id', { page: 1, limit: 10 });
+    await new ReviewsRestDatasource(http).listByMediaItem('session', 'media-id', 'page=1&limit=10');
 
     assert.equal(requestedPath, '/media/media-id/reviews?page=1&limit=10');
     assert.equal(requestedToken, 'session');
@@ -32,7 +32,7 @@ describe('ReviewsRestDatasource', () => {
       },
     } as unknown as HttpClient;
 
-    await new ReviewsRestDatasource(http, 'session').create('media-id', { title: 'Título', content: 'Una opinión válida.' });
+    await new ReviewsRestDatasource(http).create('session', 'media-id', { title: 'Título', content: 'Una opinión válida.' });
 
     assert.equal(requestedPath, '/media/media-id/reviews:session');
     assert.deepEqual(submittedBody, { title: 'Título', content: 'Una opinión válida.' });

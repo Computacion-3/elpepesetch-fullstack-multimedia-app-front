@@ -1,23 +1,20 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { describeError } from '../../../../shared/domain/errors';
+import type { ActionResult } from '@/src/shared/domain/action-result';
 import type {
   AddLibraryEntryParams,
   LibraryQuery,
 } from '../../domain/repositories/library.repository';
 import type { LibraryEntryChanges } from '../../domain/entities/library-entry';
-import type { ActionResult } from '@/src/shared/domain/action-result';
-import type {
-  LibraryEntryViewModel,
-  LibraryMediaOptionViewModel,
-} from '../viewmodels/library-entry.viewmodel';
+import type { LibraryEntryViewModel } from '../viewmodels/library-entry.viewmodel';
 
 export interface LibraryDependencies {
-  getLibrary: (query: LibraryQuery) => Promise<ActionResult<{ data: LibraryEntryViewModel[]; meta: LibraryState['meta'] }>>;
-  getLibraryEntry: (id: string) => Promise<ActionResult<LibraryEntryViewModel>>;
-  addLibraryEntry: (params: AddLibraryEntryParams) => Promise<ActionResult<LibraryEntryViewModel>>;
-  updateLibraryEntry: (id: string, changes: LibraryEntryChanges) => Promise<ActionResult<LibraryEntryViewModel>>;
-  removeLibraryEntry: (id: string) => Promise<ActionResult<null>>;
-  getLibraryMediaOptions: () => Promise<ActionResult<LibraryMediaOptionViewModel[]>>;
+  getLibrary: { execute: (query: LibraryQuery) => Promise<ActionResult<{ data: LibraryEntryViewModel[]; meta: LibraryState['meta'] }>> };
+  getLibraryEntry: { execute: (id: string) => Promise<ActionResult<LibraryEntryViewModel>> };
+  getLibraryMediaItemIds: { execute: () => Promise<ActionResult<string[]>> };
+  addLibraryEntry: { execute: (params: AddLibraryEntryParams) => Promise<ActionResult<LibraryEntryViewModel>> };
+  updateLibraryEntry: { execute: (id: string, changes: LibraryEntryChanges) => Promise<ActionResult<LibraryEntryViewModel>> };
+  removeLibraryEntry: { execute: (id: string) => Promise<ActionResult<string>> };
 }
 
 export type RequestStatus = 'idle' | 'loading' | 'succeeded' | 'failed';
@@ -25,12 +22,12 @@ export type RequestStatus = 'idle' | 'loading' | 'succeeded' | 'failed';
 export interface LibraryState {
   items: LibraryEntryViewModel[];
   selectedEntry: LibraryEntryViewModel | null;
-  mediaOptions: LibraryMediaOptionViewModel[];
+  existingMediaItemIds: string[];
+  existingIdsStatus: RequestStatus;
   query: LibraryQuery;
   meta: { total: number; page: number; limit: number; totalPages: number };
   status: RequestStatus;
   detailStatus: RequestStatus;
-  optionsStatus: RequestStatus;
   mutationStatus: RequestStatus;
   errorMessage: string | null;
   currentListRequestId: string | null;
@@ -39,12 +36,12 @@ export interface LibraryState {
 const initialState: LibraryState = {
   items: [],
   selectedEntry: null,
-  mediaOptions: [],
+  existingMediaItemIds: [],
+  existingIdsStatus: 'idle',
   query: { page: 1, limit: 10, sortBy: 'addedAt', order: 'DESC' },
   meta: { total: 0, page: 1, limit: 10, totalPages: 0 },
   status: 'idle',
   detailStatus: 'idle',
-  optionsStatus: 'idle',
   mutationStatus: 'idle',
   errorMessage: null,
   currentListRequestId: null,
@@ -60,9 +57,9 @@ export const fetchLibrary = createLibraryThunk(
   'library/fetchAll',
   async (query: LibraryQuery, { extra, rejectWithValue }) => {
     try {
-      const result = await extra.library.getLibrary(query);
-      if (!result.ok) return rejectWithValue(result.message);
-      return result.data;
+      const response = await extra.library.getLibrary.execute(query);
+      if (!response.ok) return rejectWithValue(response.message);
+      return response.data;
     } catch (error) {
       return rejectWithValue(
         describeError(error, 'No se pudo cargar la biblioteca.'),
@@ -75,9 +72,9 @@ export const fetchLibraryEntry = createLibraryThunk(
   'library/fetchEntry',
   async (id: string, { extra, rejectWithValue }) => {
     try {
-      const result = await extra.library.getLibraryEntry(id);
-      if (!result.ok) return rejectWithValue(result.message);
-      return result.data;
+      const response = await extra.library.getLibraryEntry.execute(id);
+      if (!response.ok) return rejectWithValue(response.message);
+      return response.data;
     } catch (error) {
       return rejectWithValue(
         describeError(error, 'No se pudo cargar el detalle.'),
@@ -86,17 +83,15 @@ export const fetchLibraryEntry = createLibraryThunk(
   },
 );
 
-export const fetchLibraryMediaOptions = createLibraryThunk(
-  'library/fetchMediaOptions',
+export const fetchLibraryMediaItemIds = createLibraryThunk(
+  'library/fetchMediaItemIds',
   async (_: void, { extra, rejectWithValue }) => {
     try {
-      const result = await extra.library.getLibraryMediaOptions();
-      if (!result.ok) return rejectWithValue(result.message);
-      return result.data;
+      const response = await extra.library.getLibraryMediaItemIds.execute();
+      if (!response.ok) return rejectWithValue(response.message);
+      return response.data;
     } catch (error) {
-      return rejectWithValue(
-        describeError(error, 'No se pudo cargar el catálogo multimedia.'),
-      );
+      return rejectWithValue(describeError(error, 'No se pudo consultar la biblioteca actual.'));
     }
   },
 );
@@ -105,9 +100,9 @@ export const addLibraryEntry = createLibraryThunk(
   'library/addEntry',
   async (params: AddLibraryEntryParams, { extra, rejectWithValue }) => {
     try {
-      const result = await extra.library.addLibraryEntry(params);
-      if (!result.ok) return rejectWithValue(result.message);
-      return result.data;
+      const response = await extra.library.addLibraryEntry.execute(params);
+      if (!response.ok) return rejectWithValue(response.message);
+      return response.data;
     } catch (error) {
       return rejectWithValue(
         describeError(error, 'No se pudo agregar el elemento.'),
@@ -123,9 +118,9 @@ export const updateLibraryEntry = createLibraryThunk(
     { extra, rejectWithValue },
   ) => {
     try {
-      const result = await extra.library.updateLibraryEntry(id, changes);
-      if (!result.ok) return rejectWithValue(result.message);
-      return result.data;
+      const response = await extra.library.updateLibraryEntry.execute(id, changes);
+      if (!response.ok) return rejectWithValue(response.message);
+      return response.data;
     } catch (error) {
       return rejectWithValue(
         describeError(error, 'No se pudo actualizar la entrada.'),
@@ -138,9 +133,9 @@ export const removeLibraryEntry = createLibraryThunk(
   'library/removeEntry',
   async (id: string, { extra, rejectWithValue }) => {
     try {
-      const result = await extra.library.removeLibraryEntry(id);
-      if (!result.ok) return rejectWithValue(result.message);
-      return id;
+      const response = await extra.library.removeLibraryEntry.execute(id);
+      if (!response.ok) return rejectWithValue(response.message);
+      return response.data;
     } catch (error) {
       return rejectWithValue(
         describeError(error, 'No se pudo eliminar la entrada.'),
@@ -195,17 +190,17 @@ export const librarySlice = createSlice({
         state.detailStatus = 'failed';
         state.errorMessage = action.payload ?? 'No se pudo cargar el detalle.';
       })
-      .addCase(fetchLibraryMediaOptions.pending, (state) => {
-        state.optionsStatus = 'loading';
+      .addCase(fetchLibraryMediaItemIds.pending, (state) => {
+        state.existingIdsStatus = 'loading';
+        state.errorMessage = null;
       })
-      .addCase(fetchLibraryMediaOptions.fulfilled, (state, action) => {
-        state.mediaOptions = action.payload;
-        state.optionsStatus = 'succeeded';
+      .addCase(fetchLibraryMediaItemIds.fulfilled, (state, action) => {
+        state.existingMediaItemIds = action.payload;
+        state.existingIdsStatus = 'succeeded';
       })
-      .addCase(fetchLibraryMediaOptions.rejected, (state, action) => {
-        state.optionsStatus = 'failed';
-        state.errorMessage =
-          action.payload ?? 'No se pudo cargar el catálogo de ejemplo.';
+      .addCase(fetchLibraryMediaItemIds.rejected, (state, action) => {
+        state.existingIdsStatus = 'failed';
+        state.errorMessage = action.payload ?? 'No se pudo consultar la biblioteca actual.';
       })
       .addCase(addLibraryEntry.pending, (state) => {
         state.mutationStatus = 'loading';

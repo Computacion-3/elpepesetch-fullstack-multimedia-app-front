@@ -36,7 +36,7 @@ export interface MediaItemDto {
     updatedAt?: string;
 }
 
-/** Paginación REST del catálogo, también esperada por la operación GraphQL mediaItems. */
+/** Paginación REST del catálogo multimedia. */
 export interface PaginatedMediaDto {
     data: MediaItemDto[];
     meta: { total: number; page: number; limit: number; totalPages: number };

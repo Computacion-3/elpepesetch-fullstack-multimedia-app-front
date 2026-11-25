@@ -24,6 +24,10 @@ export class UnauthorizedError extends DomainError {
     readonly code = 'UNAUTHORIZED';
 }
 
+export class ForbiddenError extends DomainError {
+    readonly code = 'FORBIDDEN';
+}
+
 export class ConflictError extends DomainError {
     readonly code = 'CONFLICT';
 }

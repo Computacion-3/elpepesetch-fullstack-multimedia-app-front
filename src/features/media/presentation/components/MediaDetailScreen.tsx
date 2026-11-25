@@ -7,7 +7,7 @@ import { Alert } from '@/src/shared/ui/Alert';
 import { Button } from '@/src/shared/ui/Button';
 import { useAuth } from '@/src/features/auth/presentation/hooks/use-auth';
 import { PERMISSIONS } from '@/src/shared/permissions';
-import { ReviewsPanel } from '@/src/features/reviews/presentation/components/ReviewsPanel';
+import { MediaReviewsPanel } from './MediaReviewsPanel';
 import { useRealtime } from '@/src/features/realtime/presentation/hooks/use-realtime';
 
 const TYPE_LABELS = { GAME: 'Videojuego', MOVIE: 'Película', BOOK: 'Libro' };
@@ -75,7 +75,7 @@ export function MediaDetailScreen({ id, canEditProposal }: MediaDetailScreenProp
                         </div>
                     </div>
                 </article>
-                <ReviewsPanel mediaItemId={id} canCreate={auth.hasPermission(PERMISSIONS.REVIEWS_CREATE)} />
+                <MediaReviewsPanel mediaItemId={id} canCreate={auth.hasPermission(PERMISSIONS.REVIEWS_CREATE)} />
                 </>
             )}
         </section>

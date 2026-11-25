@@ -46,6 +46,9 @@ e2e/
     test-data.ts         cuentas del seed, prefijos, generadores de datos únicos y mensajes esperados
   auth/                  Persona 1 · autenticación y sesión JWT
   users/                 Persona 1 · autorización, usuarios, roles y permisos
+  reviews/               Persona 4 · reseñas por elemento multimedia (CRUD y validaciones)
+  reports/               Persona 4 · reportes de reseñas y moderación (HIDE / DISMISS)
+  stats/                 Persona 4 · estadísticas personales y globales
   run.mjs                ejecuta la suite con una fuente de datos (multiplataforma)
 ```
 
@@ -74,6 +77,14 @@ Principios:
 | `users/users-admin.spec.ts` | AC2 lista, búsqueda, filtros por rol y estado, paginación · AC3 crear (dominio + 409) · AC4 editar · AC5 rol, activar/desactivar, fila propia · AC6 eliminar con confirmación |
 | `users/roles-admin.spec.ts` | AC7 crear, 409, editar, asignar/reemplazar permisos, eliminar, 409 con usuarios asignados |
 | `users/permissions-admin.spec.ts` | AC8 crear, 409, editar, eliminar |
+
+## Cobertura · Persona 4
+
+| Archivo | Criterios |
+|---|---|
+| `reviews/reviews.spec.ts` | Protección de `/reviews`, consulta de reseñas por elemento multimedia, ocultamiento de `Reportar` en reseñas propias, validación de invariantes (`< 10` caracteres), creación/edición/eliminación con confirmación y verificación en backend, gestión por `ADMIN` |
+| `reports/reports.spec.ts` | Control de acceso en `/reports` (`USER` ve "Acceso denegado", `MODERATOR` accede), creación de reporte desde `/reviews`, rechazo de reporte duplicado (`409`), resolución `HIDE` (motivo obligatorio + insignia en `/reviews`) y `DISMISS` verificando estado en backend |
+| `stats/stats.spec.ts` | Protección de `/stats`, estadísticas personales consistentes con `GET /stats/me` para `USER` (sin bloque global) y estadísticas personales + globales consistentes con `GET /stats/global` para `ADMIN` |
 
 Para agregar las pruebas de otro módulo: crear `e2e/<modulo>/*.spec.ts`, importar `test`/`expect` de `../fixtures/test` y usar `test.use({ storageState: storageStatePath('user') })` para entrar con una sesión del seed.
 

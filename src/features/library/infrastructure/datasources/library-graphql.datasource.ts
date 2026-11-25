@@ -1,4 +1,4 @@
-import type { GraphQLClient } from '@/src/shared/infrastructure/graphql-client';
+import type { GraphQLClient } from '../../../../shared/infrastructure/graphql-client';
 import type {
   CreateLibraryEntryDto,
   LibraryEntryResponseDto,
@@ -8,81 +8,42 @@ import type {
 } from '../dtos/library.dto';
 import type { LibraryDatasource } from './library.datasource';
 
-const ENTRY_FIELDS = `
-  id status progress rating isFavorite notes startedAt completedAt addedAt updatedAt
-  mediaItem {
-    id title type coverUrl releaseYear creator pages durationMinutes averageRating ratingsCount
-    genres { id name }
-  }
-`;
+const FIELDS = `id status progress rating isFavorite notes startedAt completedAt addedAt updatedAt mediaItem { id title type coverUrl releaseYear creator pages durationMinutes platform averageRating ratingsCount genres { id name } }`;
+const LIST = `query MyLibrary($filter: LibraryFilterInput) { myLibrary(filter: $filter) { data { ${FIELDS} } meta { total page limit totalPages } } }`;
+const GET = `query LibraryEntry($id: ID!) { libraryEntry(id: $id) { ${FIELDS} } }`;
+const ADD = `mutation AddEntry($input: AddLibraryEntryInput!) { addToLibrary(input: $input) { ${FIELDS} } }`;
+const UPDATE = `mutation UpdateEntry($id: ID!, $input: UpdateLibraryEntryInput!) { updateLibraryEntry(id: $id, input: $input) { ${FIELDS} } }`;
+const REMOVE = `mutation RemoveEntry($id: ID!) { removeLibraryEntry(id: $id) }`;
 
-/** Implementa las mismas operaciones de biblioteca sobre el contrato GraphQL. */
+/** GraphQL implementation of the Library domain port. */
 export class LibraryGraphQLDatasource implements LibraryDatasource {
-  constructor(private readonly client: GraphQLClient, private readonly token: string) {}
+  constructor(private readonly graphql: GraphQLClient) {}
 
-  async fetchEntries(query: LibraryQueryDto): Promise<PaginatedLibraryResponseDto> {
-    const filter = {
-      ...query,
-      // GraphQL recibe los nombres del enum, aunque el dominio use los valores REST.
-      ...(query.sortBy ? { sortBy: SORT_BY_GRAPHQL_VALUE[query.sortBy] } : {}),
-    };
-    const data = await this.client.execute<{ myLibrary: PaginatedLibraryResponseDto }>(
-      `query MyLibrary($filter: LibraryFilterInput) {
-        myLibrary(filter: $filter) {
-          data { ${ENTRY_FIELDS} }
-          meta { total page limit totalPages }
-        }
-      }`,
-      { filter },
-      this.token,
-    );
-    return data.myLibrary;
+  async fetchEntries(filter: LibraryQueryDto): Promise<PaginatedLibraryResponseDto> {
+    const sortBy = filter.sortBy ? ({
+      title: 'TITLE',
+      releaseYear: 'RELEASE_YEAR',
+      averageRating: 'AVERAGE_RATING',
+      addedAt: 'ADDED_AT',
+    } as const)[filter.sortBy] : undefined;
+    const graphqlFilter = { ...filter, sortBy };
+    return (await this.graphql.execute<{ myLibrary: PaginatedLibraryResponseDto }>(LIST, { filter: graphqlFilter })).myLibrary;
   }
 
   async fetchEntry(id: string): Promise<LibraryEntryResponseDto | null> {
-    const data = await this.client.execute<{ libraryEntry: LibraryEntryResponseDto | null }>(
-      `query LibraryEntry($id: ID!) { libraryEntry(id: $id) { ${ENTRY_FIELDS} } }`,
-      { id },
-      this.token,
-    );
-    return data.libraryEntry;
+    return (await this.graphql.execute<{ libraryEntry: LibraryEntryResponseDto | null }>(GET, { id })).libraryEntry;
   }
 
-  async createEntry(dto: CreateLibraryEntryDto) {
-    const data = await this.client.execute<{ addToLibrary: LibraryEntryResponseDto }>(
-      `mutation AddToLibrary($input: AddLibraryEntryInput!) {
-        addToLibrary(input: $input) { ${ENTRY_FIELDS} }
-      }`,
-      { input: dto },
-      this.token,
-    );
-    return { kind: 'created' as const, entry: data.addToLibrary };
+  async createEntry(input: CreateLibraryEntryDto) {
+    const entry = (await this.graphql.execute<{ addToLibrary: LibraryEntryResponseDto }>(ADD, { input })).addToLibrary;
+    return { kind: 'created' as const, entry };
   }
 
-  async updateEntry(id: string, dto: UpdateLibraryEntryDto) {
-    const data = await this.client.execute<{ updateLibraryEntry: LibraryEntryResponseDto }>(
-      `mutation UpdateLibraryEntry($id: ID!, $input: UpdateLibraryEntryInput!) {
-        updateLibraryEntry(id: $id, input: $input) { ${ENTRY_FIELDS} }
-      }`,
-      { id, input: dto },
-      this.token,
-    );
-    return data.updateLibraryEntry;
+  async updateEntry(id: string, input: UpdateLibraryEntryDto) {
+    return (await this.graphql.execute<{ updateLibraryEntry: LibraryEntryResponseDto }>(UPDATE, { id, input })).updateLibraryEntry;
   }
 
-  async deleteEntry(id: string): Promise<boolean> {
-    const data = await this.client.execute<{ removeLibraryEntry: boolean }>(
-      'mutation RemoveLibraryEntry($id: ID!) { removeLibraryEntry(id: $id) }',
-      { id },
-      this.token,
-    );
-    return data.removeLibraryEntry;
+  async deleteEntry(id: string) {
+    return (await this.graphql.execute<{ removeLibraryEntry: boolean }>(REMOVE, { id })).removeLibraryEntry;
   }
 }
-
-const SORT_BY_GRAPHQL_VALUE = {
-  title: 'TITLE',
-  releaseYear: 'RELEASE_YEAR',
-  averageRating: 'AVERAGE_RATING',
-  addedAt: 'ADDED_AT',
-} as const;

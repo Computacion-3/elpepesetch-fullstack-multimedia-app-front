@@ -1,4 +1,3 @@
-import { LibraryEntry } from '../entities/library-entry';
 import type {
   AddLibraryEntryParams,
   LibraryRepository,
@@ -8,11 +7,6 @@ export class AddLibraryEntryUseCase {
   constructor(private readonly repository: Pick<LibraryRepository, 'add'>) {}
 
   async execute(params: AddLibraryEntryParams) {
-    LibraryEntry.validateState(
-      params.status ?? 'PENDING',
-      params.progress ?? 0,
-      params.rating ?? null,
-    );
     return this.repository.add(params);
   }
 }

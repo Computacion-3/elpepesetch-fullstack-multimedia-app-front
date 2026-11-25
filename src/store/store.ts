@@ -11,6 +11,37 @@ import {
 } from '@/src/features/auth/presentation/actions/auth.actions';
 import { accountSessionEnded, authSlice, forceLogoutMutation, logoutMutation } from '@/src/features/auth/presentation/store/auth.slice';
 import type { AuthDependencies } from '@/src/features/auth/presentation/store/auth.slice';
+import { librarySlice } from '@/src/features/library/presentation/store/library.slice';
+import {
+    addLibraryEntryAction,
+    getLibraryEntryAction,
+    getLibraryMediaItemIdsAction,
+    listLibraryAction,
+    removeLibraryEntryAction,
+    updateLibraryEntryAction,
+} from '@/src/features/library/presentation/actions/library.actions';
+import {
+    createReviewReportAction,
+    listReviewReportsAction,
+    resolveReviewReportAction,
+} from '@/src/features/reports/presentation/actions/reports.actions';
+import { reportsSlice } from '@/src/features/reports/presentation/store/reports.slice';
+import type { ReportsDependencies } from '@/src/features/reports/presentation/store/reports.slice';
+import {
+    createReviewAction,
+    deleteReviewAction,
+    listReviewMediaOptionsAction,
+    listReviewsByMediaAction,
+    updateReviewAction,
+} from '@/src/features/reviews/presentation/actions/reviews.actions';
+import { reviewsSlice } from '@/src/features/reviews/presentation/store/reviews.slice';
+import type { ReviewsDependencies } from '@/src/features/reviews/presentation/store/reviews.slice';
+import {
+    getGlobalStatsAction,
+    getPersonalStatsAction,
+} from '@/src/features/stats/presentation/actions/stats.actions';
+import { statsSlice } from '@/src/features/stats/presentation/store/stats.slice';
+import type { StatsDependencies } from '@/src/features/stats/presentation/store/stats.slice';
 import {
     createPermissionAction,
     deletePermissionAction,
@@ -57,15 +88,6 @@ import {
 } from '@/src/features/genres/presentation/actions/genres.actions';
 import { genresSlice } from '@/src/features/genres/presentation/store/genres.slice';
 import type { GenresDependencies } from '@/src/features/genres/presentation/store/genres.slice';
-import {
-    addLibraryEntryAction,
-    getLibraryEntryAction,
-    getLibraryMediaOptionsAction,
-    listLibraryAction,
-    removeLibraryEntryAction,
-    updateLibraryEntryAction,
-} from '@/src/features/library/presentation/actions/library.actions';
-import { librarySlice } from '@/src/features/library/presentation/store/library.slice';
 import type { LibraryDependencies } from '@/src/features/library/presentation/store/library.slice';
 import { listNotificationsAction, markNotificationReadAction } from '@/src/features/notifications/presentation/actions/notifications.actions';
 import { notificationsSlice } from '@/src/features/notifications/presentation/store/notifications.slice';
@@ -73,13 +95,11 @@ import type { NotificationsDependencies } from '@/src/features/notifications/pre
 import { createRealtimeContainer } from '@/src/features/realtime/infrastructure/repositories/realtime.container';
 import { realtimeSlice } from '@/src/features/realtime/presentation/store/realtime.slice';
 import type { RealtimeDependencies } from '@/src/features/realtime/presentation/store/realtime.slice';
-import { createReviewAction, listReviewsAction } from '@/src/features/reviews/presentation/actions/reviews.actions';
-import { reviewsSlice } from '@/src/features/reviews/presentation/store/reviews.slice';
-import type { ReviewsDependencies } from '@/src/features/reviews/presentation/store/reviews.slice';
 
 /**
- * Global store: combines feature slices and injects feature use cases as the thunk extraArgument.
- * This and the feature di/ folders are the only places that know concrete implementations.
+ * Store global de Redux Toolkit: combina los slices de todas las features e inyecta
+ * sus casos de uso o Server Actions mediante `extraArgument` de los thunks.
+ * Este archivo y las carpetas `di/` son los únicos puntos que conocen implementaciones concretas.
  */
 const appReducer = combineSlices(
     // <clean:slices> — e.g. routinesSlice,
@@ -87,15 +107,17 @@ const appReducer = combineSlices(
     usersSlice,
     rolesSlice,
     permissionsSlice,
+    librarySlice,
+    reviewsSlice,
+    reportsSlice,
+    statsSlice,
     mediaSlice,
     genresSlice,
-    librarySlice,
     notificationsSlice,
     realtimeSlice,
-    reviewsSlice,
 );
 
-/** Resets ALL slices to their initial state when logout succeeds, so no user data survives it. */
+/** Reinicia TODOS los slices a su estado inicial cuando `logoutMutation` termina con éxito. */
 const rootReducer = (state: ReturnType<typeof appReducer> | undefined, action: UnknownAction) =>
     appReducer(
         logoutMutation.fulfilled.match(action) || forceLogoutMutation.fulfilled.match(action) || accountSessionEnded.match(action)
@@ -108,7 +130,7 @@ function createThunkExtra() {
     const realtimeContainer = createRealtimeContainer();
     return {
         // <clean:extra> — e.g. routines: createRoutineContainer(),
-        // Server Actions are injected; the server-only container is never imported here.
+        // Se inyectan Server Actions en módulos conectados a API_URL para mantener server-only los contenedores.
         auth: {
             login: loginAction,
             register: registerAction,
@@ -139,6 +161,30 @@ function createThunkExtra() {
             update: updatePermissionAction,
             remove: deletePermissionAction,
         } satisfies PermissionsDependencies,
+        library: {
+            getLibrary: { execute: listLibraryAction },
+            getLibraryEntry: { execute: getLibraryEntryAction },
+            getLibraryMediaItemIds: { execute: getLibraryMediaItemIdsAction },
+            addLibraryEntry: { execute: addLibraryEntryAction },
+            updateLibraryEntry: { execute: updateLibraryEntryAction },
+            removeLibraryEntry: { execute: removeLibraryEntryAction },
+        } satisfies LibraryDependencies,
+        reviews: {
+            listMediaOptions: listReviewMediaOptionsAction,
+            listByMedia: listReviewsByMediaAction,
+            create: createReviewAction,
+            update: updateReviewAction,
+            remove: deleteReviewAction,
+        } satisfies ReviewsDependencies,
+        reports: {
+            createReport: createReviewReportAction,
+            listReports: listReviewReportsAction,
+            resolveReport: resolveReviewReportAction,
+        } satisfies ReportsDependencies,
+        stats: {
+            getPersonal: getPersonalStatsAction,
+            getGlobal: getGlobalStatsAction,
+        } satisfies StatsDependencies,
         media: {
             list: listMediaAction,
             listPending: listPendingMediaAction,
@@ -153,14 +199,6 @@ function createThunkExtra() {
             update: updateGenreAction,
             remove: deleteGenreAction,
         } satisfies GenresDependencies,
-        library: {
-            getLibrary: listLibraryAction,
-            getLibraryEntry: getLibraryEntryAction,
-            addLibraryEntry: addLibraryEntryAction,
-            updateLibraryEntry: updateLibraryEntryAction,
-            removeLibraryEntry: removeLibraryEntryAction,
-            getLibraryMediaOptions: getLibraryMediaOptionsAction,
-        } satisfies LibraryDependencies,
         notifications: {
             list: listNotificationsAction,
             markRead: markNotificationReadAction,
@@ -177,10 +215,6 @@ function createThunkExtra() {
             getTicket: getSocketTokenAction,
             expireSession: expireSessionAction,
         } satisfies RealtimeDependencies,
-        reviews: {
-            list: listReviewsAction,
-            create: createReviewAction,
-        } satisfies ReviewsDependencies,
     };
 }
 

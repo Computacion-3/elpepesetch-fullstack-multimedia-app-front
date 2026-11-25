@@ -9,10 +9,11 @@ import type { LibraryEntryResponseDto } from '../dtos/library.dto';
 
 const entry: LibraryEntryResponseDto = {
   id: 'entry-1', status: 'IN_PROGRESS', progress: 5, rating: 8, isFavorite: true,
-  notes: 'seguir', addedAt: '2026-11-20T00:00:00.000Z',
+  notes: 'seguir', startedAt: null, completedAt: null,
+  addedAt: '2026-11-20T00:00:00.000Z', updatedAt: '2026-11-20T00:00:00.000Z',
   mediaItem: {
     id: 'media-1', title: 'Catálogo', type: 'BOOK', releaseYear: 2020,
-    creator: 'Autora', coverUrl: null, pages: 100, durationMinutes: null,
+    creator: 'Autora', coverUrl: null, pages: 100, durationMinutes: null, platform: null,
     averageRating: 8.4, ratingsCount: 3, genres: [{ id: 'genre-1', name: 'Ficción' }],
   },
 };
@@ -39,7 +40,7 @@ function createDatasources(): { name: string; datasource: LibraryDatasource }[] 
   };
   return [
     { name: 'REST', datasource: new LibraryHttpDatasource(restClient) },
-    { name: 'GraphQL', datasource: new LibraryGraphQLDatasource(graphqlClient, 'session') },
+    { name: 'GraphQL', datasource: new LibraryGraphQLDatasource(graphqlClient) },
   ];
 }
 

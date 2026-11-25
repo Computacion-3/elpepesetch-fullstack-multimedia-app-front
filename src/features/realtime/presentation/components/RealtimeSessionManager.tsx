@@ -9,8 +9,12 @@ import { connectRealtime, disconnectRealtime, subscribeToMediaRoom } from '../st
 import { selectRealtimeEvents, selectRealtimeStatus, selectSubscribedMediaItemId } from '../store/realtime.selectors';
 import { incrementUnreadCount, syncNotifications } from '@/src/features/notifications/presentation/store/notifications.slice';
 import { applyMediaModeration, applyMediaRating } from '@/src/features/media/presentation/store/media.slice';
-import { fetchReviews, hideReviewFromSocket } from '@/src/features/reviews/presentation/store/reviews.slice';
-import { selectReviewsQuery } from '@/src/features/reviews/presentation/store/reviews.selectors';
+import { fetchReviewsByMediaQuery, hideReviewFromSocket } from '@/src/features/reviews/presentation/store/reviews.slice';
+import {
+  selectReviewsCurrentPage,
+  selectReviewsLimit,
+  selectSelectedMediaId,
+} from '@/src/features/reviews/presentation/store/reviews.selectors';
 import { refreshCurrentUserMutation } from '@/src/features/auth/presentation/store/auth.slice';
 import type { RealtimeEventPayloads } from '../../domain/entities/realtime-event';
 
@@ -24,7 +28,9 @@ export function RealtimeSessionManager() {
   const status = useAppSelector(selectRealtimeStatus);
   const latestEvent = useAppSelector((state) => selectRealtimeEvents(state)[0]);
   const activeMediaId = useAppSelector(selectSubscribedMediaItemId);
-  const reviewQuery = useAppSelector(selectReviewsQuery);
+  const selectedReviewMediaId = useAppSelector(selectSelectedMediaId);
+  const reviewPage = useAppSelector(selectReviewsCurrentPage);
+  const reviewLimit = useAppSelector(selectReviewsLimit);
   const activeMediaRef = useRef(activeMediaId);
 
   useEffect(() => {
@@ -72,13 +78,21 @@ export function RealtimeSessionManager() {
       const hidden = latestEvent.payload as RealtimeEventPayloads['review.visibility.changed'];
       dispatch(hideReviewFromSocket({ reviewId: hidden.reviewId, mediaItemId: hidden.mediaItemId, hiddenReason: hidden.hiddenReason }));
       dispatch(incrementUnreadCount());
-    } else if (latestEvent.event === 'review.created' && latestEvent.mediaItemId) {
-      void dispatch(fetchReviews({ mediaItemId: latestEvent.mediaItemId, query: reviewQuery }));
+    } else if (
+      latestEvent.event === 'review.created' &&
+      latestEvent.mediaItemId === selectedReviewMediaId
+    ) {
+      // Recarga solo si el evento corresponde al medio visible en el panel de reseñas.
+      void dispatch(fetchReviewsByMediaQuery({
+        mediaItemId: latestEvent.mediaItemId,
+        page: reviewPage,
+        limit: reviewLimit,
+      }));
     } else if (latestEvent.event === 'account.updated') {
       void dispatch(refreshCurrentUserMutation());
       dispatch(incrementUnreadCount());
     }
-  }, [dispatch, latestEvent, reviewQuery]);
+  }, [dispatch, latestEvent, reviewPage, reviewLimit, selectedReviewMediaId]);
 
   return null;
 }

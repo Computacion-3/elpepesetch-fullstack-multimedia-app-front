@@ -1,49 +1,17 @@
-import {
-  ConflictError,
-  NotFoundError,
-  UnauthorizedError,
-  ValidationError,
-} from '../../../../shared/domain/errors';
-import { HttpError } from '../../../../shared/infrastructure/http-client';
 import type { LibraryApiErrorDto } from '../dtos/library.dto';
+import { HttpError } from '../../../../shared/infrastructure/http-client';
+import { toDomainError } from '../../../../shared/infrastructure/error-translator';
 
 export type LibraryApiClientError = LibraryApiErrorDto;
 
 export function toLibraryDomainError(error: unknown): unknown {
-  if (error instanceof HttpError) {
-    const message = error.message || 'Error al comunicarse con el servidor.';
-    switch (error.status) {
-      case 400:
-      case 422:
-        return new ValidationError(message);
-      case 401:
-      case 403:
-        return new UnauthorizedError(message);
-      case 404:
-        return new NotFoundError(message);
-      case 409:
-        return new ConflictError(message);
-      default:
-        return error;
-    }
-  }
+  if (error instanceof HttpError) return toDomainError(error);
   if (!isLibraryApiClientError(error)) return error;
 
   const message = Array.isArray(error.message)
     ? error.message.join('\n')
     : error.message;
-  switch (error.statusCode) {
-    case 400:
-      return new ValidationError(message);
-    case 401:
-      return new UnauthorizedError(message);
-    case 404:
-      return new NotFoundError(message);
-    case 409:
-      return new ConflictError(message);
-    default:
-      return new Error(message || 'Error al comunicarse con el servidor.');
-  }
+  return toDomainError(new HttpError(error.statusCode, message, error));
 }
 
 function isLibraryApiClientError(

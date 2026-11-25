@@ -12,6 +12,7 @@
     "inventory:clean": "node .claude/skills/clean-feature/scripts/inventory.mjs",
     "diagram:clean": "node .claude/skills/clean-feature/scripts/diagram.mjs",
     "test:e2e": "playwright test",
+    "test:library:unit": "node tests/run-library-unit.mjs",
     "test:e2e:graphql": "node e2e/run.mjs graphql",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:report": "playwright show-report"

@@ -1,7 +1,6 @@
 import type {
   LibraryEntry,
   LibraryEntryChanges,
-  LibraryMediaReference,
   LibraryStatus,
   MediaType,
 } from '../entities/library-entry';
@@ -33,11 +32,6 @@ export interface PaginatedLibrary {
 
 export interface AddLibraryEntryParams {
   mediaItemId: string;
-  status?: LibraryStatus;
-  progress?: number;
-  rating?: number | null;
-  isFavorite?: boolean;
-  notes?: string | null;
 }
 
 export interface LibraryRepository {
@@ -46,8 +40,4 @@ export interface LibraryRepository {
   add(params: AddLibraryEntryParams): Promise<LibraryEntry>;
   update(id: string, changes: LibraryEntryChanges): Promise<LibraryEntry>;
   remove(id: string): Promise<void>;
-}
-
-export interface MediaCatalogRepository {
-  getSelectableItems(): Promise<LibraryMediaReference[]>;
 }

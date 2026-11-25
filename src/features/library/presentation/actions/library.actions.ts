@@ -2,62 +2,80 @@
 
 import { runAuthenticated } from '@/src/lib/run-authenticated';
 import type { ActionResult } from '@/src/shared/domain/action-result';
-import type { AddLibraryEntryParams, LibraryQuery } from '../../domain/repositories/library.repository';
-import type { LibraryEntryChanges } from '../../domain/entities/library-entry';
+import { createFetchHttpClient } from '@/src/shared/infrastructure/http-client';
+// Esta Server Action es el punto de composición autenticado para los transportes.
+// eslint-disable-next-line no-restricted-imports
+import { createGraphQLClient, type GraphQLClient } from '@/src/shared/infrastructure/graphql-client';
 import { createLibraryContainer } from '../../di/library.container';
-import { LibraryEntryViewModelMapper, LibraryMediaOptionViewModelMapper } from '../viewmodels/library-entry.viewmodel';
-import type { LibraryEntryViewModel, LibraryMediaOptionViewModel } from '../viewmodels/library-entry.viewmodel';
+import type { AddLibraryEntryParams, LibraryQuery } from '../../domain/repositories/library.repository';
+import type { LibraryEntryViewModel } from '../viewmodels/library-entry.viewmodel';
+import { LibraryEntryViewModelMapper } from '../viewmodels/library-entry.viewmodel';
+import type { LibraryEntryChanges } from '../../domain/entities/library-entry';
 
-type LibraryPageViewModel = {
-  data: LibraryEntryViewModel[];
-  meta: { total: number; page: number; limit: number; totalPages: number };
-};
+async function withLibrary<T>(fallback: string, run: (library: ReturnType<typeof createLibraryContainer>) => Promise<T>): Promise<ActionResult<T>> {
+  return runAuthenticated(fallback, async (token) => {
+    const http = createFetchHttpClient();
+    const graph = createGraphQLClient(http);
+    const authenticatedGraph: GraphQLClient = {
+      execute: (document, variables) => graph.execute(document, variables, token),
+    };
+    const library = createLibraryContainer({
+      graphqlClient: authenticatedGraph,
+      httpClient: {
+        request: async <T>(path: string, options: { method?: 'GET' | 'POST' | 'PATCH' | 'DELETE'; query?: URLSearchParams; body?: unknown } = {}): Promise<T> => {
+          const suffix = options.query?.size ? `?${options.query}` : '';
+          const url = `${path}${suffix}`;
+          switch (options.method ?? 'GET') {
+            case 'POST': return http.post<T>(url, options.body, token);
+            case 'PATCH': return http.patch<T>(url, options.body, token);
+            case 'DELETE': return http.delete<T>(url, token);
+            default: return http.get<T>(url, token);
+          }
+        },
+      },
+    });
+    return run(library);
+  });
+}
 
-/** Carga la biblioteca propia con la fuente de datos configurada en el servidor. */
-export async function listLibraryAction(query: LibraryQuery): Promise<ActionResult<LibraryPageViewModel>> {
-  return runAuthenticated('No se pudo cargar tu biblioteca', async (token) => {
-    const result = await createLibraryContainer({ token }).getLibrary.execute(query);
+export async function listLibraryAction(query: LibraryQuery): Promise<ActionResult<{ data: LibraryEntryViewModel[]; meta: { total: number; page: number; limit: number; totalPages: number } }>> {
+  return withLibrary('No se pudo cargar la biblioteca', async ({ getLibrary }) => {
+    const result = await getLibrary.execute(query);
     return { ...result, data: result.data.map(LibraryEntryViewModelMapper.toViewModel) };
   });
 }
 
-/** Carga una entrada propia y sus datos multimedia. */
 export async function getLibraryEntryAction(id: string): Promise<ActionResult<LibraryEntryViewModel>> {
-  return runAuthenticated('No se pudo cargar esta entrada', async (token) => {
-    const entry = await createLibraryContainer({ token }).getLibraryEntry.execute(id);
-    if (!entry) throw new Error('No se encontró esta entrada.');
-    return LibraryEntryViewModelMapper.toViewModel(entry);
+  return withLibrary('No se pudo cargar la entrada', async ({ getLibraryEntry }) =>
+    LibraryEntryViewModelMapper.toViewModel(await getLibraryEntry.execute(id)));
+}
+
+export async function getLibraryMediaItemIdsAction(): Promise<ActionResult<string[]>> {
+  return withLibrary('No se pudo consultar la biblioteca actual', async ({ getLibrary }) => {
+    const pageSize = 50;
+    const firstPage = await getLibrary.execute({ page: 1, limit: pageSize });
+    const mediaItemIds = firstPage.data.map((entry) => entry.mediaItemId);
+    for (let page = 2; page <= firstPage.meta.totalPages; page += 1) {
+      const nextPage = await getLibrary.execute({ page, limit: pageSize });
+      mediaItemIds.push(...nextPage.data.map((entry) => entry.mediaItemId));
+    }
+    return mediaItemIds;
   });
 }
 
-/** Obtiene las opciones visibles del catálogo multimedia. */
-export async function getLibraryMediaOptionsAction(): Promise<ActionResult<LibraryMediaOptionViewModel[]>> {
-  return runAuthenticated('No se pudo cargar el catálogo', async (token) => {
-    const options = await createLibraryContainer({ token }).getLibraryMediaOptions.execute();
-    return options.map(LibraryMediaOptionViewModelMapper.toViewModel);
-  });
-}
-
-/** Agrega un elemento visible a la biblioteca del usuario autenticado. */
 export async function addLibraryEntryAction(params: AddLibraryEntryParams): Promise<ActionResult<LibraryEntryViewModel>> {
-  return runAuthenticated('No se pudo agregar el elemento', async (token) => {
-    const entry = await createLibraryContainer({ token }).addLibraryEntry.execute(params);
-    return LibraryEntryViewModelMapper.toViewModel(entry);
-  });
+  return withLibrary('No se pudo agregar el elemento', async ({ addLibraryEntry }) =>
+    LibraryEntryViewModelMapper.toViewModel(await addLibraryEntry.execute(params)));
 }
 
-/** Actualiza únicamente los campos admitidos por el backend. */
 export async function updateLibraryEntryAction(id: string, changes: LibraryEntryChanges): Promise<ActionResult<LibraryEntryViewModel>> {
-  return runAuthenticated('No se pudo actualizar la entrada', async (token) => {
-    const entry = await createLibraryContainer({ token }).updateLibraryEntry.execute(id, changes);
-    return LibraryEntryViewModelMapper.toViewModel(entry);
-  });
+  return withLibrary('No se pudo actualizar la entrada', async ({ updateLibraryEntry }) =>
+    LibraryEntryViewModelMapper.toViewModel(await updateLibraryEntry.execute(id, changes)));
 }
 
-/** Elimina una entrada propia. El backend vuelve a validar su propiedad. */
-export async function removeLibraryEntryAction(id: string): Promise<ActionResult<null>> {
-  return runAuthenticated('No se pudo eliminar la entrada', async (token) => {
-    await createLibraryContainer({ token }).removeLibraryEntry.execute(id);
-    return null;
+export async function removeLibraryEntryAction(id: string): Promise<ActionResult<string>> {
+  return withLibrary('No se pudo eliminar la entrada', async ({ removeLibraryEntry }) => {
+    await removeLibraryEntry.execute(id);
+    return id;
   });
 }

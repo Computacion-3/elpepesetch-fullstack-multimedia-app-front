@@ -1,121 +1,251 @@
-import { createAsyncThunk, createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import { describeError } from '@/src/shared/domain/errors';
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import type { PayloadAction } from '@reduxjs/toolkit';
 import type { ActionResult } from '@/src/shared/domain/action-result';
-import type { CreateReviewDraft, ReviewQuery } from '../../domain/entities/review';
-import type { ReviewViewModel } from '../viewmodels/review.viewmodel';
+import { describeError } from '@/src/shared/domain/errors';
+import type {
+    ReviewChanges,
+    ReviewDraft,
+    ReviewListQuery,
+} from '../../domain/entities/review';
+import type {
+    ReviewMediaOptionViewModel,
+    ReviewsPageViewModel,
+    ReviewViewModel,
+} from '../viewmodels/reviews.viewmodel';
 
-/** API externa inyectada desde Server Actions. */
+/**
+ * Contrato de dependencias que los thunks de `reviews` reciben vía `extraArgument`.
+ * En producción/desarrollo son Server Actions inyectadas desde `src/store/store.ts`.
+ */
 export interface ReviewsDependencies {
-  list: (mediaItemId: string, query: ReviewQuery) => Promise<ActionResult<{
-    data: ReviewViewModel[];
-    meta: { total: number; page: number; limit: number; totalPages: number };
-  }>>;
-  create: (mediaItemId: string, draft: CreateReviewDraft) => Promise<ActionResult<ReviewViewModel>>;
+    listMediaOptions: () => Promise<ActionResult<ReviewMediaOptionViewModel[]>>;
+    listByMedia: (query: ReviewListQuery) => Promise<ActionResult<ReviewsPageViewModel>>;
+    create: (mediaItemId: string, draft: ReviewDraft) => Promise<ActionResult<ReviewViewModel>>;
+    update: (id: string, changes: ReviewChanges) => Promise<ActionResult<ReviewViewModel>>;
+    remove: (id: string) => Promise<ActionResult<null>>;
 }
 
-type Status = 'idle' | 'loading' | 'succeeded' | 'failed';
+export type RequestStatus = 'idle' | 'loading' | 'succeeded' | 'failed';
 
+/** Estado global de Redux para el módulo de reseñas de la comunidad. */
 export interface ReviewsState {
-  mediaItemId: string | null;
-  items: ReviewViewModel[];
-  meta: { total: number; page: number; limit: number; totalPages: number };
-  query: ReviewQuery;
-  status: Status;
-  mutationStatus: Status;
-  errorMessage: string | null;
+    mediaOptions: ReviewMediaOptionViewModel[];
+    mediaOptionsStatus: RequestStatus;
+    selectedMediaId: string;
+    items: ReviewViewModel[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    status: RequestStatus;
+    mutationStatus: RequestStatus;
+    errorMessage: string | null;
+    successMessage: string | null;
 }
 
 const initialState: ReviewsState = {
-  mediaItemId: null,
-  items: [],
-  meta: { total: 0, page: 1, limit: 10, totalPages: 0 },
-  query: { page: 1, limit: 10 },
-  status: 'idle',
-  mutationStatus: 'idle',
-  errorMessage: null,
+    mediaOptions: [],
+    mediaOptionsStatus: 'idle',
+    selectedMediaId: '',
+    items: [],
+    total: 0,
+    page: 1,
+    limit: 10,
+    totalPages: 0,
+    status: 'idle',
+    mutationStatus: 'idle',
+    errorMessage: null,
+    successMessage: null,
 };
 
-const createReviewsThunk = createAsyncThunk.withTypes<{
-  state: { reviews: ReviewsState };
-  extra: { reviews: ReviewsDependencies };
-  rejectValue: string;
+const createAppThunk = createAsyncThunk.withTypes<{
+    state: { reviews: ReviewsState };
+    extra: { reviews: ReviewsDependencies };
+    rejectValue: string;
 }>();
 
-/** Carga reseñas visibles para un elemento. */
-export const fetchReviews = createReviewsThunk(
-  'reviews/list',
-  async (input: { mediaItemId: string; query: ReviewQuery }, { extra, rejectWithValue }) => {
-    try {
-      const result = await extra.reviews.list(input.mediaItemId, input.query);
-      if (!result.ok) return rejectWithValue(result.message);
-      return { ...result.data, mediaItemId: input.mediaItemId, query: input.query };
-    } catch (error) {
-      return rejectWithValue(describeError(error, 'No se pudieron cargar las reseñas.'));
-    }
-  },
-);
-
-/** Publica una reseña después de la validación del dominio y del backend. */
-export const submitReview = createReviewsThunk(
-  'reviews/create',
-  async (input: { mediaItemId: string; draft: CreateReviewDraft }, { extra, rejectWithValue }) => {
-    try {
-      const result = await extra.reviews.create(input.mediaItemId, input.draft);
-      if (!result.ok) return rejectWithValue(result.message);
-      return { review: result.data, mediaItemId: input.mediaItemId };
-    } catch (error) {
-      return rejectWithValue(describeError(error, 'No se pudo publicar la reseña.'));
-    }
-  },
-);
-
-export const reviewsSlice = createSlice({
-  name: 'reviews',
-  initialState,
-  reducers: {
-    /** Marca en la lista una reseña que el moderador acaba de ocultar. */
-    hideReviewFromSocket: (state, action: PayloadAction<{ reviewId: string; mediaItemId: string; hiddenReason: string }>) => {
-      if (state.mediaItemId !== action.payload.mediaItemId) return;
-      state.items = state.items.map((item) => item.id === action.payload.reviewId
-        ? { ...item, isHidden: true, hiddenReason: action.payload.hiddenReason }
-        : item);
+/** Query: carga los elementos multimedia disponibles para reseñar. */
+export const fetchReviewMediaOptionsQuery = createAppThunk(
+    'reviews/fetchMediaOptions',
+    async (_, { extra, rejectWithValue }) => {
+        try {
+            const result = await extra.reviews.listMediaOptions();
+            if (!result.ok) return rejectWithValue(result.message);
+            return result.data;
+        } catch (err) {
+            return rejectWithValue(describeError(err, 'No se pudo cargar el catálogo multimedia'));
+        }
     },
-    clearReviews: () => initialState,
-  },
-  extraReducers: (builder) => {
-    builder
-      .addCase(fetchReviews.pending, (state, action) => {
-        if (state.mediaItemId !== action.meta.arg.mediaItemId) state.items = [];
-        state.mediaItemId = action.meta.arg.mediaItemId;
-        state.query = action.meta.arg.query;
-        state.status = 'loading';
-        state.errorMessage = null;
-      })
-      .addCase(fetchReviews.fulfilled, (state, action) => {
-        if (state.mediaItemId !== action.payload.mediaItemId) return;
-        state.items = action.payload.data;
-        state.meta = action.payload.meta;
-        state.status = 'succeeded';
-      })
-      .addCase(fetchReviews.rejected, (state, action) => {
-        state.status = 'failed';
-        state.errorMessage = action.payload ?? 'No se pudieron cargar las reseñas.';
-      })
-      .addCase(submitReview.pending, (state) => {
-        state.mutationStatus = 'loading';
-        state.errorMessage = null;
-      })
-      .addCase(submitReview.fulfilled, (state, action) => {
-        state.mutationStatus = 'succeeded';
-        if (state.mediaItemId !== action.payload.mediaItemId) return;
-        if (state.items.every((item) => item.id !== action.payload.review.id)) state.items.unshift(action.payload.review);
-        state.meta.total += 1;
-      })
-      .addCase(submitReview.rejected, (state, action) => {
-        state.mutationStatus = 'failed';
-        state.errorMessage = action.payload ?? 'No se pudo publicar la reseña.';
-      });
-  },
+);
+
+/** Query: carga una página de reseñas para el elemento multimedia seleccionado. */
+export const fetchReviewsByMediaQuery = createAppThunk(
+    'reviews/fetchByMedia',
+    async (query: ReviewListQuery, { extra, rejectWithValue }) => {
+        try {
+            const result = await extra.reviews.listByMedia(query);
+            if (!result.ok) return rejectWithValue(result.message);
+            return result.data;
+        } catch (err) {
+            return rejectWithValue(describeError(err, 'No se pudieron cargar las reseñas'));
+        }
+    },
+);
+
+/** Mutation: crea una reseña nueva para el elemento multimedia activo. */
+export const createReviewMutation = createAppThunk(
+    'reviews/create',
+    async (
+        input: { mediaItemId: string; draft: ReviewDraft },
+        { extra, rejectWithValue },
+    ) => {
+        try {
+            const result = await extra.reviews.create(input.mediaItemId, input.draft);
+            if (!result.ok) return rejectWithValue(result.message);
+            return result.data;
+        } catch (err) {
+            return rejectWithValue(describeError(err, 'No se pudo publicar la reseña'));
+        }
+    },
+);
+
+/** Mutation: actualiza una reseña existente. */
+export const updateReviewMutation = createAppThunk(
+    'reviews/update',
+    async (input: { id: string; changes: ReviewChanges }, { extra, rejectWithValue }) => {
+        try {
+            const result = await extra.reviews.update(input.id, input.changes);
+            if (!result.ok) return rejectWithValue(result.message);
+            return result.data;
+        } catch (err) {
+            return rejectWithValue(describeError(err, 'No se pudo actualizar la reseña'));
+        }
+    },
+);
+
+/** Mutation: elimina una reseña existente. */
+export const deleteReviewMutation = createAppThunk(
+    'reviews/delete',
+    async (id: string, { extra, rejectWithValue }) => {
+        try {
+            const result = await extra.reviews.remove(id);
+            if (!result.ok) return rejectWithValue(result.message);
+            return result.data;
+        } catch (err) {
+            return rejectWithValue(describeError(err, 'No se pudo eliminar la reseña'));
+        }
+    },
+);
+
+/**
+ * Slice de Redux Toolkit para el módulo `reviews`.
+ * Administra la lista paginada de reseñas, selección de medio y mensajes de estado.
+ */
+export const reviewsSlice = createSlice({
+    name: 'reviews',
+    initialState,
+    reducers: {
+        /** Refleja el ocultamiento recibido por WebSocket en el elemento actualmente abierto. */
+        hideReviewFromSocket: (state, action: PayloadAction<{ reviewId: string; mediaItemId: string; hiddenReason: string }>) => {
+            if (state.selectedMediaId !== action.payload.mediaItemId) return;
+            state.items = state.items.map((review) => review.id === action.payload.reviewId
+                ? { ...review, isHidden: true, hiddenReason: action.payload.hiddenReason }
+                : review);
+        },
+        setSelectedMediaId: (state, action: PayloadAction<string>) => {
+            state.selectedMediaId = action.payload;
+            state.page = 1;
+            state.errorMessage = null;
+        },
+        setReviewsPage: (state, action: PayloadAction<number>) => {
+            state.page = Math.max(1, action.payload);
+        },
+        clearReviewsFeedback: (state) => {
+            state.errorMessage = null;
+            state.successMessage = null;
+            if (state.status === 'failed') state.status = 'idle';
+            if (state.mutationStatus === 'failed' || state.mutationStatus === 'succeeded') {
+                state.mutationStatus = 'idle';
+            }
+        },
+    },
+    extraReducers: (builder) => {
+        builder
+            .addCase(fetchReviewMediaOptionsQuery.pending, (state) => {
+                state.mediaOptionsStatus = 'loading';
+            })
+            .addCase(fetchReviewMediaOptionsQuery.fulfilled, (state, action) => {
+                state.mediaOptionsStatus = 'succeeded';
+                state.mediaOptions = action.payload;
+                if (!state.selectedMediaId && action.payload.length > 0) {
+                    state.selectedMediaId = action.payload[0].id;
+                }
+            })
+            .addCase(fetchReviewMediaOptionsQuery.rejected, (state, action) => {
+                state.mediaOptionsStatus = 'failed';
+                state.errorMessage =
+                    action.payload ?? action.error.message ?? 'No se pudo cargar el catálogo';
+            })
+            .addCase(fetchReviewsByMediaQuery.pending, (state) => {
+                state.status = 'loading';
+                state.errorMessage = null;
+            })
+            .addCase(fetchReviewsByMediaQuery.fulfilled, (state, action) => {
+                state.status = 'succeeded';
+                state.items = action.payload.items;
+                state.total = action.payload.total;
+                state.page = action.payload.page;
+                state.limit = action.payload.limit;
+                state.totalPages = action.payload.totalPages;
+            })
+            .addCase(fetchReviewsByMediaQuery.rejected, (state, action) => {
+                state.status = 'failed';
+                state.errorMessage =
+                    action.payload ?? action.error.message ?? 'No se pudieron cargar las reseñas';
+            })
+            .addCase(createReviewMutation.pending, (state) => {
+                state.mutationStatus = 'loading';
+                state.errorMessage = null;
+                state.successMessage = null;
+            })
+            .addCase(createReviewMutation.fulfilled, (state) => {
+                state.mutationStatus = 'succeeded';
+                state.successMessage = 'Reseña publicada correctamente.';
+            })
+            .addCase(createReviewMutation.rejected, (state, action) => {
+                state.mutationStatus = 'failed';
+                state.errorMessage =
+                    action.payload ?? action.error.message ?? 'No se pudo publicar la reseña';
+            })
+            .addCase(updateReviewMutation.pending, (state) => {
+                state.mutationStatus = 'loading';
+                state.errorMessage = null;
+                state.successMessage = null;
+            })
+            .addCase(updateReviewMutation.fulfilled, (state) => {
+                state.mutationStatus = 'succeeded';
+                state.successMessage = 'Reseña actualizada correctamente.';
+            })
+            .addCase(updateReviewMutation.rejected, (state, action) => {
+                state.mutationStatus = 'failed';
+                state.errorMessage =
+                    action.payload ?? action.error.message ?? 'No se pudo actualizar la reseña';
+            })
+            .addCase(deleteReviewMutation.pending, (state) => {
+                state.mutationStatus = 'loading';
+                state.errorMessage = null;
+                state.successMessage = null;
+            })
+            .addCase(deleteReviewMutation.fulfilled, (state) => {
+                state.mutationStatus = 'succeeded';
+                state.successMessage = 'Reseña eliminada correctamente.';
+            })
+            .addCase(deleteReviewMutation.rejected, (state, action) => {
+                state.mutationStatus = 'failed';
+                state.errorMessage =
+                    action.payload ?? action.error.message ?? 'No se pudo eliminar la reseña';
+            });
+    },
 });
 
-export const { hideReviewFromSocket, clearReviews } = reviewsSlice.actions;
+export const { hideReviewFromSocket, setSelectedMediaId, setReviewsPage, clearReviewsFeedback } = reviewsSlice.actions;

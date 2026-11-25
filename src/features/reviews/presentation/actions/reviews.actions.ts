@@ -1,29 +1,78 @@
 'use server';
 
-import { runAuthenticated } from '@/src/lib/run-authenticated';
-import { runAuthorized } from '@/src/lib/run-authorized';
-import { PERMISSIONS } from '@/src/shared/permissions';
+import { runAuthenticated, runAuthorized } from '@/src/lib/run-authorized';
 import type { ActionResult } from '@/src/shared/domain/action-result';
-import type { CreateReviewDraft, ReviewQuery } from '../../domain/entities/review';
-import { createReviewsContainer } from '../../di/reviews.container';
-import { ReviewViewModelMapper } from '../viewmodels/review.viewmodel';
-import type { ReviewViewModel } from '../viewmodels/review.viewmodel';
+import { PERMISSIONS } from '@/src/shared/permissions';
+import { reviewsContainer } from '../../di/reviews.container';
+import type {
+    ReviewChanges,
+    ReviewDraft,
+    ReviewListQuery,
+} from '../../domain/entities/review';
+import {
+    ReviewsViewModelMapper,
+    type ReviewMediaOptionViewModel,
+    type ReviewsPageViewModel,
+    type ReviewViewModel,
+} from '../viewmodels/reviews.viewmodel';
 
-/** Lista únicamente las reseñas visibles para la cuenta que consulta. */
-export async function listReviewsAction(mediaItemId: string, query: ReviewQuery): Promise<ActionResult<{
-  data: ReviewViewModel[];
-  meta: { total: number; page: number; limit: number; totalPages: number };
-}>> {
-  return runAuthenticated('No se pudieron cargar las reseñas', async (token) => {
-    const page = await createReviewsContainer(token).list.execute(mediaItemId, query);
-    return { ...page, data: page.data.map(ReviewViewModelMapper.toViewModel) };
-  });
+/** Obtiene la lista de elementos multimedia disponibles para seleccionar y consultar reseñas. */
+export async function listReviewMediaOptionsAction(): Promise<
+    ActionResult<ReviewMediaOptionViewModel[]>
+> {
+    return runAuthenticated('No se pudo cargar el catálogo multimedia', async (token) => {
+        const items = await reviewsContainer.listMediaOptions.execute(token);
+        return items.map((item) => ReviewsViewModelMapper.toMediaOption(item));
+    });
 }
 
-/** Revalida el permiso para crear reseñas en cada llamada al backend. */
-export async function createReviewAction(mediaItemId: string, draft: CreateReviewDraft): Promise<ActionResult<ReviewViewModel>> {
-  return runAuthorized(PERMISSIONS.REVIEWS_CREATE, 'No se pudo publicar la reseña', async (token) => {
-    const review = await createReviewsContainer(token).create.execute(mediaItemId, draft);
-    return ReviewViewModelMapper.toViewModel(review);
-  });
+/** Lista las reseñas paginadas visibles de un elemento multimedia. */
+export async function listReviewsByMediaAction(
+    query: ReviewListQuery,
+): Promise<ActionResult<ReviewsPageViewModel>> {
+    return runAuthenticated('No se pudieron cargar las reseñas', async (token) =>
+        ReviewsViewModelMapper.toPage(await reviewsContainer.listByMedia.execute(token, query)),
+    );
+}
+
+/** Crea una reseña sobre un elemento multimedia verificando el permiso `reviews:create`. */
+export async function createReviewAction(
+    mediaItemId: string,
+    draft: ReviewDraft,
+): Promise<ActionResult<ReviewViewModel>> {
+    return runAuthorized(
+        PERMISSIONS.REVIEWS_CREATE,
+        'No se pudo publicar la reseña',
+        async (token) =>
+            ReviewsViewModelMapper.toViewModel(
+                await reviewsContainer.create.execute(token, mediaItemId, draft),
+            ),
+    );
+}
+
+/** Actualiza una reseña existente verificando el permiso `reviews:update`. */
+export async function updateReviewAction(
+    id: string,
+    changes: ReviewChanges,
+): Promise<ActionResult<ReviewViewModel>> {
+    return runAuthorized(
+        PERMISSIONS.REVIEWS_UPDATE,
+        'No se pudo actualizar la reseña',
+        async (token) =>
+            ReviewsViewModelMapper.toViewModel(
+                await reviewsContainer.update.execute(token, id, changes),
+            ),
+    );
+}
+
+/** Elimina una reseña existente verificando el permiso `reviews:delete`. */
+export async function deleteReviewAction(id: string): Promise<ActionResult<null>> {
+    return runAuthorized(
+        PERMISSIONS.REVIEWS_DELETE,
+        'No se pudo eliminar la reseña',
+        async (token) => {
+            await reviewsContainer.remove.execute(token, id);
+            return null;
+        },
+    );
 }

@@ -1,33 +1,159 @@
 'use client';
 
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '@/src/store/hooks';
-import type { CreateReviewDraft, ReviewQuery } from '../../domain/entities/review';
-import { clearReviews, fetchReviews, submitReview } from '../store/reviews.slice';
-import { selectReviewMutationStatus, selectReviews, selectReviewsError, selectReviewsMeta, selectReviewsStatus } from '../store/reviews.selectors';
+import type { ReviewChanges, ReviewDraft } from '../../domain/entities/review';
+import {
+    clearReviewsFeedback,
+    createReviewMutation,
+    deleteReviewMutation,
+    fetchReviewMediaOptionsQuery,
+    fetchReviewsByMediaQuery,
+    setReviewsPage,
+    setSelectedMediaId,
+    updateReviewMutation,
+} from '../store/reviews.slice';
+import {
+    selectReviewMediaOptions,
+    selectReviewMediaOptionsStatus,
+    selectReviews,
+    selectReviewsError,
+    selectReviewsMutationStatus,
+    selectReviewsPage,
+    selectReviewsStatus,
+    selectReviewsSuccess,
+    selectSelectedMediaId,
+} from '../store/reviews.selectors';
 
-/** Fachada de la lista de reseñas y su formulario de creación. */
-export function useReviews(mediaItemId: string) {
-  const dispatch = useAppDispatch();
-  const items = useAppSelector(selectReviews);
-  const meta = useAppSelector(selectReviewsMeta);
-  const status = useAppSelector(selectReviewsStatus);
-  const mutationStatus = useAppSelector(selectReviewMutationStatus);
-  const errorMessage = useAppSelector(selectReviewsError);
+/**
+ * Hook fachada del módulo `reviews`.
+ * Es la única interfaz que consumen los componentes visuales de reseñas;
+ * encapsula Redux Toolkit, dispatchers de thunks y recarga tras mutaciones.
+ */
+export function useReviews() {
+    const dispatch = useAppDispatch();
+    const mediaOptions = useAppSelector(selectReviewMediaOptions);
+    const mediaOptionsStatus = useAppSelector(selectReviewMediaOptionsStatus);
+    const selectedMediaId = useAppSelector(selectSelectedMediaId);
+    const reviews = useAppSelector(selectReviews);
+    const page = useAppSelector(selectReviewsPage);
+    const status = useAppSelector(selectReviewsStatus);
+    const mutationStatus = useAppSelector(selectReviewsMutationStatus);
+    const errorMessage = useAppSelector(selectReviewsError);
+    const successMessage = useAppSelector(selectReviewsSuccess);
 
-  useEffect(() => {
-    void dispatch(fetchReviews({ mediaItemId, query: { page: 1, limit: 10 } }));
-    return () => { dispatch(clearReviews()); };
-  }, [dispatch, mediaItemId]);
+    /** Carga las opciones de elementos multimedia del catálogo. */
+    const loadMediaOptions = useCallback(async (): Promise<void> => {
+        await dispatch(fetchReviewMediaOptionsQuery());
+    }, [dispatch]);
 
-  const load = useCallback((query: ReviewQuery) => {
-    void dispatch(fetchReviews({ mediaItemId, query }));
-  }, [dispatch, mediaItemId]);
+    /** Carga las reseñas del elemento multimedia seleccionado (o el indicado por parámetro). */
+    const loadReviews = useCallback(
+        async (mediaItemId: string = selectedMediaId, nextPage: number = page.page): Promise<void> => {
+            if (!mediaItemId) return;
+            await dispatch(
+                fetchReviewsByMediaQuery({
+                    mediaItemId,
+                    page: nextPage,
+                    limit: page.limit,
+                }),
+            );
+        },
+        [dispatch, page.limit, page.page, selectedMediaId],
+    );
 
-  const create = useCallback(async (draft: CreateReviewDraft) => {
-    const result = await dispatch(submitReview({ mediaItemId, draft }));
-    return submitReview.fulfilled.match(result);
-  }, [dispatch, mediaItemId]);
+    /** Cambia el elemento multimedia seleccionado y reinicia la paginación a la página 1. */
+    const selectMedia = useCallback(
+        (mediaItemId: string) => {
+            dispatch(setSelectedMediaId(mediaItemId));
+        },
+        [dispatch],
+    );
 
-  return { items, meta, status, mutationStatus, errorMessage, load, create };
+    /** Cambia la página actual de reseñas. */
+    const changePage = useCallback(
+        (nextPage: number) => {
+            dispatch(setReviewsPage(nextPage));
+        },
+        [dispatch],
+    );
+
+    /** Publica una nueva reseña sobre el elemento seleccionado y recarga el listado. */
+    const create = useCallback(
+        async (mediaItemId: string, draft: ReviewDraft): Promise<boolean> => {
+            const action = await dispatch(createReviewMutation({ mediaItemId, draft }));
+            const ok = createReviewMutation.fulfilled.match(action);
+            if (ok) {
+                await dispatch(
+                    fetchReviewsByMediaQuery({ mediaItemId, page: 1, limit: page.limit }),
+                );
+            }
+            return ok;
+        },
+        [dispatch, page.limit],
+    );
+
+    /** Edita una reseña existente y recarga el listado para reflejar los cambios del servidor. */
+    const update = useCallback(
+        async (id: string, changes: ReviewChanges): Promise<boolean> => {
+            const action = await dispatch(updateReviewMutation({ id, changes }));
+            const ok = updateReviewMutation.fulfilled.match(action);
+            if (ok && selectedMediaId) {
+                await dispatch(
+                    fetchReviewsByMediaQuery({
+                        mediaItemId: selectedMediaId,
+                        page: page.page,
+                        limit: page.limit,
+                    }),
+                );
+            }
+            return ok;
+        },
+        [dispatch, page.limit, page.page, selectedMediaId],
+    );
+
+    /** Elimina una reseña y recarga la página actual (o retrocede si quedó vacía). */
+    const remove = useCallback(
+        async (id: string): Promise<boolean> => {
+            const action = await dispatch(deleteReviewMutation(id));
+            const ok = deleteReviewMutation.fulfilled.match(action);
+            if (ok && selectedMediaId) {
+                const nextPage = reviews.length <= 1 && page.page > 1 ? page.page - 1 : page.page;
+                await dispatch(
+                    fetchReviewsByMediaQuery({
+                        mediaItemId: selectedMediaId,
+                        page: nextPage,
+                        limit: page.limit,
+                    }),
+                );
+            }
+            return ok;
+        },
+        [dispatch, page.limit, page.page, reviews.length, selectedMediaId],
+    );
+
+    /** Limpia mensajes de éxito y error previos en el store. */
+    const clearFeedback = useCallback(() => {
+        dispatch(clearReviewsFeedback());
+    }, [dispatch]);
+
+    return {
+        mediaOptions,
+        isLoadingOptions: mediaOptionsStatus === 'loading',
+        selectedMediaId,
+        reviews,
+        page,
+        isLoading: status === 'loading',
+        isMutating: mutationStatus === 'loading',
+        errorMessage,
+        successMessage,
+        loadMediaOptions,
+        loadReviews,
+        selectMedia,
+        changePage,
+        create,
+        update,
+        remove,
+        clearFeedback,
+    };
 }
