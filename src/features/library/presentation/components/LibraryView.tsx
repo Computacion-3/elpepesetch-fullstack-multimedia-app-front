@@ -114,7 +114,7 @@ export function LibraryView() {
             <span>elpepesetch</span>
           </Link>
           <span className="text-right text-sm text-base-content/60">
-            Colección personal · datos de demostración
+            Colección personal · sincronizada con tu cuenta
           </span>
         </div>
 
@@ -361,11 +361,6 @@ export function LibraryView() {
           </div>
         )}
 
-        <p className="mt-7 border-t border-base-300 pt-4 text-xs leading-relaxed text-base-content/60">
-          Modo de demostración: los cambios viven en memoria durante esta
-          sesión. La autenticación, el transporte HTTP y el catálogo real se
-          integrarán desde sus módulos compartidos.
-        </p>
       </div>
 
       {editorOpen && (isAdding || activeEntry) && (

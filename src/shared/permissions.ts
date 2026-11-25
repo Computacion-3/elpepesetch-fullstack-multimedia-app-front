@@ -7,4 +7,8 @@ export const PERMISSIONS = {
     CATALOG_UPDATE: 'catalog:update',
     CATALOG_MODERATE: 'catalog:moderate',
     GENRES_MANAGE: 'genres:manage',
+    REVIEWS_CREATE: 'reviews:create',
+    REVIEWS_UPDATE: 'reviews:update',
+    REVIEWS_DELETE: 'reviews:delete',
+    REVIEWS_MODERATE: 'reviews:moderate',
 } as const;

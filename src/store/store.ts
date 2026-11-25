@@ -6,8 +6,10 @@ import {
     loginAction,
     logoutAction,
     registerAction,
+    refreshCurrentUserAction,
+    expireSessionAction,
 } from '@/src/features/auth/presentation/actions/auth.actions';
-import { authSlice, logoutMutation } from '@/src/features/auth/presentation/store/auth.slice';
+import { accountSessionEnded, authSlice, forceLogoutMutation, logoutMutation } from '@/src/features/auth/presentation/store/auth.slice';
 import type { AuthDependencies } from '@/src/features/auth/presentation/store/auth.slice';
 import {
     createPermissionAction,
@@ -55,6 +57,25 @@ import {
 } from '@/src/features/genres/presentation/actions/genres.actions';
 import { genresSlice } from '@/src/features/genres/presentation/store/genres.slice';
 import type { GenresDependencies } from '@/src/features/genres/presentation/store/genres.slice';
+import {
+    addLibraryEntryAction,
+    getLibraryEntryAction,
+    getLibraryMediaOptionsAction,
+    listLibraryAction,
+    removeLibraryEntryAction,
+    updateLibraryEntryAction,
+} from '@/src/features/library/presentation/actions/library.actions';
+import { librarySlice } from '@/src/features/library/presentation/store/library.slice';
+import type { LibraryDependencies } from '@/src/features/library/presentation/store/library.slice';
+import { listNotificationsAction, markNotificationReadAction } from '@/src/features/notifications/presentation/actions/notifications.actions';
+import { notificationsSlice } from '@/src/features/notifications/presentation/store/notifications.slice';
+import type { NotificationsDependencies } from '@/src/features/notifications/presentation/store/notifications.slice';
+import { createRealtimeContainer } from '@/src/features/realtime/infrastructure/repositories/realtime.container';
+import { realtimeSlice } from '@/src/features/realtime/presentation/store/realtime.slice';
+import type { RealtimeDependencies } from '@/src/features/realtime/presentation/store/realtime.slice';
+import { createReviewAction, listReviewsAction } from '@/src/features/reviews/presentation/actions/reviews.actions';
+import { reviewsSlice } from '@/src/features/reviews/presentation/store/reviews.slice';
+import type { ReviewsDependencies } from '@/src/features/reviews/presentation/store/reviews.slice';
 
 /**
  * Global store: combines feature slices and injects feature use cases as the thunk extraArgument.
@@ -68,13 +89,23 @@ const appReducer = combineSlices(
     permissionsSlice,
     mediaSlice,
     genresSlice,
+    librarySlice,
+    notificationsSlice,
+    realtimeSlice,
+    reviewsSlice,
 );
 
 /** Resets ALL slices to their initial state when logout succeeds, so no user data survives it. */
 const rootReducer = (state: ReturnType<typeof appReducer> | undefined, action: UnknownAction) =>
-    appReducer(logoutMutation.fulfilled.match(action) ? undefined : state, action);
+    appReducer(
+        logoutMutation.fulfilled.match(action) || forceLogoutMutation.fulfilled.match(action) || accountSessionEnded.match(action)
+            ? undefined
+            : state,
+        action,
+    );
 
 function createThunkExtra() {
+    const realtimeContainer = createRealtimeContainer();
     return {
         // <clean:extra> — e.g. routines: createRoutineContainer(),
         // Server Actions are injected; the server-only container is never imported here.
@@ -83,6 +114,8 @@ function createThunkExtra() {
             register: registerAction,
             logout: logoutAction,
             getSocketToken: getSocketTokenAction,
+            refreshCurrentUser: refreshCurrentUserAction,
+            expireSession: expireSessionAction,
         } satisfies AuthDependencies,
         users: {
             list: listUsersAction,
@@ -120,6 +153,34 @@ function createThunkExtra() {
             update: updateGenreAction,
             remove: deleteGenreAction,
         } satisfies GenresDependencies,
+        library: {
+            getLibrary: listLibraryAction,
+            getLibraryEntry: getLibraryEntryAction,
+            addLibraryEntry: addLibraryEntryAction,
+            updateLibraryEntry: updateLibraryEntryAction,
+            removeLibraryEntry: removeLibraryEntryAction,
+            getLibraryMediaOptions: getLibraryMediaOptionsAction,
+        } satisfies LibraryDependencies,
+        notifications: {
+            list: listNotificationsAction,
+            markRead: markNotificationReadAction,
+        } satisfies NotificationsDependencies,
+        realtime: {
+            connect: (getTicket) => realtimeContainer.connect.execute(getTicket),
+            disconnect: () => realtimeContainer.disconnect.execute(),
+            on: (event, handler) => realtimeContainer.repository.on(event, handler),
+            off: (event) => realtimeContainer.repository.off(event),
+            onStatus: (handler) => realtimeContainer.repository.onStatus(handler),
+            clearStatusHandlers: () => realtimeContainer.repository.clearStatusHandlers(),
+            emit: (event, payload) => realtimeContainer.repository.emit(event, payload),
+            subscribeEvents: (events, handler) => realtimeContainer.subscribeEvents.execute(events, handler),
+            getTicket: getSocketTokenAction,
+            expireSession: expireSessionAction,
+        } satisfies RealtimeDependencies,
+        reviews: {
+            list: listReviewsAction,
+            create: createReviewAction,
+        } satisfies ReviewsDependencies,
     };
 }
 

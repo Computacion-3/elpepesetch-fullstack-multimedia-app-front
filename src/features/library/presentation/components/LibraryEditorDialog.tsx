@@ -60,10 +60,6 @@ export function LibraryEditorDialog({
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
-    if (!mediaItemId && options.length > 0) setMediaItemId(options[0].id);
-  }, [mediaItemId, options]);
-
-  useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
     if (!dialog.open) dialog.showModal();
@@ -84,10 +80,11 @@ export function LibraryEditorDialog({
       notes: notes.trim() || null,
     };
 
+    const selectedMediaItemId = mediaItemId || options[0]?.id || '';
     const succeeded = entry
       ? await onSave(entry.id, changes)
-      : mediaItemId
-        ? await onAdd({ mediaItemId, ...changes })
+      : selectedMediaItemId
+        ? await onAdd({ mediaItemId: selectedMediaItemId, ...changes })
         : false;
     if (succeeded) onClose();
   }
@@ -120,7 +117,7 @@ export function LibraryEditorDialog({
             <p className="mt-2 text-sm text-base-content/70">
               {entry
                 ? `${typeLabel[entry.type]} · ${entry.creator} · ${entry.releaseYear}`
-                : 'Selecciona una opción temporal del catálogo de muestra.'}
+                : 'Selecciona un elemento visible del catálogo multimedia.'}
             </p>
           </div>
           <button
@@ -143,7 +140,7 @@ export function LibraryEditorDialog({
               ¿Eliminar de tu biblioteca?
             </h3>
             <p id="delete-copy" className="mt-1 text-sm text-base-content/70">
-              Se quitará “{entry.title}” de esta biblioteca de muestra.
+              Se quitará “{entry.title}” de tu biblioteca.
             </p>
             {error && (
               <div className="alert alert-error mt-3" role="alert">
@@ -181,7 +178,7 @@ export function LibraryEditorDialog({
                 <span className="fieldset-legend">Elemento multimedia</span>
                 <select
                   className="select w-full"
-                  value={mediaItemId}
+                  value={mediaItemId || options[0]?.id || ''}
                   onChange={(event) => setMediaItemId(event.target.value)}
                   disabled={optionsLoading || options.length === 0}
                   required
@@ -197,7 +194,7 @@ export function LibraryEditorDialog({
                   ))}
                 </select>
                 <span className="label text-xs text-base-content/60">
-                  Opciones de demostración; se conectarán al catálogo Media.
+                  Opciones sincronizadas con el catálogo multimedia.
                 </span>
               </label>
             )}
@@ -302,7 +299,7 @@ export function LibraryEditorDialog({
                 </button>
               ) : (
                 <span className="text-xs text-base-content/60">
-                  Los cambios se guardan solo en esta sesión.
+                  Los cambios se guardarán en tu cuenta.
                 </span>
               )}
               <div className="flex flex-col-reverse gap-2 sm:flex-row">

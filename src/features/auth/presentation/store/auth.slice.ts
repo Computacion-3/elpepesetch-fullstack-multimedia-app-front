@@ -1,4 +1,4 @@
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { createAction, createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import type { ActionResult } from '@/src/shared/domain/action-result';
 import { describeError } from '@/src/shared/domain/errors';
@@ -16,6 +16,8 @@ export interface AuthDependencies {
     logout: () => Promise<void>;
     /** Ticket del WebSocket. Lo usa el módulo de tiempo real (P3) desde sus thunks: `extra.auth.getSocketToken()`. */
     getSocketToken: () => Promise<ActionResult<SocketTicket>>;
+    refreshCurrentUser: () => Promise<ActionResult<AuthUserViewModel>>;
+    expireSession: () => Promise<void>;
 }
 
 export type RequestStatus = 'idle' | 'loading' | 'succeeded' | 'failed';
@@ -24,12 +26,14 @@ export interface AuthState {
     user: AuthUserViewModel | null;
     status: RequestStatus;
     errorMessage: string | null;
+    sessionEndedReason: 'account-deactivated' | null;
 }
 
 const initialState: AuthState = {
     user: null,
     status: 'idle',
     errorMessage: null,
+    sessionEndedReason: null,
 };
 
 const createAppThunk = createAsyncThunk.withTypes<{
@@ -78,6 +82,35 @@ export const logoutMutation = createAppThunk(
     },
 );
 
+/** Sincroniza el rol y los permisos tras recibir account.updated. */
+export const refreshCurrentUserMutation = createAppThunk(
+    'auth/refreshCurrentUser',
+    async (_: void, { extra, rejectWithValue }) => {
+        try {
+            const result = await extra.auth.refreshCurrentUser();
+            if (!result.ok) return rejectWithValue(result.message);
+            return result.data;
+        } catch (error) {
+            return rejectWithValue(describeError(error, 'No se pudo actualizar tu perfil'));
+        }
+    },
+);
+
+/** Limpia la sesión local cuando el backend informa que la cuenta fue desactivada. */
+export const forceLogoutMutation = createAppThunk(
+    'auth/forceLogout',
+    async (_: void, { extra, rejectWithValue }) => {
+        try {
+            await extra.auth.expireSession();
+        } catch (error) {
+            return rejectWithValue(describeError(error, 'No se pudo cerrar la sesión'));
+        }
+    },
+);
+
+/** Acción síncrona que vacía todo el store cuando la cuenta fue desactivada. */
+export const accountSessionEnded = createAction<'account-deactivated'>('auth/accountSessionEnded');
+
 export const authSlice = createSlice({
     name: 'auth',
     initialState,
@@ -99,6 +132,7 @@ export const authSlice = createSlice({
             .addCase(loginMutation.fulfilled, (state, action) => {
                 state.status = 'succeeded';
                 state.user = action.payload;
+                state.sessionEndedReason = null;
             })
             .addCase(loginMutation.rejected, (state, action) => {
                 state.status = 'failed';
@@ -127,6 +161,14 @@ export const authSlice = createSlice({
                 state.status = 'failed';
                 state.errorMessage = action.payload ?? action.error.message ?? 'Ocurrió un error';
             });
+
+        builder.addCase(refreshCurrentUserMutation.fulfilled, (state, action) => {
+            state.user = action.payload;
+        });
+        builder.addCase(accountSessionEnded, (state, action) => {
+            state.user = null;
+            state.sessionEndedReason = action.payload;
+        });
     },
 });
 
