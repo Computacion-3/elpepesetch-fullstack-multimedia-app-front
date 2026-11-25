@@ -37,6 +37,24 @@ import { rolesSlice } from '@/src/features/users/presentation/store/roles.slice'
 import type { RolesDependencies } from '@/src/features/users/presentation/store/roles.slice';
 import { usersSlice } from '@/src/features/users/presentation/store/users.slice';
 import type { UsersDependencies } from '@/src/features/users/presentation/store/users.slice';
+import {
+    createMediaItemAction,
+    getMediaItemAction,
+    listMediaAction,
+    listPendingMediaAction,
+    setMediaItemApprovalAction,
+    updateMediaItemAction,
+} from '@/src/features/media/presentation/actions/media.actions';
+import { mediaSlice } from '@/src/features/media/presentation/store/media.slice';
+import type { MediaDependencies } from '@/src/features/media/presentation/store/media.slice';
+import {
+    createGenreAction,
+    deleteGenreAction,
+    listGenresAction,
+    updateGenreAction,
+} from '@/src/features/genres/presentation/actions/genres.actions';
+import { genresSlice } from '@/src/features/genres/presentation/store/genres.slice';
+import type { GenresDependencies } from '@/src/features/genres/presentation/store/genres.slice';
 
 /**
  * Global store: combines feature slices and injects feature use cases as the thunk extraArgument.
@@ -48,6 +66,8 @@ const appReducer = combineSlices(
     usersSlice,
     rolesSlice,
     permissionsSlice,
+    mediaSlice,
+    genresSlice,
 );
 
 /** Resets ALL slices to their initial state when logout succeeds, so no user data survives it. */
@@ -86,8 +106,21 @@ function createThunkExtra() {
             update: updatePermissionAction,
             remove: deletePermissionAction,
         } satisfies PermissionsDependencies,
+        media: {
+            list: listMediaAction,
+            listPending: listPendingMediaAction,
+            getById: getMediaItemAction,
+            create: createMediaItemAction,
+            update: updateMediaItemAction,
+            setApproval: setMediaItemApprovalAction,
+        } satisfies MediaDependencies,
+        genres: {
+            list: listGenresAction,
+            create: createGenreAction,
+            update: updateGenreAction,
+            remove: deleteGenreAction,
+        } satisfies GenresDependencies,
     };
-    // Add `satisfies { routines: RoutinesDependencies; ... }` once features exist, so TS checks the wiring.
 }
 
 /**
