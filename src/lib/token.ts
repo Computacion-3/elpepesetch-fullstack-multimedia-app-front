@@ -8,14 +8,22 @@ export interface TokenPayload {
     exp: number;
 }
 
-/** Solo decodifica el token (no verifica la firma); devuelve null si falta, es inválido o expiró. */
-export function decodeToken(token?: string): TokenPayload | null {
+/**
+ * Solo decodifica el token (no verifica la firma ni el vencimiento); null si falta o está mal formado.
+ * Es la que usa el servidor al renderizar: con cacheComponents, Next no permite leer la hora
+ * (Date.now) durante el prerender. Un token vencido lo rechaza el backend con 401.
+ */
+export function decodeClaims(token?: string): TokenPayload | null {
     if (!token) return null;
     try {
-        const payload = jwtDecode<TokenPayload>(token);
-        if (payload.exp * 1000 <= Date.now()) return null;
-        return payload;
+        return jwtDecode<TokenPayload>(token);
     } catch {
         return null;
     }
+}
+
+/** Decodifica y además descarta el token vencido. Para proxy.ts, que corre en cada petición (no se prerenderiza). */
+export function decodeToken(token?: string): TokenPayload | null {
+    const payload = decodeClaims(token);
+    return payload && payload.exp * 1000 > Date.now() ? payload : null;
 }

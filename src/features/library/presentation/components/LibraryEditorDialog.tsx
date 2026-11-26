@@ -2,14 +2,15 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
+import { useMedia } from '@/src/features/media/presentation/hooks/use-media';
 import type { AddLibraryEntryParams } from '../../domain/repositories/library.repository';
 import type {
   LibraryEntryChanges,
+  MediaType,
   LibraryStatus,
 } from '../../domain/entities/library-entry';
 import type {
   LibraryEntryViewModel,
-  LibraryMediaOptionViewModel,
 } from '../viewmodels/library-entry.viewmodel';
 
 const statuses: { value: LibraryStatus; label: string }[] = [
@@ -23,12 +24,15 @@ function isLibraryStatus(value: string): value is LibraryStatus {
   return statuses.some((item) => item.value === value);
 }
 
+function isMediaType(value: string): value is MediaType {
+  return value === 'GAME' || value === 'MOVIE' || value === 'BOOK';
+}
+
 const typeLabel = { GAME: 'Juego', MOVIE: 'Película', BOOK: 'Libro' } as const;
 
 export function LibraryEditorDialog({
   entry,
-  options,
-  optionsLoading,
+  existingMediaItemIds,
   busy,
   error,
   onClose,
@@ -37,8 +41,7 @@ export function LibraryEditorDialog({
   onDelete,
 }: {
   entry: LibraryEntryViewModel | null;
-  options: LibraryMediaOptionViewModel[];
-  optionsLoading: boolean;
+  existingMediaItemIds: string[];
   busy: boolean;
   error: string | null;
   onClose: () => void;
@@ -47,7 +50,7 @@ export function LibraryEditorDialog({
   onDelete: (id: string) => Promise<boolean>;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const [mediaItemId, setMediaItemId] = useState(options[0]?.id ?? '');
+  const [mediaItemId, setMediaItemId] = useState('');
   const [status, setStatus] = useState<LibraryStatus>(
     entry?.status ?? 'PENDING',
   );
@@ -60,10 +63,6 @@ export function LibraryEditorDialog({
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
-    if (!mediaItemId && options.length > 0) setMediaItemId(options[0].id);
-  }, [mediaItemId, options]);
-
-  useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
     if (!dialog.open) dialog.showModal();
@@ -74,20 +73,16 @@ export function LibraryEditorDialog({
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const numericProgress = Number(progress);
-    const numericRating = rating === '' ? null : Number(rating);
-    const changes: LibraryEntryChanges = {
-      status,
-      progress: numericProgress,
-      rating: numericRating,
-      isFavorite,
-      notes: notes.trim() || null,
-    };
-
     const succeeded = entry
-      ? await onSave(entry.id, changes)
-      : mediaItemId
-        ? await onAdd({ mediaItemId, ...changes })
+      ? await onSave(entry.id, {
+          status,
+          progress: Number(progress),
+          rating: rating === '' ? null : Number(rating),
+          isFavorite,
+          notes: notes.trim() || null,
+        })
+      : selectedMediaItemId
+        ? await onAdd({ mediaItemId: selectedMediaItemId })
         : false;
     if (succeeded) onClose();
   }
@@ -97,6 +92,7 @@ export function LibraryEditorDialog({
   }
 
   const titleId = 'library-dialog-title';
+  const selectedMediaItemId = mediaItemId;
 
   return (
     <dialog
@@ -120,7 +116,7 @@ export function LibraryEditorDialog({
             <p className="mt-2 text-sm text-base-content/70">
               {entry
                 ? `${typeLabel[entry.type]} · ${entry.creator} · ${entry.releaseYear}`
-                : 'Selecciona una opción temporal del catálogo de muestra.'}
+                : 'Elige un elemento del catálogo para agregarlo.'}
             </p>
           </div>
           <button
@@ -143,7 +139,7 @@ export function LibraryEditorDialog({
               ¿Eliminar de tu biblioteca?
             </h3>
             <p id="delete-copy" className="mt-1 text-sm text-base-content/70">
-              Se quitará “{entry.title}” de esta biblioteca de muestra.
+              Se quitará “{entry.title}” de tu biblioteca.
             </p>
             {error && (
               <div className="alert alert-error mt-3" role="alert">
@@ -177,40 +173,25 @@ export function LibraryEditorDialog({
         ) : (
           <form className="grid gap-4" onSubmit={handleSubmit} aria-busy={busy}>
             {!entry && (
-              <label className="fieldset">
-                <span className="fieldset-legend">Elemento multimedia</span>
-                <select
-                  className="select w-full"
-                  value={mediaItemId}
-                  onChange={(event) => setMediaItemId(event.target.value)}
-                  disabled={optionsLoading || options.length === 0}
-                  required
-                >
-                  {options.length === 0 && (
-                    <option value="">No hay opciones disponibles</option>
-                  )}
-                  {options.map((option) => (
-                    <option key={option.id} value={option.id}>
-                      {option.title} · {typeLabel[option.type]} ·{' '}
-                      {option.creator}
-                    </option>
-                  ))}
-                </select>
-                <span className="label text-xs text-base-content/60">
-                  Opciones de demostración; se conectarán al catálogo Media.
-                </span>
-              </label>
+              <LibraryMediaPicker
+                selectedId={selectedMediaItemId}
+                onSelect={setMediaItemId}
+                existingMediaItemIds={existingMediaItemIds}
+              />
             )}
 
-            <div className="grid gap-4 sm:grid-cols-2">
+            {entry && <div className="grid gap-4 sm:grid-cols-2">
               <label className="fieldset">
                 <span className="fieldset-legend">Estado</span>
                 <select
                   className="select w-full"
+                  aria-label="Estado"
                   value={status}
                   onChange={(event) => {
-                    if (isLibraryStatus(event.target.value))
+                    if (isLibraryStatus(event.target.value)) {
                       setStatus(event.target.value);
+                      if (event.target.value === 'PENDING') setRating('');
+                    }
                   }}
                 >
                   {statuses.map((item) => (
@@ -229,8 +210,10 @@ export function LibraryEditorDialog({
                 </span>
                 <input
                   className="input w-full"
+                  aria-label="Progreso"
                   type="number"
                   min="0"
+                  max={entry?.progressMaximum}
                   step="1"
                   inputMode="numeric"
                   value={progress}
@@ -241,8 +224,10 @@ export function LibraryEditorDialog({
                 <span className="fieldset-legend">Calificación</span>
                 <select
                   className="select w-full"
+                  aria-label="Calificación"
                   value={rating}
                   onChange={(event) => setRating(event.target.value)}
+                  disabled={status === 'PENDING'}
                 >
                   <option value="">Sin calificar</option>
                   {Array.from({ length: 10 }, (_, index) => index + 1).map(
@@ -264,6 +249,7 @@ export function LibraryEditorDialog({
                 <span className="fieldset-legend">Favorito</span>
                 <select
                   className="select w-full"
+                  aria-label="Favorito"
                   value={String(isFavorite)}
                   onChange={(event) =>
                     setIsFavorite(event.target.value === 'true')
@@ -273,17 +259,18 @@ export function LibraryEditorDialog({
                   <option value="true">Sí</option>
                 </select>
               </label>
-            </div>
+            </div>}
 
-            <label className="fieldset">
+            {entry && <label className="fieldset">
               <span className="fieldset-legend">Notas</span>
               <textarea
                 className="textarea min-h-24 w-full resize-y"
+                aria-label="Notas"
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}
                 placeholder="Una idea, una cita o dónde lo dejaste…"
               />
-            </label>
+            </label>}
 
             {error && (
               <div className="alert alert-error" role="alert">
@@ -300,11 +287,7 @@ export function LibraryEditorDialog({
                 >
                   Eliminar
                 </button>
-              ) : (
-                <span className="text-xs text-base-content/60">
-                  Los cambios se guardan solo en esta sesión.
-                </span>
-              )}
+              ) : <span />}
               <div className="flex flex-col-reverse gap-2 sm:flex-row">
                 <button
                   type="button"
@@ -317,7 +300,7 @@ export function LibraryEditorDialog({
                   type="submit"
                   className="btn btn-primary"
                   disabled={
-                    busy || (!entry && (optionsLoading || options.length === 0))
+                    busy || (!entry && !selectedMediaItemId)
                   }
                 >
                   {busy && (
@@ -343,5 +326,75 @@ export function LibraryEditorDialog({
         </button>
       </form>
     </dialog>
+  );
+}
+
+function LibraryMediaPicker({
+  selectedId,
+  onSelect,
+  existingMediaItemIds,
+}: {
+  selectedId: string;
+  onSelect: (id: string) => void;
+  existingMediaItemIds: string[];
+}) {
+  const media = useMedia();
+  const setMediaFilters = media.setFilters;
+  const [search, setSearch] = useState('');
+  const [type, setType] = useState('');
+
+  useEffect(() => {
+    setMediaFilters({ q: undefined, type: undefined, page: 1, limit: 12, sortBy: 'title', order: 'ASC' });
+  }, [setMediaFilters]);
+
+  const existing = new Set(existingMediaItemIds);
+  const options = media.items.filter((item) => item.approvalStatus === 'APPROVED' && !existing.has(item.id));
+  const selected = options.find((item) => item.id === selectedId);
+
+  function applyCatalogFilters() {
+    onSelect('');
+    setMediaFilters({ q: search.trim() || undefined, type: isMediaType(type) ? type : undefined, page: 1 });
+  }
+
+  return (
+    <section className="grid gap-3" aria-label="Seleccionar del catálogo multimedia">
+      <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto]">
+        <label className="fieldset">
+          <span className="fieldset-legend">Buscar en el catálogo</span>
+          <input className="input w-full" type="search" aria-label="Buscar en el catálogo" value={search} onChange={(event) => setSearch(event.target.value)} />
+        </label>
+        <label className="fieldset">
+          <span className="fieldset-legend">Tipo</span>
+          <select className="select w-full" aria-label="Tipo de catálogo" value={type} onChange={(event) => setType(event.target.value)}>
+            <option value="">Todos</option>
+            <option value="GAME">Juegos</option>
+            <option value="MOVIE">Películas</option>
+            <option value="BOOK">Libros</option>
+          </select>
+        </label>
+        <button className="btn btn-secondary self-end" type="button" onClick={applyCatalogFilters}>Buscar</button>
+      </div>
+
+      {media.errorMessage && <div role="alert" className="alert alert-error">{media.errorMessage}</div>}
+      {media.isLoading ? <p role="status">Cargando catálogo…</p> : options.length === 0 ? (
+        <p className="rounded-xl border border-dashed border-base-300 p-4 text-sm text-base-content/70">No hay elementos disponibles con esta búsqueda.</p>
+      ) : (
+        <>
+          <label className="fieldset">
+            <span className="fieldset-legend">Elemento multimedia</span>
+            <select className="select w-full" aria-label="Elemento multimedia" value={selectedId} onChange={(event) => onSelect(event.target.value)} required>
+              <option value="">Selecciona un elemento</option>
+              {options.map((item) => <option key={item.id} value={item.id}>{item.title} · {typeLabel[item.type]} · {item.creator}</option>)}
+            </select>
+          </label>
+          {selected && <p className="text-sm text-base-content/70">{selected.releaseYear} · {selected.genres.map((genre) => genre.name).join(', ')}</p>}
+          <nav className="flex items-center justify-between text-sm" aria-label="Paginación del catálogo">
+            <button type="button" className="btn btn-ghost btn-sm" disabled={media.meta.page <= 1 || media.isLoading} onClick={() => { onSelect(''); setMediaFilters({ page: media.meta.page - 1 }); }}>Anterior</button>
+            <span>Página {media.meta.page} de {Math.max(1, media.meta.totalPages)}</span>
+            <button type="button" className="btn btn-ghost btn-sm" disabled={media.meta.page >= media.meta.totalPages || media.isLoading} onClick={() => { onSelect(''); setMediaFilters({ page: media.meta.page + 1 }); }}>Siguiente</button>
+          </nav>
+        </>
+      )}
+    </section>
   );
 }

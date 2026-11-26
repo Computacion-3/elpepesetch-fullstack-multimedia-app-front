@@ -1,6 +1,7 @@
 'use server';
 
 import { createSession, deleteSession, readToken } from '@/src/lib/session';
+import { runAuthenticated } from '@/src/lib/run-authenticated';
 import type { ActionResult } from '@/src/shared/domain/action-result';
 import { describeError } from '@/src/shared/domain/errors';
 import { authContainer } from '../../di/auth.container';
@@ -43,6 +44,18 @@ export async function getSocketTokenAction(): Promise<ActionResult<SocketTicket>
     } catch (err) {
         return { ok: false, message: describeError(err, 'No se pudo autenticar la conexión en tiempo real') };
     }
+}
+
+/** Vuelve a consultar el perfil cuando el rol cambia en otra sesión. */
+export async function refreshCurrentUserAction(): Promise<ActionResult<AuthUserViewModel>> {
+    return runAuthenticated('No se pudo actualizar tu perfil', async (token) =>
+        AuthViewModelMapper.toViewModel(await authContainer.getCurrentUser.execute(token)),
+    );
+}
+
+/** Borra la cookie sin intentar usar una sesión que el backend acaba de desactivar. */
+export async function expireSessionAction(): Promise<void> {
+    await deleteSession();
 }
 
 /** Invalidates the token in the backend and clears the session cookie. */

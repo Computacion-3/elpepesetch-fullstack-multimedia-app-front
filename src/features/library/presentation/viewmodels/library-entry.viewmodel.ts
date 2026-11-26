@@ -1,7 +1,4 @@
-import type {
-  LibraryEntry,
-  LibraryMediaReference,
-} from '../../domain/entities/library-entry';
+import type { LibraryEntry } from '../../domain/entities/library-entry';
 
 export interface LibraryEntryViewModel {
   id: string;
@@ -12,27 +9,28 @@ export interface LibraryEntryViewModel {
   releaseYear: number;
   cover: string;
   coverUrl?: string | null;
+  description?: string | null;
+  pages?: number | null;
+  durationMinutes?: number | null;
+  platform?: string | null;
+  isbn?: string | null;
+  ratingsCount?: number;
+  approvalStatus?: 'PENDING' | 'APPROVED' | 'REJECTED';
+  rejectionReason?: string | null;
+  mediaCreatedAt?: string;
+  mediaUpdatedAt?: string;
   averageRating?: number;
+  genres: { id: string; name: string; description?: string | null }[];
   progressMaximum?: number;
   status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'DROPPED';
   progress: number;
   rating: number | null;
   isFavorite: boolean;
   notes: string | null;
+  startedAt: string | null;
+  completedAt: string | null;
   addedAt: string;
-}
-
-export interface LibraryMediaOptionViewModel {
-  id: string;
-  title: string;
-  type: 'GAME' | 'MOVIE' | 'BOOK';
-  creator: string;
-  releaseYear: number;
-  cover: string;
-  coverUrl?: string | null;
-  genreIds: string[];
-  progressMaximum?: number;
-  averageRating?: number;
+  updatedAt: string;
 }
 
 export class LibraryEntryViewModelMapper {
@@ -46,6 +44,17 @@ export class LibraryEntryViewModelMapper {
       releaseYear: entry.media.releaseYear,
       cover: entry.media.cover,
       coverUrl: entry.media.coverUrl,
+      description: entry.media.description,
+      pages: entry.media.pages,
+      durationMinutes: entry.media.durationMinutes,
+      platform: entry.media.platform,
+      isbn: entry.media.isbn,
+      ratingsCount: entry.media.ratingsCount,
+      approvalStatus: entry.media.approvalStatus,
+      rejectionReason: entry.media.rejectionReason,
+      mediaCreatedAt: entry.media.createdAt,
+      mediaUpdatedAt: entry.media.updatedAt,
+      genres: (entry.media.genres ?? []).map((genre) => ({ ...genre })),
       averageRating: entry.media.averageRating,
       progressMaximum: entry.media.progressMaximum,
       status: entry.status,
@@ -53,15 +62,10 @@ export class LibraryEntryViewModelMapper {
       rating: entry.rating,
       isFavorite: entry.isFavorite,
       notes: entry.notes,
+      startedAt: entry.startedAt,
+      completedAt: entry.completedAt,
       addedAt: entry.addedAt,
+      updatedAt: entry.updatedAt,
     };
-  }
-}
-
-export class LibraryMediaOptionViewModelMapper {
-  static toViewModel(
-    media: LibraryMediaReference,
-  ): LibraryMediaOptionViewModel {
-    return { ...media, genreIds: [...media.genreIds] };
   }
 }

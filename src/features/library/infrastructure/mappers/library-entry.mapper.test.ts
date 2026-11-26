@@ -43,7 +43,15 @@ describe('LibraryEntryMapper', () => {
     assert.equal(entry.id, 'entry-uuid');
     assert.equal(entry.mediaItemId, 'media-uuid');
     assert.equal(entry.status, 'IN_PROGRESS');
+    assert.equal(entry.startedAt, '2026-01-02T00:00:00.000Z');
+    assert.equal(entry.completedAt, null);
+    assert.equal(entry.updatedAt, '2026-01-02T00:00:00.000Z');
     assert.equal(entry.media.coverUrl, 'https://example.test/cover.jpg');
+    assert.equal(entry.media.description, null);
+    assert.equal(entry.media.ratingsCount, 12);
+    assert.equal(entry.media.pages, 300);
+    assert.equal(entry.media.genres?.[0]?.description, null);
+    assert.equal(entry.media.approvalStatus, 'APPROVED');
     assert.equal(entry.media.progressMaximum, 300);
     assert.deepEqual(entry.media.genreIds, ['genre-uuid']);
   });
@@ -58,5 +66,14 @@ describe('LibraryEntryMapper', () => {
 
     assert.deepEqual(entry.media.genreIds, []);
     assert.equal(entry.media.progressMaximum, 300);
+  });
+
+  it('normalizes a numeric rating serialized as a string by REST', () => {
+    const entry = LibraryEntryMapper.toDomain({
+      ...entryResponse,
+      mediaItem: { ...entryResponse.mediaItem, averageRating: '8.4' },
+    });
+
+    assert.equal(entry.media.averageRating, 8.4);
   });
 });
