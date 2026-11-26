@@ -14,6 +14,7 @@ export async function CommunityNav() {
   const links = [
     { href: '/lists', label: 'Mis listas', visible: true },
     { href: '/community/lists', label: 'Explorar listas', visible: true },
+    { href: '/activity', label: 'Actividad', visible: true },
     { href: '/reviews', label: 'Reseñas', visible: true },
     { href: '/stats', label: 'Estadísticas', visible: true },
     {

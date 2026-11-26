@@ -115,6 +115,9 @@ import type { NotificationsDependencies } from '@/src/features/notifications/pre
 import { createRealtimeContainer } from '@/src/features/realtime/infrastructure/repositories/realtime.container';
 import { realtimeSlice } from '@/src/features/realtime/presentation/store/realtime.slice';
 import type { RealtimeDependencies } from '@/src/features/realtime/presentation/store/realtime.slice';
+import { activityLogsSlice } from '@/src/features/activity-logs/presentation/store/activity-logs.slice';
+import type { ActivityLogsDependencies } from '@/src/features/activity-logs/presentation/store/activity-logs.slice';
+import { getMyActivityAction } from '@/src/features/activity-logs/presentation/actions/activity-logs.actions';
 
 /**
  * Store global de Redux Toolkit: combina los slices de todas las features e inyecta
@@ -136,6 +139,7 @@ const appReducer = combineSlices(
   genresSlice,
   notificationsSlice,
   realtimeSlice,
+  activityLogsSlice,
 );
 
 /** Reinicia TODOS los slices a su estado inicial cuando `logoutMutation` termina con éxito. */
@@ -254,6 +258,7 @@ function createThunkExtra() {
       getTicket: getSocketTokenAction,
       expireSession: expireSessionAction,
     } satisfies RealtimeDependencies,
+    activityLogs: { getMyActivity: getMyActivityAction } satisfies ActivityLogsDependencies,
   };
 }
 
