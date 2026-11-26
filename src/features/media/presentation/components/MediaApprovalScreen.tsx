@@ -8,8 +8,7 @@ import { Alert } from '@/src/shared/ui/Alert';
 import { Pagination } from '@/src/shared/ui/Pagination';
 import { MediaFilters } from './MediaFilters';
 import { MediaApprovalCard } from './MediaApprovalCard';
-import { useAppSelector } from '@/src/store/hooks';
-import { selectModerationQueueCounts } from '@/src/features/realtime/presentation/store/realtime.selectors';
+import { useRealtime } from '@/src/features/realtime/presentation/hooks/use-realtime';
 import { Spinner } from '@/src/shared/ui/Spinner';
 
 const INITIAL_QUERY: MediaQuery = { page: 1, limit: 12, sortBy: 'title', order: 'ASC' };
@@ -19,7 +18,7 @@ export function MediaApprovalScreen() {
     const media = useMedia();
     const [query, setQuery] = useState(INITIAL_QUERY);
     const loadPending = media.loadPending;
-    const queueCounts = useAppSelector(selectModerationQueueCounts);
+    const { moderationQueueCounts: queueCounts } = useRealtime();
 
     useEffect(() => {
         loadPending(query);

@@ -23,6 +23,7 @@ import {
 } from '@/src/features/reviews/presentation/store/reviews.selectors';
 import {
   selectLatestRealtimeEvent,
+  selectModerationQueueCounts,
   selectRealtimeStatus,
   selectSubscribedMediaItemId,
 } from '../store/realtime.selectors';
@@ -34,6 +35,8 @@ export function useRealtime() {
   const status = useAppSelector(selectRealtimeStatus);
   const latestEvent = useAppSelector(selectLatestRealtimeEvent);
   const subscribedMediaItemId = useAppSelector(selectSubscribedMediaItemId);
+  /** Pendientes de moderación (propuestas y reportes) que llegan por `moderation.queue.changed`. */
+  const moderationQueueCounts = useAppSelector(selectModerationQueueCounts);
   const selectedReviewMediaId = useAppSelector(selectSelectedMediaId);
   const reviewPage = useAppSelector(selectReviewsCurrentPage);
   const reviewLimit = useAppSelector(selectReviewsLimit);
@@ -91,6 +94,7 @@ export function useRealtime() {
     status,
     latestEvent: latestEvent as RealtimeEventEnvelope | undefined,
     subscribedMediaItemId,
+    moderationQueueCounts,
     connect,
     disconnect,
     subscribeToMedia,
