@@ -8,8 +8,8 @@ import { PERMISSIONS } from '@/src/shared/permissions';
  * Se mantiene separada de `AdminNav` (`Administración`) para respetar sus controles de acceso.
  */
 export async function CommunityNav() {
-    const session = await getSession();
-    if (!session) return null;
+  const session = await getSession();
+  if (!session) return null;
 
     const links = [
         {
