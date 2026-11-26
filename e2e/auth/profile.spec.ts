@@ -13,6 +13,14 @@ import { ACCOUNTS, MESSAGES, newUserData, uid } from '../fixtures/test-data';
 
 test.use({ storageState: NO_SESSION });
 
+/**
+ * Campo del formulario de perfil. Se busca por rol (no con getByLabel) porque Next deja montada,
+ * oculta, la página de /login de la que se viene, y su campo "Correo electrónico" también coincide.
+ */
+function field(page: Page, name: string) {
+    return page.getByRole('textbox', { name, exact: true });
+}
+
 /** Entra al perfil desde el menú de usuario (avatar) de la barra superior. */
 async function openProfile(page: Page) {
     await page.getByRole('link', { name: /^Mi perfil:/ }).click();
@@ -39,14 +47,14 @@ test.describe('Perfil propio (/profile)', () => {
     test('muestra la cuenta y guarda nombre y biografía (PATCH /users/me)', async ({ api, page }) => {
         await openProfile(page);
         await expect(page.getByText(`@${target.username}`)).toBeVisible();
-        await expect(page.getByLabel('Correo electrónico')).toHaveValue(target.email);
+        await expect(field(page, 'Correo electrónico')).toHaveValue(target.email);
 
         const saveButton = page.getByRole('button', { name: 'Guardar cambios' });
         await expect(saveButton).toBeDisabled();
 
         const newName = `E2E Nombre ${uid()}`;
-        await page.getByLabel('Nombre completo').fill(newName);
-        await page.getByLabel('Biografía').fill('Juego roguelikes y leo ciencia ficción.');
+        await field(page, 'Nombre completo').fill(newName);
+        await field(page, 'Biografía').fill('Juego roguelikes y leo ciencia ficción.');
         await saveButton.click();
 
         await expect(statusWithText(page, 'Perfil actualizado.')).toBeVisible();
@@ -72,7 +80,7 @@ test.describe('Perfil propio (/profile)', () => {
 
     test('un correo de otra cuenta muestra el conflicto 409 y no cambia nada', async ({ api, page }) => {
         await openProfile(page);
-        await page.getByLabel('Correo electrónico').fill(ACCOUNTS.admin.email);
+        await field(page, 'Correo electrónico').fill(ACCOUNTS.admin.email);
         await page.getByRole('button', { name: 'Guardar cambios' }).click();
 
         await expect(alertWithText(page, MESSAGES.userConflict)).toBeVisible();
