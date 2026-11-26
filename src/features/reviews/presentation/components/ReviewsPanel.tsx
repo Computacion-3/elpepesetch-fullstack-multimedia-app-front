@@ -12,6 +12,7 @@ import { useReviews } from '../hooks/use-reviews';
 import type { ReviewViewModel } from '../viewmodels/reviews.viewmodel';
 import { ReviewCard } from './ReviewCard';
 import { ReviewForm } from './ReviewForm';
+import { Spinner } from '@/src/shared/ui/Spinner';
 
 type ReviewsPanelProps = {
     /** ID del usuario autenticado para determinar autoría y evitar auto-reportes. */
@@ -162,7 +163,7 @@ export function ReviewsPanel({
             {reportSentMessage && <Alert variant="success">{reportSentMessage}</Alert>}
 
             {isLoading && reviews.length === 0 ? (
-                <p className="text-sm">Cargando reseñas…</p>
+                <Spinner label="Cargando reseñas" className="py-10" />
             ) : reviews.length === 0 ? (
                 <p className="rounded-xl border border-white/10 bg-surface p-4 text-sm text-muted">
                     Aún no hay reseñas visibles para este elemento multimedia.

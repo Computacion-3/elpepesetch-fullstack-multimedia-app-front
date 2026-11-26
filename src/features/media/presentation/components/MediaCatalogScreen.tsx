@@ -7,6 +7,7 @@ import { Alert } from '@/src/shared/ui/Alert';
 import { Pagination } from '@/src/shared/ui/Pagination';
 import { MediaCard } from './MediaCard';
 import { MediaFilters } from './MediaFilters';
+import { Spinner } from '@/src/shared/ui/Spinner';
 
 /** Catálogo interactivo; filtros y paginación delegan la consulta al hook fachada. */
 export function MediaCatalogScreen() {
@@ -28,7 +29,7 @@ export function MediaCatalogScreen() {
             </MediaFilters>
 
             {media.errorMessage && <Alert variant="error">{media.errorMessage}</Alert>}
-            {media.isLoading && <p role="status">Cargando catálogo…</p>}
+            {media.isLoading && <Spinner label="Cargando catálogo" size="lg" className="py-16" />}
             {!media.isLoading && media.listStatus === 'succeeded' && media.items.length === 0 && (
                 <p className="rounded-2xl border border-dashed border-white/20 bg-surface p-8 text-center text-muted">No encontramos elementos con esos filtros.</p>
             )}

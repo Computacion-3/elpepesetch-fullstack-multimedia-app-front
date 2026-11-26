@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { requireSession } from '@/src/lib/dal';
 import { UserListsView } from '@/src/features/user-lists/presentation/components/UserListsView';
+import { Spinner } from '@/src/shared/ui/Spinner';
 
 async function AuthenticatedUserLists() {
   await requireSession();
@@ -11,7 +12,7 @@ export default function UserListsPage() {
   return (
     <Suspense
       fallback={
-        <p className="p-6 text-sm text-gray-500">Cargando tus listas…</p>
+        <Spinner label="Cargando tus listas" size="lg" className="py-16" />
       }
     >
       <AuthenticatedUserLists />

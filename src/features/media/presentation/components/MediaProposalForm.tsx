@@ -10,6 +10,7 @@ import { Alert } from '@/src/shared/ui/Alert';
 import { Button } from '@/src/shared/ui/Button';
 import { Select } from '@/src/shared/ui/Select';
 import { TextField } from '@/src/shared/ui/TextField';
+import { Spinner } from '@/src/shared/ui/Spinner';
 
 type ProposalFormValues = {
     title: string;
@@ -118,7 +119,7 @@ export function MediaProposalForm({ mediaId }: MediaProposalFormProps) {
             </header>
             {media.errorMessage && <Alert variant="error">{media.errorMessage}</Alert>}
             {saved && <Alert variant="success">Propuesta enviada. Puedes consultar su estado desde el catálogo.</Alert>}
-            {!isReady && <p role="status">Cargando propuesta…</p>}
+            {!isReady && <Spinner label="Cargando propuesta" className="py-8" />}
             {isReady && (
                 <form className="space-y-5 rounded-2xl border border-white/10 bg-surface p-5 sm:p-7" onSubmit={handleSubmit}>
                     <TextField id="proposal-title" label="Título" required maxLength={150} value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} />

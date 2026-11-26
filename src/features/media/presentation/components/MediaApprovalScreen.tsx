@@ -10,6 +10,7 @@ import { MediaFilters } from './MediaFilters';
 import { MediaApprovalCard } from './MediaApprovalCard';
 import { useAppSelector } from '@/src/store/hooks';
 import { selectModerationQueueCounts } from '@/src/features/realtime/presentation/store/realtime.selectors';
+import { Spinner } from '@/src/shared/ui/Spinner';
 
 const INITIAL_QUERY: MediaQuery = { page: 1, limit: 12, sortBy: 'title', order: 'ASC' };
 
@@ -47,7 +48,7 @@ export function MediaApprovalScreen() {
                 <GenreFilter value={query.genreId ?? ''} onChange={(genreId) => setFilters({ genreId: genreId || undefined })} />
             </MediaFilters>
             {media.errorMessage && <Alert variant="error">{media.errorMessage}</Alert>}
-            {media.pendingStatus === 'loading' && <p role="status">Cargando propuestas…</p>}
+            {media.pendingStatus === 'loading' && <Spinner label="Cargando propuestas" size="lg" className="py-12" />}
             {media.pendingStatus === 'succeeded' && media.pendingItems.length === 0 && (
                 <p className="rounded-2xl border border-dashed border-white/20 bg-surface px-6 py-10 text-center text-muted">No hay propuestas pendientes.</p>
             )}

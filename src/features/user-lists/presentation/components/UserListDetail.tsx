@@ -10,6 +10,7 @@ import { useUserLists } from '../hooks/use-user-lists';
 import { AddMediaToListDialog } from './AddMediaToListDialog';
 import { UserListEditorDialog } from './UserListEditorDialog';
 import { UserListItems } from './UserListItems';
+import { Spinner } from '@/src/shared/ui/Spinner';
 
 export function UserListDetail({
   id,
@@ -65,9 +66,7 @@ export function UserListDetail({
             </Link>
           </div>
         ) : (
-          <p role="status" className="py-12 text-center text-[#c2bddc]">
-            Cargando lista…
-          </p>
+          <Spinner label="Cargando lista" size="lg" className="py-12" />
         )
       ) : (
         <>

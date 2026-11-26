@@ -9,6 +9,7 @@ import { useRoles } from '../hooks/use-roles';
 import type { RoleViewModel } from '../viewmodels/roles.viewmodel';
 import { RoleForm } from './RoleForm';
 import { RolePermissionsForm } from './RolePermissionsForm';
+import { Spinner } from '@/src/shared/ui/Spinner';
 
 /** Roles administration panel. */
 export function RolesPanel() {
@@ -112,7 +113,7 @@ export function RolesPanel() {
                         {roles.length === 0 && (
                             <tr>
                                 <td colSpan={4} className="px-3 py-8 text-center text-muted">
-                                    {isLoading ? 'Cargando…' : 'No hay roles'}
+                                    {isLoading ? <Spinner label="Cargando roles" /> : 'No hay roles'}
                                 </td>
                             </tr>
                         )}

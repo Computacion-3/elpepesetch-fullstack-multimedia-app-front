@@ -4,6 +4,7 @@ import { useNotifications } from '../hooks/use-notifications';
 import { useEffect } from 'react';
 import { Alert } from '@/src/shared/ui/Alert';
 import { Button } from '@/src/shared/ui/Button';
+import { Spinner } from '@/src/shared/ui/Spinner';
 
 /** Muestra la lista paginada y guarda las lecturas en el backend. */
 export function NotificationsInbox() {
@@ -38,7 +39,7 @@ export function NotificationsInbox() {
       </header>
 
       {notifications.errorMessage && <div className="mb-4"><Alert variant="error">{notifications.errorMessage}</Alert></div>}
-      {notifications.status === 'loading' && <p role="status">Cargando avisos…</p>}
+      {notifications.status === 'loading' && <Spinner label="Cargando avisos" size="lg" className="py-12" />}
       {notifications.status === 'succeeded' && notifications.items.length === 0 && <p className="rounded-2xl border border-dashed border-white/20 bg-surface p-8 text-center text-muted">No hay notificaciones en esta página.</p>}
 
       <ul className="space-y-3">

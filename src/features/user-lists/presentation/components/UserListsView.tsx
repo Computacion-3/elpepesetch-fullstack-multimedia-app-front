@@ -9,6 +9,7 @@ import { useUserLists } from '../hooks/use-user-lists';
 import type { UserListViewModel } from '../viewmodels/user-list.viewmodel';
 import { UserListCard } from './UserListCard';
 import { UserListEditorDialog } from './UserListEditorDialog';
+import { Spinner } from '@/src/shared/ui/Spinner';
 
 export function UserListsView() {
   const lists = useUserLists();
@@ -61,9 +62,7 @@ export function UserListsView() {
         <Alert variant="error">{lists.errorMessage}</Alert>
       )}
       {lists.ownStatus === 'loading' ? (
-        <p role="status" className="py-12 text-center text-[#c2bddc]">
-          Cargando tus listas…
-        </p>
+        <Spinner label="Cargando tus listas" size="lg" className="py-12" />
       ) : lists.ownStatus === 'failed' ? (
         <div className="rounded-xl border border-white/10 bg-[#241f42] p-8 text-center">
           <p className="mb-4 text-[#c2bddc]">

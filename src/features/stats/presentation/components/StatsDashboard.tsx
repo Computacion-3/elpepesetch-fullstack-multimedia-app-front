@@ -5,6 +5,7 @@ import { Alert } from '@/src/shared/ui/Alert';
 import { Button } from '@/src/shared/ui/Button';
 import { useStats } from '../hooks/use-stats';
 import type { StatDistributionItemViewModel } from '../viewmodels/stats.viewmodel';
+import { Spinner } from '@/src/shared/ui/Spinner';
 
 type StatsDashboardProps = {
     /** Indica si el usuario cuenta con `stats:read_global` para mostrar estadísticas globales. */
@@ -104,7 +105,7 @@ export function StatsDashboard({ canReadGlobal }: StatsDashboardProps) {
                 <h2 className="text-lg font-semibold">Mis estadísticas</h2>
                 {personalError && <Alert variant="error">{personalError}</Alert>}
                 {isLoadingPersonal && !personal ? (
-                    <p className="text-sm">Cargando estadísticas personales…</p>
+                    <Spinner label="Cargando estadísticas personales" className="py-10" />
                 ) : (
                     personal && (
                         <>
@@ -177,7 +178,7 @@ export function StatsDashboard({ canReadGlobal }: StatsDashboardProps) {
                     <h2 className="text-lg font-semibold">Estadísticas globales</h2>
                     {globalError && <Alert variant="error">{globalError}</Alert>}
                     {isLoadingGlobal && !global ? (
-                        <p className="text-sm">Cargando estadísticas globales…</p>
+                        <Spinner label="Cargando estadísticas globales" className="py-10" />
                     ) : (
                         global && (
                             <>

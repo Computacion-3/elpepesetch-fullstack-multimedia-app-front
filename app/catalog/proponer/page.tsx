@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { requirePermission } from '@/src/lib/dal';
 import { PERMISSIONS } from '@/src/shared/permissions';
 import { MediaProposalForm } from '@/src/features/media/presentation/components/MediaProposalForm';
+import { Spinner } from '@/src/shared/ui/Spinner';
 
 type ProposalPageProps = { searchParams: Promise<{ id?: string | string[] }> };
 
@@ -17,7 +18,7 @@ async function ProposalContent({ searchParams }: ProposalPageProps) {
 export default function ProposalPage(props: ProposalPageProps) {
     return (
         <main className="mx-auto w-full max-w-4xl flex-1 p-6">
-            <Suspense fallback={<p role="status">Cargando formulario…</p>}>
+            <Suspense fallback={<Spinner label="Cargando formulario" size="lg" className="py-16" />}>
                 <ProposalContent {...props} />
             </Suspense>
         </main>

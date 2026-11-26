@@ -11,6 +11,7 @@ import { TextArea } from '@/src/shared/ui/TextArea';
 import type { ReportStatus } from '../../domain/entities/report';
 import { useReports } from '../hooks/use-reports';
 import type { ReviewReportViewModel } from '../viewmodels/reports.viewmodel';
+import { Spinner } from '@/src/shared/ui/Spinner';
 
 const STATUS_FILTER_OPTIONS = [
     { value: '', label: 'Todos los estados' },
@@ -103,7 +104,7 @@ export function ReportsModerationPanel() {
             {successMessage && !hideTarget && <Alert variant="success">{successMessage}</Alert>}
 
             {isLoading && reports.length === 0 ? (
-                <p className="text-sm">Cargando reportes…</p>
+                <Spinner label="Cargando reportes" className="py-10" />
             ) : reports.length === 0 ? (
                 <p className="rounded-xl border border-white/10 bg-surface p-4 text-sm text-muted">
                     No hay reportes para el filtro seleccionado.
