@@ -7,6 +7,8 @@ export interface AuthUserViewModel {
     email: string;
     displayName: string;
     initials: string;
+    fullName: string | null;
+    bio: string | null;
     role: string;
     permissions: string[];
 }
@@ -26,6 +28,8 @@ export class AuthViewModelMapper {
             email: user.email,
             displayName,
             initials,
+            fullName: user.fullName,
+            bio: user.bio,
             role: user.role,
             permissions: [...user.permissions],
         };

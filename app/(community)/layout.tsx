@@ -1,15 +1,14 @@
 import type { ReactNode } from 'react';
-import AppHeader from '@/app/app-header';
+import AppShell from '@/app/app-shell';
 
 /**
  * Layout compartido para las rutas de comunidad y estadísticas (`/reviews`, `/reports`, `/stats`).
- * Replica la estructura visual de `AdminLayout` con navegación superior y menú de usuario.
+ * Usa la misma estructura que el resto de páginas con sesión (`AppShell`).
  */
 export default function CommunityLayout({ children }: { children: ReactNode }) {
     return (
-        <div className="flex min-h-full flex-col">
-            <AppHeader />
+        <AppShell>
             <main className="mx-auto w-full max-w-5xl flex-1 p-6">{children}</main>
-        </div>
+        </AppShell>
     );
 }

@@ -8,6 +8,7 @@ import { Alert } from '@/src/shared/ui/Alert';
 import { Button } from '@/src/shared/ui/Button';
 import { ConfirmDialog } from '@/src/shared/ui/ConfirmDialog';
 import { GenreForm } from './GenreForm';
+import { Spinner } from '@/src/shared/ui/Spinner';
 
 /** Pantalla administrativa para CRUD de géneros y presentación de conflictos del backend. */
 export function GenresManagementScreen() {
@@ -41,7 +42,7 @@ export function GenresManagementScreen() {
                 onSave={save}
                 onCancel={() => setEditing(null)}
             />
-            {genres.isLoading && <p role="status">Cargando géneros…</p>}
+            {genres.isLoading && <Spinner label="Cargando géneros" size="lg" className="py-12" />}
             {genres.status === 'succeeded' && genres.items.length === 0 && <p>Aún no hay géneros creados.</p>}
             <ul className="divide-y divide-white/10 rounded-2xl border border-white/10 bg-surface">
                 {[...genres.items].sort((a, b) => a.name.localeCompare(b.name)).map((genre) => (

@@ -16,6 +16,7 @@ import {
 import { Alert } from '@/src/shared/ui/Alert';
 import { Button } from '@/src/shared/ui/Button';
 import { useStats } from '../hooks/use-stats';
+import { Spinner } from '@/src/shared/ui/Spinner';
 
 function MetricCard({
     icon: Icon,
@@ -132,9 +133,7 @@ export function HomeDashboard({ displayName }: { displayName: string }) {
                 )}
 
                 {isLoadingPersonal && !personal ? (
-                    <p role="status" className="rounded-2xl border border-white/10 bg-surface p-5 text-sm text-muted">
-                        Cargando el resumen de tu biblioteca…
-                    </p>
+                    <Spinner label="Cargando el resumen de tu biblioteca" size="lg" className="py-12" />
                 ) : personal ? (
                     <>
                         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

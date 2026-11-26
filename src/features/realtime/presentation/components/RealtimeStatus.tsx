@@ -9,8 +9,23 @@ const labels = {
   disconnected: 'Sin conexión en tiempo real',
 } as const;
 
-/** Indica al usuario el estado actual del canal de actualizaciones. */
-export function RealtimeStatus() {
+const dots = {
+  connecting: 'bg-amber-300 motion-safe:animate-pulse',
+  connected: 'bg-emerald-400',
+  reconnecting: 'bg-amber-300 motion-safe:animate-pulse',
+  disconnected: 'bg-gray-500',
+} as const;
+
+/**
+ * Punto de color con el estado del canal en tiempo real. El texto queda para lectores de pantalla
+ * (y como tooltip), así no ocupa espacio en la barra.
+ */
+export function RealtimeStatus({ className = '' }: { className?: string }) {
   const { status } = useRealtime();
-  return <span className="text-xs text-muted" role="status">{labels[status]}</span>;
+  return (
+    <span role="status" title={labels[status]} className={`inline-flex ${className}`}>
+      <span aria-hidden="true" className={`block h-3 w-3 rounded-full ring-2 ring-surface ${dots[status]}`} />
+      <span className="sr-only">{labels[status]}</span>
+    </span>
+  );
 }

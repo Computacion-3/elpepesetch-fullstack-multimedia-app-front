@@ -25,6 +25,15 @@ export interface RegisterRequestDto {
     bio?: string;
 }
 
+/** Backend profile payload (PATCH /users/me o UpdateProfileInput): solo los campos que cambian. */
+export interface UpdateProfileRequestDto {
+    username?: string;
+    email?: string;
+    password?: string;
+    fullName?: string;
+    bio?: string;
+}
+
 /** Backend socket ticket (POST /auth/socket-token or mutation socketToken). */
 export interface SocketTokenResponseDto {
     token: string;

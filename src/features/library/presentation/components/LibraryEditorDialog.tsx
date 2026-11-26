@@ -12,6 +12,7 @@ import type {
 import type {
   LibraryEntryViewModel,
 } from '../viewmodels/library-entry.viewmodel';
+import { Spinner } from '@/src/shared/ui/Spinner';
 
 const statuses: { value: LibraryStatus; label: string }[] = [
   { value: 'PENDING', label: 'Pendiente' },
@@ -374,7 +375,7 @@ function LibraryMediaPicker({
       </div>
 
       {media.errorMessage && <div role="alert" className="rounded-xl border border-red-400/50 bg-red-500/10 px-4 py-3 text-red-200">{media.errorMessage}</div>}
-      {media.isLoading ? <p role="status">Cargando catálogo…</p> : options.length === 0 ? (
+      {media.isLoading ? <Spinner label="Cargando catálogo" className="py-8" /> : options.length === 0 ? (
         <p className="rounded-xl border border-dashed border-white/20 p-4 text-sm text-muted">No hay elementos disponibles con esta búsqueda.</p>
       ) : (
         <>

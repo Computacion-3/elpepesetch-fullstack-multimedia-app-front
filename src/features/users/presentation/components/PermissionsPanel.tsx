@@ -8,6 +8,7 @@ import { Modal } from '@/src/shared/ui/Modal';
 import { usePermissions } from '../hooks/use-permissions';
 import type { PermissionViewModel } from '../viewmodels/permissions.viewmodel';
 import { PermissionForm } from './PermissionForm';
+import { Spinner } from '@/src/shared/ui/Spinner';
 
 /** Permissions admin panel: list, create, edit and delete. */
 export function PermissionsPanel() {
@@ -95,7 +96,7 @@ export function PermissionsPanel() {
                         {permissions.length === 0 && (
                             <tr>
                                 <td colSpan={3} className="px-3 py-8 text-center text-muted">
-                                    {isLoading ? 'Cargando…' : 'No hay permisos'}
+                                    {isLoading ? <Spinner label="Cargando permisos" /> : 'No hay permisos'}
                                 </td>
                             </tr>
                         )}

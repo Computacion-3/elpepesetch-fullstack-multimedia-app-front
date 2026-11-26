@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { requireSession } from '@/src/lib/dal';
 import { PERMISSIONS } from '@/src/shared/permissions';
 import { MediaDetailScreen } from '@/src/features/media/presentation/components/MediaDetailScreen';
+import { Spinner } from '@/src/shared/ui/Spinner';
 
 type MediaDetailPageProps = { params: Promise<{ id: string }> };
 
@@ -19,7 +20,7 @@ async function MediaDetailContent({ params }: MediaDetailPageProps) {
 export default function MediaDetailPage(props: MediaDetailPageProps) {
     return (
         <main className="mx-auto w-full max-w-6xl flex-1 p-6">
-            <Suspense fallback={<p role="status">Cargando detalle…</p>}>
+            <Suspense fallback={<Spinner label="Cargando detalle" size="lg" className="py-16" />}>
                 <MediaDetailContent {...props} />
             </Suspense>
         </main>

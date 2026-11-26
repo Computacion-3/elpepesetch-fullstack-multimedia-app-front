@@ -2,20 +2,24 @@
 
 import { useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '@/src/store/hooks';
-import type { LoginCredentials, RegisterDraft } from '../../domain/entities/user';
+import type { LoginCredentials, ProfileDraft, RegisterDraft } from '../../domain/entities/user';
 import {
     clearAuthError,
+    clearProfileFeedback,
     hydrateUser,
     loginMutation,
     logoutMutation,
     registerMutation,
     refreshCurrentUserMutation,
+    updateProfileMutation,
 } from '../store/auth.slice';
 import {
     selectAuthError,
     selectAuthStatus,
     selectAuthUser,
     selectIsAuthenticated,
+    selectProfileError,
+    selectProfileStatus,
     selectSessionEndedReason,
 } from '../store/auth.selectors';
 import type { AuthUserViewModel } from '../viewmodels/auth.viewmodel';
@@ -28,6 +32,8 @@ export function useAuth() {
     const status = useAppSelector(selectAuthStatus);
     const errorMessage = useAppSelector(selectAuthError);
     const sessionEndedReason = useAppSelector(selectSessionEndedReason);
+    const profileStatus = useAppSelector(selectProfileStatus);
+    const profileError = useAppSelector(selectProfileError);
 
     const login = useCallback(
         async (credentials: LoginCredentials): Promise<boolean> =>
@@ -49,6 +55,17 @@ export function useAuth() {
     const refreshCurrentUser = useCallback(async (): Promise<boolean> => {
         const result = await dispatch(refreshCurrentUserMutation());
         return refreshCurrentUserMutation.fulfilled.match(result);
+    }, [dispatch]);
+
+    /** Guarda los cambios del perfil propio; true si el backend los aceptó. */
+    const updateProfile = useCallback(
+        async (draft: ProfileDraft): Promise<boolean> =>
+            updateProfileMutation.fulfilled.match(await dispatch(updateProfileMutation(draft))),
+        [dispatch],
+    );
+
+    const resetProfileFeedback = useCallback(() => {
+        dispatch(clearProfileFeedback());
     }, [dispatch]);
 
     const hydrate = useCallback(
@@ -77,6 +94,10 @@ export function useAuth() {
         register,
         logout,
         refreshCurrentUser,
+        profileStatus,
+        profileError,
+        updateProfile,
+        resetProfileFeedback,
         hydrate,
         hasPermission,
         clearError,

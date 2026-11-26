@@ -5,6 +5,7 @@ import { Alert } from '@/src/shared/ui/Alert';
 import { Pagination } from '@/src/shared/ui/Pagination';
 import { useUserLists } from '../hooks/use-user-lists';
 import { UserListCard } from './UserListCard';
+import { Spinner } from '@/src/shared/ui/Spinner';
 
 export function PublicListsView() {
   const lists = useUserLists();
@@ -29,9 +30,7 @@ export function PublicListsView() {
         <Alert variant="error">{lists.errorMessage}</Alert>
       )}
       {lists.publicStatus === 'loading' ? (
-        <p role="status" className="py-12 text-center text-[#c2bddc]">
-          Cargando listas públicas…
-        </p>
+        <Spinner label="Cargando listas públicas" size="lg" className="py-12" />
       ) : lists.publicStatus === 'failed' ? (
         <div className="rounded-xl bg-[#241f42] p-8 text-center">
           <p className="mb-4 text-[#c2bddc]">

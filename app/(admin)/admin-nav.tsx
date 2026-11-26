@@ -1,7 +1,9 @@
-import Link from 'next/link';
 import { getSession } from '@/src/lib/dal';
 import { PERMISSIONS } from '@/src/shared/permissions';
+import { NavLink } from '../_shell/nav-link';
+import { sidebarSectionClass, sidebarSectionTitleClass } from '../_shell/nav-styles';
 
+/** Sección "Administración" de la barra lateral: solo los paneles que el usuario puede abrir. */
 export async function AdminNav() {
     const session = await getSession();
     if (!session) return null;
@@ -12,15 +14,12 @@ export async function AdminNav() {
     ].filter((l) => session.user.hasPermission(l.permission));
     if (links.length === 0) return null;
     return (
-        <nav aria-label="Administración" className="flex flex-wrap items-center gap-1">
+        <nav aria-label="Administración" className={sidebarSectionClass}>
+            <p className={sidebarSectionTitleClass}>Administración</p>
             {links.map((l) => (
-                <Link
-                    key={l.href}
-                    href={l.href}
-                    className="rounded-lg px-3 py-2 text-sm font-medium text-brand transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-                >
+                <NavLink key={l.href} href={l.href}>
                     {l.label}
-                </Link>
+                </NavLink>
             ))}
         </nav>
     );

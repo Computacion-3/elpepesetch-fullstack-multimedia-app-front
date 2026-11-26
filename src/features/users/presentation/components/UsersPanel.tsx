@@ -12,6 +12,7 @@ import type { UserViewModel } from '../viewmodels/users.viewmodel';
 import { UserForm } from './UserForm';
 import { UsersFilters } from './UsersFilters';
 import { UsersTable } from './UsersTable';
+import { Spinner } from '@/src/shared/ui/Spinner';
 
 /** Users administration panel. */
 export function UsersPanel({ currentUserId }: { currentUserId: number }) {
@@ -70,7 +71,7 @@ export function UsersPanel({ currentUserId }: { currentUserId: number }) {
                 onEdit={openEdit}
                 onDelete={setToDelete}
             />
-            {isLoading && users.length === 0 && <p className="text-sm">Cargando…</p>}
+            {isLoading && users.length === 0 && <Spinner label="Cargando usuarios" className="py-8" />}
             <Pagination
                 page={page.page}
                 totalPages={page.totalPages}

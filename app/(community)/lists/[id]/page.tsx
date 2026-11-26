@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { requireSession } from '@/src/lib/dal';
 import { UserListDetail } from '@/src/features/user-lists/presentation/components/UserListDetail';
+import { Spinner } from '@/src/shared/ui/Spinner';
 
 async function AuthenticatedUserList({
   params,
@@ -19,7 +20,7 @@ export default function UserListPage({
 }) {
   return (
     <Suspense
-      fallback={<p className="p-6 text-sm text-gray-500">Cargando lista…</p>}
+      fallback={<Spinner label="Cargando lista" size="lg" className="py-16" />}
     >
       <AuthenticatedUserList params={params} />
     </Suspense>

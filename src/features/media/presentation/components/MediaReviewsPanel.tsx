@@ -8,6 +8,7 @@ import { Alert } from '@/src/shared/ui/Alert';
 import { Button } from '@/src/shared/ui/Button';
 import { Modal } from '@/src/shared/ui/Modal';
 import { Pagination } from '@/src/shared/ui/Pagination';
+import { Spinner } from '@/src/shared/ui/Spinner';
 
 /** Muestra reseñas del detalle y reutiliza las operaciones del módulo de comunidad. */
 export function MediaReviewsPanel({
@@ -59,7 +60,7 @@ export function MediaReviewsPanel({
       {errorMessage && !formOpen && <Alert variant="error">{errorMessage}</Alert>}
       {successMessage && <Alert variant="success">{successMessage}</Alert>}
       {isLoading && reviews.length === 0 ? (
-        <p role="status" className="text-sm">Cargando reseñas…</p>
+        <Spinner label="Cargando reseñas" className="py-8" />
       ) : reviews.length === 0 ? (
         <p className="rounded-xl border border-white/10 bg-surface p-4 text-sm text-muted">
           Aún no hay reseñas visibles para este elemento multimedia.

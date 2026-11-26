@@ -50,10 +50,9 @@ export function NotificationBell() {
 
   return (
     <>
-      <Link href="/notifications" className="relative inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" aria-label={`Notificaciones, ${unreadCount} sin leer`}>
-        <Bell size={17} strokeWidth={1.8} aria-hidden="true" />
-        <span>Notificaciones</span>
-        {unreadCount > 0 && <span aria-hidden="true" className="rounded-full bg-brand px-2 py-0.5 text-xs font-bold text-[#17132b]">{unreadCount > 99 ? '99+' : unreadCount}</span>}
+      <Link href="/notifications" title="Notificaciones" className="relative grid h-10 w-10 shrink-0 place-items-center rounded-full text-muted transition-colors hover:bg-white/10 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" aria-label={`Notificaciones, ${unreadCount} sin leer`}>
+        <Bell size={19} strokeWidth={1.8} aria-hidden="true" />
+        {unreadCount > 0 && <span aria-hidden="true" className="absolute -top-0.5 -right-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-brand px-1 text-[11px] font-bold text-[#17132b] ring-2 ring-background">{unreadCount > 99 ? '99+' : unreadCount}</span>}
       </Link>
       {notice && (
         <p className="fixed right-4 top-20 z-50 max-w-sm rounded-xl border border-brand/40 bg-surface px-4 py-3 text-sm text-foreground shadow-lg" role="status">

@@ -5,6 +5,7 @@ import { GetSocketTicketUseCase } from '../domain/usecases/get-socket-ticket.use
 import { LoginUseCase } from '../domain/usecases/login.usecase';
 import { LogoutUseCase } from '../domain/usecases/logout.usecase';
 import { RegisterUseCase } from '../domain/usecases/register.usecase';
+import { UpdateProfileUseCase } from '../domain/usecases/update-profile.usecase';
 import type { AuthDatasource } from '../infrastructure/datasources/auth.datasource';
 import { AuthGraphQLDatasource } from '../infrastructure/datasources/auth-graphql.datasource';
 import { AuthRestDatasource } from '../infrastructure/datasources/auth-rest.datasource';
@@ -28,6 +29,7 @@ export function createAuthContainer() {
         logout: new LogoutUseCase(repository),
         getCurrentUser: new GetCurrentUserUseCase(repository),
         getSocketTicket: new GetSocketTicketUseCase(repository),
+        updateProfile: new UpdateProfileUseCase(repository),
     };
 }
 

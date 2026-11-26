@@ -18,6 +18,17 @@ export interface RegisterDraft {
     fullName?: string;
 }
 
+/** Cambios del perfil propio: solo viajan los campos que el usuario modificó. El rol no se edita aquí. */
+export interface ProfileDraft {
+    username?: string;
+    email?: string;
+    fullName?: string;
+    bio?: string;
+    password?: string;
+}
+
+const BIO_MAX_LENGTH = 200;
+
 /** Login rules: valid email and a non-empty password. */
 export function assertValidLoginCredentials(credentials: LoginCredentials): void {
     assertValidEmail(credentials.email ?? '');
@@ -36,6 +47,21 @@ export function assertValidRegisterDraft(draft: RegisterDraft): void {
     }
 }
 
+/** Reglas del perfil, iguales a las del registro para cada campo presente. */
+export function assertValidProfileDraft(draft: ProfileDraft): void {
+    const fields = Object.values(draft).filter((value) => value !== undefined);
+    if (fields.length === 0) {
+        throw new ValidationError('No hay cambios para guardar');
+    }
+    if (draft.username !== undefined) assertValidUsername(draft.username);
+    if (draft.email !== undefined) assertValidEmail(draft.email);
+    if (draft.fullName !== undefined) assertValidFullName(draft.fullName);
+    if (draft.bio !== undefined && draft.bio.length > BIO_MAX_LENGTH) {
+        throw new ValidationError(`La biografía no puede superar ${BIO_MAX_LENGTH} caracteres`);
+    }
+    if (draft.password !== undefined) assertValidPassword(draft.password);
+}
+
 export class User {
     constructor(
         readonly id: number,
@@ -44,6 +70,7 @@ export class User {
         readonly fullName: string | null,
         readonly role: string,
         readonly permissions: readonly string[],
+        readonly bio: string | null = null,
     ) {}
 
     hasPermission(permission: string): boolean {

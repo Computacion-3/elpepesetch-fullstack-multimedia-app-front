@@ -6,6 +6,7 @@ import { Alert } from '@/src/shared/ui/Alert';
 import { Button } from '@/src/shared/ui/Button';
 import { usePermissions } from '../hooks/use-permissions';
 import { useRoles } from '../hooks/use-roles';
+import { Spinner } from '@/src/shared/ui/Spinner';
 
 /** Assigns permissions to a role. */
 export function RolePermissionsForm({ roleId, onDone }: { roleId: number; onDone: () => void }) {
@@ -39,7 +40,7 @@ export function RolePermissionsForm({ roleId, onDone }: { roleId: number; onDone
         return (
             <div className="flex flex-col gap-4">
                 {errorMessage && <Alert variant="error">{errorMessage}</Alert>}
-                <p className="text-sm text-muted">Cargando permisos…</p>
+                <Spinner label="Cargando permisos" className="py-6" />
             </div>
         );
     }

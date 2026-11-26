@@ -6,7 +6,7 @@ import type { ActionResult } from '@/src/shared/domain/action-result';
 import { describeError } from '@/src/shared/domain/errors';
 import { authContainer } from '../../di/auth.container';
 import type { SocketTicket } from '../../domain/entities/socket-ticket';
-import type { LoginCredentials, RegisterDraft } from '../../domain/entities/user';
+import type { LoginCredentials, ProfileDraft, RegisterDraft } from '../../domain/entities/user';
 import { AuthViewModelMapper, type AuthUserViewModel } from '../viewmodels/auth.viewmodel';
 
 /** Logs in and stores the session cookie. */
@@ -50,6 +50,13 @@ export async function getSocketTokenAction(): Promise<ActionResult<SocketTicket>
 export async function refreshCurrentUserAction(): Promise<ActionResult<AuthUserViewModel>> {
     return runAuthenticated('No se pudo actualizar tu perfil', async (token) =>
         AuthViewModelMapper.toViewModel(await authContainer.getCurrentUser.execute(token)),
+    );
+}
+
+/** Edita el perfil propio y devuelve el usuario ya actualizado para el store. */
+export async function updateProfileAction(draft: ProfileDraft): Promise<ActionResult<AuthUserViewModel>> {
+    return runAuthenticated('No se pudo actualizar tu perfil', async (token) =>
+        AuthViewModelMapper.toViewModel(await authContainer.updateProfile.execute(token, draft)),
     );
 }
 

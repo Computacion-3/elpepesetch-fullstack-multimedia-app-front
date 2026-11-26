@@ -8,3 +8,5 @@ export const selectIsAuthenticated = (state: State) => state.auth.user !== null;
 export const selectAuthStatus = (state: State) => state.auth.status;
 export const selectAuthError = (state: State) => state.auth.errorMessage;
 export const selectSessionEndedReason = (state: State) => state.auth.sessionEndedReason;
+export const selectProfileStatus = (state: State) => state.auth.profileStatus;
+export const selectProfileError = (state: State) => state.auth.profileError;

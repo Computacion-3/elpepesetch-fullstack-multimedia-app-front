@@ -8,6 +8,7 @@ import {
   registerAction,
   refreshCurrentUserAction,
   expireSessionAction,
+  updateProfileAction,
 } from '@/src/features/auth/presentation/actions/auth.actions';
 import {
   accountSessionEnded,
@@ -168,6 +169,7 @@ function createThunkExtra() {
       getSocketToken: getSocketTokenAction,
       refreshCurrentUser: refreshCurrentUserAction,
       expireSession: expireSessionAction,
+      updateProfile: updateProfileAction,
     } satisfies AuthDependencies,
     users: {
       list: listUsersAction,
