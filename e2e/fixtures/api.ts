@@ -1,6 +1,7 @@
+
 import { request, type APIRequestContext } from '@playwright/test';
 import { ACCOUNTS, type Account } from './test-data';
-
+ 
 export type ApiUser = {
     id: number;
     username: string;
@@ -43,7 +44,7 @@ export type ApiGlobalStats = {
     reviews: number;
 };
 type Paginated<T> = { data: T[]; meta: { total: number; page: number; limit: number; totalPages: number } };
-
+ 
 export type ApiLibraryEntry = {
     id: string;
     status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'DROPPED';
@@ -53,7 +54,7 @@ export type ApiLibraryEntry = {
     notes: string | null;
     mediaItem: { id: string; title: string };
 };
-
+ 
 export type ApiUserList = {
     id: string;
     name: string;
@@ -62,18 +63,18 @@ export type ApiUserList = {
     owner: { id: number; username: string };
     items: Array<{ id: string; title: string }>;
 };
-
+ 
 export function apiBaseUrl(): string {
     return process.env.E2E_API_URL ?? 'http://localhost:3002';
 }
-
+ 
 /** POST /auth/login directo al backend; devuelve el JWT. */
 export async function apiLogin(ctx: APIRequestContext, account: Account): Promise<string> {
     const res = await ctx.post('/auth/login', { data: { email: account.email, password: account.password } });
     if (!res.ok()) throw new Error(`Login en el backend falló (${res.status()}): ${await res.text()}`);
     return ((await res.json()) as { accessToken: string }).accessToken;
 }
-
+ 
 /**
  * Cliente REST del backend con el token del administrador del seed.
  * Lo usan las pruebas para preparar datos (arrange) y limpiar (cleanup) sin pasar por la interfaz,
@@ -84,7 +85,7 @@ export class AdminApi {
         private readonly ctx: APIRequestContext,
         private readonly token: string,
     ) {}
-
+ 
     static async create(): Promise<AdminApi> {
         const ctx = await request.newContext({ baseURL: apiBaseUrl() });
         try {
@@ -96,11 +97,11 @@ export class AdminApi {
             );
         }
     }
-
+ 
     async dispose(): Promise<void> {
         await this.ctx.dispose();
     }
-
+ 
     private async call<T>(method: string, path: string, data?: unknown): Promise<T> {
         const res = await this.ctx.fetch(path, {
             method,
@@ -111,7 +112,7 @@ export class AdminApi {
         if (!res.ok()) throw new Error(`${method} ${path} → ${res.status()} ${text}`);
         return (text ? JSON.parse(text) : undefined) as T;
     }
-
+ 
     // ---- usuarios
     createUser(body: {
         username: string;
@@ -122,21 +123,21 @@ export class AdminApi {
     }): Promise<ApiUser> {
         return this.call('POST', '/users', body);
     }
-
+ 
     searchUsers(q: string, page = 1, limit = 50): Promise<Paginated<ApiUser>> {
         const params = new URLSearchParams({ q, page: String(page), limit: String(limit) });
         return this.call('GET', `/users?${params.toString()}`);
     }
-
+ 
     async findUser(username: string): Promise<ApiUser | undefined> {
         const { data } = await this.searchUsers(username);
         return data.find((u) => u.username === username);
     }
-
+ 
     assignRole(id: number, roleId: number): Promise<ApiUser> {
         return this.call('PATCH', `/users/${id}/roles`, { roleId });
     }
-
+ 
     async requestStatus(method: string, path: string, data?: unknown): Promise<number> {
         const response = await this.ctx.fetch(path, {
             method,
@@ -145,15 +146,15 @@ export class AdminApi {
         });
         return response.status();
     }
-
+ 
     setUserStatus(id: number, isActive: boolean): Promise<ApiUser> {
         return this.call('PATCH', `/users/${id}/status`, { isActive });
     }
-
+ 
     async deleteUser(id: number): Promise<void> {
         await this.call('DELETE', `/users/${id}`);
     }
-
+ 
     /** Borra todos los usuarios cuyo username empiece por `prefix`. */
     async deleteUsersWithPrefix(prefix: string): Promise<void> {
         for (;;) {
@@ -163,48 +164,48 @@ export class AdminApi {
             for (const u of matches) await this.deleteUser(u.id);
         }
     }
-
+ 
     // ---- roles
     listRoles(): Promise<ApiRole[]> {
         return this.call('GET', '/roles');
     }
-
+ 
     async roleByName(name: string): Promise<ApiRole | undefined> {
         return (await this.listRoles()).find((r) => r.name === name);
     }
-
+ 
     async roleId(name: string): Promise<number> {
         const role = await this.roleByName(name);
         if (!role) throw new Error(`El rol ${name} no existe en el backend`);
         return role.id;
     }
-
+ 
     getRole(id: number): Promise<ApiRole & { rolePermissions?: { permission?: ApiPermission }[] }> {
         return this.call('GET', `/roles/${id}`);
     }
-
+ 
     async rolePermissionNames(id: number): Promise<string[]> {
         const role = await this.getRole(id);
         return (role.rolePermissions ?? []).flatMap((rp) => (rp.permission ? [rp.permission.name] : [])).sort();
     }
-
+ 
     createRole(name: string, description = 'Rol temporal de E2E'): Promise<ApiRole> {
         return this.call('POST', '/roles', { name, description });
     }
-
+ 
     async setRolePermissions(id: number, permissionIds: number[]): Promise<void> {
         await this.call('PUT', `/roles/${id}/permissions`, { permissionIds });
     }
-
+ 
     async deleteRole(id: number): Promise<void> {
         await this.call('DELETE', `/roles/${id}`);
     }
-
+ 
     // ---- permisos
     listPermissions(): Promise<ApiPermission[]> {
         return this.call('GET', '/permissions');
     }
-
+ 
     async permissionIds(names: string[]): Promise<number[]> {
         const all = await this.listPermissions();
         return names.map((name) => {
@@ -213,19 +214,19 @@ export class AdminApi {
             return found.id;
         });
     }
-
+ 
     async permissionByName(name: string): Promise<ApiPermission | undefined> {
         return (await this.listPermissions()).find((p) => p.name === name);
     }
-
+ 
     createPermission(name: string, description = 'Permiso temporal de E2E'): Promise<ApiPermission> {
         return this.call('POST', '/permissions', { name, description });
     }
-
+ 
     async deletePermission(id: number): Promise<void> {
         await this.call('DELETE', `/permissions/${id}`);
     }
-
+ 
     // ---- géneros (Persona 2; compatible con /genres y fallback /genre)
     async listGenres(): Promise<ApiGenre[]> {
         try {
@@ -234,7 +235,7 @@ export class AdminApi {
             return this.call('GET', '/genre');
         }
     }
-
+ 
     async deleteGenre(id: string): Promise<void> {
         try {
             await this.call('DELETE', `/genres/${id}`);
@@ -242,30 +243,30 @@ export class AdminApi {
             await this.call('DELETE', `/genre/${id}`);
         }
     }
-
+ 
     // ---- reseñas, reportes y estadísticas (Persona 4)
     listReviewsByMedia(mediaItemId: string, page = 1, limit = 50): Promise<Paginated<ApiReview>> {
         return this.call('GET', `/media/${mediaItemId}/reviews?page=${page}&limit=${limit}`);
     }
-
+ 
     async deleteReview(id: string): Promise<void> {
         await this.call('DELETE', `/reviews/${id}`);
     }
-
+ 
     listReports(status?: 'OPEN' | 'RESOLVED' | 'DISMISSED', page = 1, limit = 50): Promise<Paginated<ApiReviewReport>> {
         const params = new URLSearchParams({ page: String(page), limit: String(limit) });
         if (status) params.set('status', status);
         return this.call('GET', `/reports?${params.toString()}`);
     }
-
+ 
     resolveReport(id: string, body: { action: 'HIDE' | 'DISMISS'; reason?: string }): Promise<ApiReviewReport> {
         return this.call('PATCH', `/reports/${id}/resolve`, body);
     }
-
+ 
     getGlobalStats(): Promise<ApiGlobalStats> {
         return this.call('GET', '/stats/global');
     }
-
+ 
     // ---- limpieza
     /** Usuarios, luego roles (sin permisos) y por último permisos con el prefijo dado. Mejor esfuerzo. */
     async cleanup(prefix: { user: string; role: string; permission: string }): Promise<string[]> {
@@ -293,7 +294,7 @@ export class AdminApi {
         return problems;
     }
 }
-
+ 
 /** GET /auth/me con un token cualquiera; devuelve el código HTTP. */
 export async function authMeStatus(token: string): Promise<number> {
     const ctx = await request.newContext({ baseURL: apiBaseUrl() });
@@ -304,7 +305,7 @@ export async function authMeStatus(token: string): Promise<number> {
         await ctx.dispose();
     }
 }
-
+ 
 /** Ejecuta una petición REST autenticada como la cuenta indicada (útil para preparar reseñas/reportes ajenos). */
 async function callAsAccount<T>(account: Account, method: string, path: string, data?: unknown): Promise<T> {
     const ctx = await request.newContext({ baseURL: apiBaseUrl() });
@@ -322,7 +323,7 @@ async function callAsAccount<T>(account: Account, method: string, path: string, 
         await ctx.dispose();
     }
 }
-
+ 
 export async function requestStatusAs(
     account: Account,
     method: string,
@@ -342,7 +343,7 @@ export async function requestStatusAs(
         await ctx.dispose();
     }
 }
-
+ 
 /** Agrega un elemento a la biblioteca de la cuenta indicada para habilitar la creación de reseñas. */
 export function addLibraryEntryAs(
     account: Account,
@@ -351,7 +352,7 @@ export function addLibraryEntryAs(
 ): Promise<{ id: string }> {
     return callAsAccount(account, 'POST', '/library', { mediaItemId, status });
 }
-
+ 
 /** Crea una reseña directamente en el backend autenticado como la cuenta indicada. */
 export function createReviewAs(
     account: Account,
@@ -360,7 +361,7 @@ export function createReviewAs(
 ): Promise<ApiReview> {
     return callAsAccount(account, 'POST', `/media/${mediaItemId}/reviews`, body);
 }
-
+ 
 /** Crea un reporte sobre una reseña directamente en el backend autenticado como la cuenta indicada. */
 export function createReportAs(
     account: Account,
@@ -369,51 +370,32 @@ export function createReportAs(
 ): Promise<ApiReviewReport> {
     return callAsAccount(account, 'POST', `/reviews/${reviewId}/report`, body);
 }
-
+ 
 /** Consulta GET /stats/me autenticado como la cuenta indicada para contrastar los KPIs en UI. */
 export function getPersonalStatsAs(account: Account): Promise<ApiPersonalStats> {
     return callAsAccount(account, 'GET', '/stats/me');
 }
-
+ 
 /** Consulta la biblioteca de una cuenta para verificar lo persistido después del flujo UI. */
 export function getLibraryAs(account: Account): Promise<Paginated<ApiLibraryEntry>> {
     return callAsAccount(account, 'GET', '/library?page=1&limit=50');
 }
-
+ 
 export function getMyListsAs(account: Account): Promise<ApiUserList[]> {
     return callAsAccount(account, 'GET', '/lists');
 }
-
+ 
 export function getPublicListsAs(account: Account, page = 1, limit = 10): Promise<Paginated<ApiUserList>> {
     return callAsAccount(account, 'GET', `/lists/public?page=${page}&limit=${limit}`);
 }
-
+ 
 export function createUserListAs(
     account: Account,
     body: { name: string; description?: string | null; visibility?: 'PRIVATE' | 'PUBLIC' },
 ): Promise<ApiUserList> {
     return callAsAccount(account, 'POST', '/lists', body);
 }
-
+ 
 export function getUserListAs(account: Account, id: string): Promise<ApiUserList> {
     return callAsAccount(account, 'GET', `/lists/${encodeURIComponent(id)}`);
-}
-
-export async function requestStatusAs(
-    account: Account,
-    method: string,
-    path: string,
-    data?: unknown,
-): Promise<number> {
-    const ctx = await request.newContext({ baseURL: apiBaseUrl() });
-    try {
-        const token = await apiLogin(ctx, account);
-        return (await ctx.fetch(path, {
-            method,
-            data,
-            headers: { Authorization: `Bearer ${token}` },
-        })).status();
-    } finally {
-        await ctx.dispose();
-    }
 }
