@@ -9,6 +9,8 @@ import { useAuth } from '@/src/features/auth/presentation/hooks/use-auth';
 import { PERMISSIONS } from '@/src/shared/permissions';
 import { MediaReviewsPanel } from './MediaReviewsPanel';
 import { useRealtime } from '@/src/features/realtime/presentation/hooks/use-realtime';
+import { Spinner } from '@/src/shared/ui/Spinner';
+import { MediaCover } from './MediaCover';
 
 const TYPE_LABELS = { GAME: 'Videojuego', MOVIE: 'Película', BOOK: 'Libro' };
 
@@ -38,17 +40,12 @@ export function MediaDetailScreen({ id, canEditProposal }: MediaDetailScreenProp
     return (
         <section className="space-y-6">
             <Link href="/catalog" className="text-sm font-medium text-brand hover:underline">← Volver al catálogo</Link>
-            {detailStatus === 'loading' && <p role="status">Cargando detalle…</p>}
+            {detailStatus === 'loading' && <Spinner label="Cargando detalle" size="lg" className="py-16" />}
             {errorMessage && <Alert variant="error">{errorMessage}</Alert>}
             {item && (
                 <>
                 <article className="grid gap-6 rounded-2xl border border-white/10 bg-surface p-5 sm:p-7 md:grid-cols-[minmax(0,1fr)_2fr]">
-                    <div
-                        role="img"
-                        aria-label={item.coverUrl ? `Portada de ${item.title}` : 'Sin portada disponible'}
-                        className="min-h-72 rounded-xl bg-surface-raised bg-cover bg-center"
-                        style={item.coverUrl ? { backgroundImage: `url("${item.coverUrl}")` } : undefined}
-                    />
+                    <MediaCover item={item} className="min-h-72 rounded-xl" />
                     <div className="space-y-4">
                         <p className="text-sm font-semibold uppercase tracking-wide text-brand">{TYPE_LABELS[item.type]}</p>
                         <h1 className="text-3xl font-bold">{item.title}</h1>
