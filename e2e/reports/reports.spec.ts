@@ -2,6 +2,7 @@ import {
     addLibraryEntryAs,
     createReportAs,
     createReviewAs,
+    requestStatusAs,
 } from '../fixtures/api';
 import {
     NO_SESSION,
@@ -29,8 +30,17 @@ test.describe('Reportes — control de acceso por permisos', () => {
             page,
         }) => {
             await page.goto('/');
-            const nav = page.getByRole('navigation', { name: 'Comunidad y estadísticas' });
-            await expect(nav.getByRole('link')).toHaveText(['Reseñas', 'Estadísticas']);
+            const primaryNav = page.getByRole('navigation', { name: 'Principal', exact: true });
+            await expect(primaryNav.getByRole('link')).toHaveText([
+                'Inicio',
+                'Catálogo',
+                'Biblioteca',
+                'Reseñas',
+                'Estadísticas',
+            ]);
+            await expect(
+                page.getByRole('navigation', { name: 'Moderación de comunidad', exact: true }),
+            ).toHaveCount(0);
 
             await page.goto('/reports');
             await expect(page.getByRole('heading', { name: MESSAGES.forbiddenPage })).toBeVisible();
@@ -43,12 +53,11 @@ test.describe('Reportes — control de acceso por permisos', () => {
 
         test('ve el enlace de Moderación de reportes y accede al panel', async ({ page }) => {
             await page.goto('/');
-            const nav = page.getByRole('navigation', { name: 'Comunidad y estadísticas' });
-            await expect(nav.getByRole('link')).toHaveText([
-                'Reseñas',
-                'Estadísticas',
-                'Moderación de reportes',
-            ]);
+            const nav = page.getByRole('navigation', {
+                name: 'Moderación de comunidad',
+                exact: true,
+            });
+            await expect(nav.getByRole('link')).toHaveText(['Moderación de reportes']);
             await nav.getByRole('link', { name: 'Moderación de reportes' }).click();
             await expect(page).toHaveURL(/\/reports$/);
             await expect(page.getByRole('heading', { name: 'Moderación de reportes' })).toBeVisible();
@@ -98,6 +107,12 @@ test.describe('Reportes — creación desde reseñas y moderación (HIDE / DISMI
             await waitForHydration(page, 'dialog form');
             await page.getByRole('button', { name: 'Enviar reporte' }).click();
             await expect(alertWithText(page, MESSAGES.reportConflict)).toBeVisible();
+            expect(
+                await requestStatusAs(reporterAcc, 'POST', `/reviews/${createdReview.id}/report`, {
+                    reason: 'SPOILER',
+                    comment: `Spoiler E2E ${tag}`,
+                }),
+            ).toBe(409);
             await page.keyboard.press('Escape');
 
             const openReports = await api.listReports('OPEN');

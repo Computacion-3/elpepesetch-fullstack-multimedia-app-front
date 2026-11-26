@@ -15,14 +15,20 @@ test.describe('Catálogo — protección de rutas', () => {
 test.describe('Catálogo — navegación, filtros y detalle como USER', () => {
     test.use({ storageState: storageStatePath('user') });
 
-    test('ve solo Catálogo en la barra y explora, filtra y abre el detalle de un elemento', async ({
+    test('navega desde la barra principal, filtra y abre el detalle de un elemento', async ({
         page,
     }) => {
         await page.goto('/');
-        const catalogNav = page.getByRole('navigation', { name: 'Catálogo' });
-        await expect(catalogNav.getByRole('link')).toHaveText(['Catálogo']);
+        const primaryNav = page.getByRole('navigation', { name: 'Principal', exact: true });
+        await expect(primaryNav.getByRole('link')).toHaveText([
+            'Inicio',
+            'Catálogo',
+            'Biblioteca',
+            'Reseñas',
+            'Estadísticas',
+        ]);
 
-        await catalogNav.getByRole('link', { name: 'Catálogo' }).click();
+        await primaryNav.getByRole('link', { name: 'Catálogo' }).click();
         await expect(page).toHaveURL(/\/catalog$/);
         await expect(page.getByRole('heading', { name: 'Catálogo multimedia' })).toBeVisible();
 
@@ -56,8 +62,19 @@ test.describe('Catálogo — moderación de propuestas como MODERATOR', () => {
         page,
     }) => {
         await page.goto('/');
-        const catalogNav = page.getByRole('navigation', { name: 'Catálogo' });
-        await expect(catalogNav.getByRole('link')).toHaveText(['Catálogo', 'Propuestas']);
+        const primaryNav = page.getByRole('navigation', { name: 'Principal', exact: true });
+        await expect(primaryNav.getByRole('link')).toHaveText([
+            'Inicio',
+            'Catálogo',
+            'Biblioteca',
+            'Reseñas',
+            'Estadísticas',
+        ]);
+        const catalogNav = page.getByRole('navigation', {
+            name: 'Administración del catálogo',
+            exact: true,
+        });
+        await expect(catalogNav.getByRole('link')).toHaveText(['Propuestas']);
 
         await catalogNav.getByRole('link', { name: 'Propuestas' }).click();
         await expect(page).toHaveURL(/\/media\/pending$/);

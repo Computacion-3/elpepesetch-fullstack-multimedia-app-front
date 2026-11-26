@@ -124,6 +124,19 @@ export class AdminApi {
         return data.find((u) => u.username === username);
     }
 
+    assignRole(id: number, roleId: number): Promise<ApiUser> {
+        return this.call('PATCH', `/users/${id}/roles`, { roleId });
+    }
+
+    async requestStatus(method: string, path: string, data?: unknown): Promise<number> {
+        const response = await this.ctx.fetch(path, {
+            method,
+            data,
+            headers: { Authorization: `Bearer ${this.token}` },
+        });
+        return response.status();
+    }
+
     setUserStatus(id: number, isActive: boolean): Promise<ApiUser> {
         return this.call('PATCH', `/users/${id}/status`, { isActive });
     }
@@ -296,6 +309,26 @@ async function callAsAccount<T>(account: Account, method: string, path: string, 
         const text = await res.text();
         if (!res.ok()) throw new Error(`${method} ${path} → ${res.status()} ${text}`);
         return (text ? JSON.parse(text) : undefined) as T;
+    } finally {
+        await ctx.dispose();
+    }
+}
+
+export async function requestStatusAs(
+    account: Account,
+    method: string,
+    path: string,
+    data?: unknown,
+): Promise<number> {
+    const ctx = await request.newContext({ baseURL: apiBaseUrl() });
+    try {
+        const token = await apiLogin(ctx, account);
+        const response = await ctx.fetch(path, {
+            method,
+            data,
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        return response.status();
     } finally {
         await ctx.dispose();
     }

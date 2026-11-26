@@ -71,11 +71,20 @@ test.describe('Administración de usuarios (/users)', () => {
         await dialog.getByRole('button', { name: 'Crear usuario' }).click();
         await expect(alertWithText(page, MESSAGES.roleRequired)).toBeVisible();
 
-        // Correo de otra cuenta → 409 del backend, mostrado dentro del modal.
+        // Correo de otra cuenta → conflicto del backend, mostrado dentro del modal.
         await dialog.getByLabel('Rol').selectOption({ label: 'MODERATOR' });
         await dialog.getByLabel('Correo electrónico').fill(ACCOUNTS.user.email);
         await dialog.getByRole('button', { name: 'Crear usuario' }).click();
         await expect(dialog.getByRole('alert').filter({ hasText: MESSAGES.userConflict })).toBeVisible();
+        expect(
+            await api.requestStatus('POST', '/users', {
+                username: data.username,
+                email: ACCOUNTS.user.email,
+                password: data.password,
+                fullName: data.fullName,
+                roleId: await api.roleId('MODERATOR'),
+            }),
+        ).toBe(409);
 
         await dialog.getByLabel('Correo electrónico').fill(data.email);
         await dialog.getByRole('button', { name: 'Crear usuario' }).click();

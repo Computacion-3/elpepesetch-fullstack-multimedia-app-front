@@ -44,6 +44,11 @@ export async function waitForHydration(page: Page, selector = 'form'): Promise<v
 export async function loginViaUi(page: Page, account: Account): Promise<void> {
     await page.goto('/login');
     await waitForHydration(page);
+    if (!process.env.E2E_BASE_URL) {
+        await page.waitForFunction(
+            () => document.documentElement.dataset.sessionHydrated === 'true',
+        );
+    }
     await page.getByLabel('Correo electrónico').fill(account.email);
     await page.getByLabel('Contraseña').fill(account.password);
     await page.getByRole('button', { name: 'Iniciar sesión' }).click();
@@ -82,6 +87,7 @@ type ReduxSnapshot = {
     reviews?: { items: unknown[]; selectedMediaId: string };
     reports?: { items: unknown[] };
     stats?: { personal: unknown; global: unknown };
+    realtime?: { status: string; events: Array<{ event: string }> };
 };
 
 /** true si el front se levantó con NEXT_PUBLIC_E2E=true (expone window.__APP_STORE__). */

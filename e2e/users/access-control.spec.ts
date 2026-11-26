@@ -14,7 +14,9 @@ for (const account of [ACCOUNTS.user, ACCOUNTS.moderator]) {
         test('AC9: la página de inicio no muestra la navegación de administración', async ({ page }) => {
             await page.goto('/');
             await expect(page.getByRole('heading', { name: `Hola, ${account.fullName}` })).toBeVisible();
-            await expect(page.getByRole('navigation', { name: 'Administración' })).toHaveCount(0);
+            await expect(
+                page.getByRole('navigation', { name: 'Administración', exact: true }),
+            ).toHaveCount(0);
         });
 
         for (const route of ADMIN_ROUTES) {
@@ -34,7 +36,7 @@ test.describe('Autorización como ADMIN', () => {
 
     test('AC9: ve los tres enlaces de administración y cada uno abre su panel', async ({ page }) => {
         await page.goto('/');
-        const nav = page.getByRole('navigation', { name: 'Administración' });
+        const nav = page.getByRole('navigation', { name: 'Administración', exact: true });
         await expect(nav.getByRole('link')).toHaveText(ADMIN_ROUTES.map((r) => r.link));
 
         for (const route of ADMIN_ROUTES) {
