@@ -3,8 +3,8 @@ import { getSession } from '@/src/lib/dal';
 import { PERMISSIONS } from '@/src/shared/permissions';
 
 /**
- * Barra de navegación para los módulos de comunidad y estadísticas (Persona 4).
- * Muestra `Moderación de reportes` únicamente cuando el usuario posee `reviews:moderate`.
+ * Barra de navegación de comunidad: listas propias, listas públicas y actividad para toda sesión;
+ * `Moderación de reportes` únicamente cuando el usuario posee `reviews:moderate`.
  * Se mantiene separada de `AdminNav` (`Administración`) para respetar sus controles de acceso.
  */
 export async function CommunityNav() {
@@ -12,6 +12,9 @@ export async function CommunityNav() {
   if (!session) return null;
 
     const links = [
+        { href: '/lists', label: 'Mis listas', visible: true },
+        { href: '/community/lists', label: 'Explorar listas', visible: true },
+        { href: '/activity', label: 'Actividad', visible: true },
         {
             href: '/reports',
             label: 'Moderación de reportes',
@@ -21,7 +24,7 @@ export async function CommunityNav() {
     if (links.length === 0) return null;
 
     return (
-        <nav aria-label="Moderación de comunidad" className="flex flex-wrap items-center gap-1">
+        <nav aria-label="Comunidad" className="flex flex-wrap items-center gap-1">
             {links.map((link) => (
                 <Link
                     key={link.href}
