@@ -44,6 +44,7 @@ test.describe('Administración de permisos (/permissions)', () => {
         await dialog.getByLabel('Nombre').fill(name);
         await dialog.getByRole('button', { name: 'Crear permiso' }).click();
         await expect(dialog.getByRole('alert').filter({ hasText: MESSAGES.permissionConflict })).toBeVisible();
+        expect(await api.requestStatus('POST', '/permissions', { name, description: '' })).toBe(409);
         await page.keyboard.press('Escape');
         await expect(dialog).toBeHidden();
         await expect(rowOf(page, name)).toHaveCount(1);

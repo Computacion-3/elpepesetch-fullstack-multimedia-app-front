@@ -22,8 +22,8 @@ export function UsersFilters() {
     const statusValue = filters.isActive === undefined ? '' : String(filters.isActive);
 
     return (
-        <div className="flex flex-wrap items-end gap-3">
-            <form onSubmit={handleSubmit} className="flex items-end gap-2">
+        <div className="grid gap-3 rounded-2xl border border-white/10 bg-surface p-4 sm:grid-cols-2 lg:grid-cols-3">
+            <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-2 sm:col-span-2 lg:col-span-3">
                 <TextField
                     id="users-filter-q"
                     label="Buscar"

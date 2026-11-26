@@ -32,7 +32,7 @@ export function PermissionForm({ permission, onDone }: PermissionFormProps) {
     };
 
     return (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-surface p-5">
             {errorMessage && <Alert variant="error">{errorMessage}</Alert>}
             <TextField
                 id="permission-form-name"

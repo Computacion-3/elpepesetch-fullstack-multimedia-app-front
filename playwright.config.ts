@@ -21,6 +21,7 @@ const dataSource = process.env.E2E_DATA_SOURCE === 'graphql' ? 'graphql' : 'rest
 const port = dataSource === 'graphql' ? 3101 : 3100;
 const apiUrl = process.env.E2E_API_URL ?? process.env.API_URL ?? 'http://localhost:3002';
 const externalBaseUrl = process.env.E2E_BASE_URL;
+const vercelBypass = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
 
 // Lo leen los helpers de e2e/fixtures (el proceso de cada worker hereda este entorno).
 process.env.E2E_API_URL = apiUrl;
@@ -42,8 +43,15 @@ export default defineConfig({
         locale: 'es-CO',
         trace: 'retain-on-failure',
         screenshot: 'only-on-failure',
-        video: 'retain-on-failure',
+        video: 'on',
         navigationTimeout: 30_000,
+        extraHTTPHeaders:
+            externalBaseUrl && vercelBypass
+                ? {
+                      'x-vercel-protection-bypass': vercelBypass,
+                      'x-vercel-set-bypass-cookie': 'true',
+                  }
+                : undefined,
     },
     projects: [
         { name: 'setup', testMatch: /auth\.setup\.ts/, teardown: 'cleanup' },
@@ -67,6 +75,7 @@ export default defineConfig({
               env: {
                   API_URL: apiUrl,
                   NEXT_PUBLIC_DATA_SOURCE: dataSource,
+                  NEXT_PUBLIC_WS_URL: apiUrl,
                   // Expone el store de Redux en window.__APP_STORE__ para comprobar su estado.
                   NEXT_PUBLIC_E2E: 'true',
               },

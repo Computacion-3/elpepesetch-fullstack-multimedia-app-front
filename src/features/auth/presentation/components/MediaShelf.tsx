@@ -63,7 +63,7 @@ export function MediaShelf({ compact = false }: { compact?: boolean }) {
                         }
                     >
                         {!compact && (
-                            <span className="rotate-180 font-(family-name:--font-display) text-[0.82rem] font-bold leading-none tracking-tight text-[#17132b] [writing-mode:vertical-rl]">
+                            <span className="rotate-180 font-(family-name:--font-display) text-[0.82rem] font-bold leading-none tracking-tight text-background [writing-mode:vertical-rl]">
                                 {spine.title}
                             </span>
                         )}
@@ -72,7 +72,7 @@ export function MediaShelf({ compact = false }: { compact?: boolean }) {
             </div>
             <div className="h-3 rounded-sm bg-[#2f2955] shadow-[inset_0_2px_0_#433b78]" />
             {!compact && (
-                <figcaption className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm text-[#a8a1cf]">
+                <figcaption className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted">
                     {(Object.keys(KIND_LABEL) as MediaKind[]).map((kind) => (
                         <span key={kind} className="flex items-center gap-2">
                             <span className={`inline-block size-3 rounded-xs ${KIND_CLASS[kind].split(' ')[0]}`} />

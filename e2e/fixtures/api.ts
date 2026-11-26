@@ -11,6 +11,7 @@ export type ApiUser = {
 };
 export type ApiRole = { id: number; name: string; description: string };
 export type ApiPermission = { id: number; name: string; description: string };
+export type ApiGenre = { id: string; name: string; description?: string | null };
 export type ApiReview = {
     id: string;
     title: string | null;
@@ -132,6 +133,19 @@ export class AdminApi {
         return data.find((u) => u.username === username);
     }
 
+    assignRole(id: number, roleId: number): Promise<ApiUser> {
+        return this.call('PATCH', `/users/${id}/roles`, { roleId });
+    }
+
+    async requestStatus(method: string, path: string, data?: unknown): Promise<number> {
+        const response = await this.ctx.fetch(path, {
+            method,
+            data,
+            headers: { Authorization: `Bearer ${this.token}` },
+        });
+        return response.status();
+    }
+
     setUserStatus(id: number, isActive: boolean): Promise<ApiUser> {
         return this.call('PATCH', `/users/${id}/status`, { isActive });
     }
@@ -212,6 +226,23 @@ export class AdminApi {
         await this.call('DELETE', `/permissions/${id}`);
     }
 
+    // ---- géneros (Persona 2; compatible con /genres y fallback /genre)
+    async listGenres(): Promise<ApiGenre[]> {
+        try {
+            return await this.call('GET', '/genres');
+        } catch {
+            return this.call('GET', '/genre');
+        }
+    }
+
+    async deleteGenre(id: string): Promise<void> {
+        try {
+            await this.call('DELETE', `/genres/${id}`);
+        } catch {
+            await this.call('DELETE', `/genre/${id}`);
+        }
+    }
+
     // ---- reseñas, reportes y estadísticas (Persona 4)
     listReviewsByMedia(mediaItemId: string, page = 1, limit = 50): Promise<Paginated<ApiReview>> {
         return this.call('GET', `/media/${mediaItemId}/reviews?page=${page}&limit=${limit}`);
@@ -256,6 +287,9 @@ export class AdminApi {
         for (const p of (await this.listPermissions()).filter((x) => x.name.startsWith(prefix.permission))) {
             await attempt(`permiso ${p.name}`, () => this.deletePermission(p.id));
         }
+        for (const genre of (await this.listGenres()).filter((g) => g.name.startsWith(prefix.user))) {
+            await attempt(`género ${genre.name}`, () => this.deleteGenre(genre.id));
+        }
         return problems;
     }
 }
@@ -284,6 +318,26 @@ async function callAsAccount<T>(account: Account, method: string, path: string, 
         const text = await res.text();
         if (!res.ok()) throw new Error(`${method} ${path} → ${res.status()} ${text}`);
         return (text ? JSON.parse(text) : undefined) as T;
+    } finally {
+        await ctx.dispose();
+    }
+}
+
+export async function requestStatusAs(
+    account: Account,
+    method: string,
+    path: string,
+    data?: unknown,
+): Promise<number> {
+    const ctx = await request.newContext({ baseURL: apiBaseUrl() });
+    try {
+        const token = await apiLogin(ctx, account);
+        const response = await ctx.fetch(path, {
+            method,
+            data,
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        return response.status();
     } finally {
         await ctx.dispose();
     }

@@ -1,32 +1,28 @@
 import { Suspense } from 'react';
-import { AdminNav } from '@/app/(admin)/admin-nav';
-import { CommunityNav } from '@/app/(community)/community-nav';
-import { UserMenu } from '@/src/features/auth/presentation/components/UserMenu';
+import AppHeader from '@/app/app-header';
+import { HomeDashboard } from '@/src/features/stats/presentation/components/HomeDashboard';
 import { requireSession } from '@/src/lib/dal';
 
-async function Welcome() {
+async function AuthenticatedHome() {
     const { user } = await requireSession();
-    return (
-        <>
-            <h1 className="text-3xl font-semibold tracking-tight">Hola, {user.fullName ?? user.username}</h1>
-            <p className="text-zinc-600 dark:text-zinc-400">Tu sesión está activa.</p>
-            <Suspense fallback={null}>
-                <CommunityNav />
-            </Suspense>
-            <Suspense fallback={null}>
-                <AdminNav />
-            </Suspense>
-            <UserMenu />
-        </>
-    );
+    return <HomeDashboard displayName={user.fullName ?? user.username} />;
 }
 
 export default function Home() {
     return (
-        <main className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center">
-            <Suspense fallback={null}>
-                <Welcome />
-            </Suspense>
-        </main>
+        <div className="flex min-h-full flex-col">
+            <AppHeader />
+            <main className="w-full flex-1 px-4 py-7 sm:px-6 sm:py-10">
+                <Suspense
+                    fallback={
+                        <p role="status" className="mx-auto max-w-6xl text-sm text-muted">
+                            Cargando tu inicio…
+                        </p>
+                    }
+                >
+                    <AuthenticatedHome />
+                </Suspense>
+            </main>
+        </div>
     );
 }

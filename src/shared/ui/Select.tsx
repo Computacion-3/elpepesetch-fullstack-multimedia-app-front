@@ -11,14 +11,14 @@ type SelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
 export function Select({ id, label, options, error, className = '', ...props }: SelectProps) {
     return (
         <div className="flex flex-col gap-1">
-            <label htmlFor={id} className="text-sm font-medium">
+            <label htmlFor={id} className="text-sm font-medium text-foreground">
                 {label}
             </label>
             <select
                 id={id}
                 aria-invalid={error ? 'true' : undefined}
                 aria-describedby={error ? `${id}-error` : undefined}
-                className={`rounded-md border px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-brand ${error ? 'border-red-600' : 'border-gray-400'} ${className}`}
+                className={`min-h-11 w-full rounded-lg border bg-surface px-3 py-2.5 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ${error ? 'border-red-400' : 'border-white/20'} ${className}`}
                 {...props}
             >
                 {options.map((option) => (
@@ -28,7 +28,7 @@ export function Select({ id, label, options, error, className = '', ...props }: 
                 ))}
             </select>
             {error && (
-                <p id={`${id}-error`} className="text-sm text-red-600">
+                <p id={`${id}-error`} className="text-sm text-red-300">
                     {error}
                 </p>
             )}

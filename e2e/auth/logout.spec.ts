@@ -51,9 +51,15 @@ test.describe('Logout', () => {
         test.skip(!(await storeIsExposed(page)), 'El front no se levantó con NEXT_PUBLIC_E2E=true');
 
         // Llenar los slices de administración navegando por la interfaz (navegación de cliente: mismo store).
-        await page.getByRole('navigation', { name: 'Administración' }).getByRole('link', { name: 'Usuarios' }).click();
+        await page
+            .getByRole('navigation', { name: 'Administración', exact: true })
+            .getByRole('link', { name: 'Usuarios' })
+            .click();
         await expect(page.getByRole('cell', { name: ACCOUNTS.admin.email })).toBeVisible();
-        await page.getByRole('navigation', { name: 'Administración' }).getByRole('link', { name: 'Roles' }).click();
+        await page
+            .getByRole('navigation', { name: 'Administración', exact: true })
+            .getByRole('link', { name: 'Roles' })
+            .click();
         await expect(page.getByRole('cell', { name: 'ADMIN', exact: true })).toBeVisible();
 
         const before = await reduxState(page);
@@ -73,12 +79,16 @@ test.describe('Logout', () => {
 
     test('AC4: otro usuario que entra después no ve nada del anterior', async ({ page }) => {
         await loginViaUi(page, ACCOUNTS.admin);
-        await expect(page.getByRole('navigation', { name: 'Administración' })).toBeVisible();
+        await expect(
+            page.getByRole('navigation', { name: 'Administración', exact: true }),
+        ).toBeVisible();
         await logoutViaUi(page);
 
         await loginViaUi(page, ACCOUNTS.user);
         await expect(page.getByRole('heading', { name: `Hola, ${ACCOUNTS.user.fullName}` })).toBeVisible();
         await expect(page.getByText(ACCOUNTS.admin.fullName)).toHaveCount(0);
-        await expect(page.getByRole('navigation', { name: 'Administración' })).toHaveCount(0);
+        await expect(
+            page.getByRole('navigation', { name: 'Administración', exact: true }),
+        ).toHaveCount(0);
     });
 });

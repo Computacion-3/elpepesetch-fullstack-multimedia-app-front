@@ -14,7 +14,7 @@ type MediaFiltersProps = {
 /** Controles comunes para q, tipo, género, año, orden y página del catálogo. */
 export function MediaFilters({ query, onChange, children }: MediaFiltersProps) {
     return (
-        <section aria-label="Filtros del catálogo" className="grid gap-4 rounded-lg border border-gray-300 p-4 sm:grid-cols-2 lg:grid-cols-3">
+        <section aria-label="Filtros del catálogo" className="grid gap-4 rounded-2xl border border-white/10 bg-surface p-4 sm:grid-cols-2 lg:grid-cols-3">
             <TextField
                 id="media-search"
                 label="Buscar por título o creador"
