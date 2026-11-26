@@ -6,8 +6,8 @@ type AlertProps = {
 };
 
 const styles = {
-    error: 'border-red-600 bg-red-50 text-red-800',
-    success: 'border-green-600 bg-green-50 text-green-800',
+    error: 'border-red-400/50 bg-red-500/10 text-red-200',
+    success: 'border-emerald-400/50 bg-emerald-500/10 text-emerald-200',
 };
 
 /** Caja de aviso para errores o confirmaciones. */
@@ -15,7 +15,7 @@ export function Alert({ variant, children }: AlertProps) {
     return (
         <div
             role={variant === 'error' ? 'alert' : 'status'}
-            className={`rounded-md border px-3 py-2 text-sm ${styles[variant]}`}
+            className={`rounded-xl border px-4 py-3 text-sm ${styles[variant]}`}
         >
             {children}
         </div>

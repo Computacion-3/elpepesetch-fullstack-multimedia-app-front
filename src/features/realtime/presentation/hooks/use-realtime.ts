@@ -11,6 +11,7 @@ import {
 import { applyMediaModeration, applyMediaRating } from '@/src/features/media/presentation/store/media.slice';
 import { incrementUnreadCount, syncNotifications } from '@/src/features/notifications/presentation/store/notifications.slice';
 import { refreshCurrentUserMutation } from '@/src/features/auth/presentation/store/auth.slice';
+import { activityArrived } from '@/src/features/activity-logs/presentation/store/activity-logs.slice';
 import {
   fetchReviewsByMediaQuery,
   hideReviewFromSocket,
@@ -21,7 +22,7 @@ import {
   selectSelectedMediaId,
 } from '@/src/features/reviews/presentation/store/reviews.selectors';
 import {
-  selectRealtimeEvents,
+  selectLatestRealtimeEvent,
   selectRealtimeStatus,
   selectSubscribedMediaItemId,
 } from '../store/realtime.selectors';
@@ -31,7 +32,7 @@ import type { RealtimeEventEnvelope, RealtimeEventPayloads } from '../../domain/
 export function useRealtime() {
   const dispatch = useAppDispatch();
   const status = useAppSelector(selectRealtimeStatus);
-  const latestEvent = useAppSelector((state) => selectRealtimeEvents(state)[0]);
+  const latestEvent = useAppSelector(selectLatestRealtimeEvent);
   const subscribedMediaItemId = useAppSelector(selectSubscribedMediaItemId);
   const selectedReviewMediaId = useAppSelector(selectSelectedMediaId);
   const reviewPage = useAppSelector(selectReviewsCurrentPage);
@@ -81,8 +82,11 @@ export function useRealtime() {
     } else if (event.event === 'account.updated') {
       void dispatch(refreshCurrentUserMutation());
       dispatch(incrementUnreadCount());
+    } else if (event.event === 'activity.created') {
+      dispatch(activityArrived());
     }
   }, [dispatch, reviewLimit, reviewPage, selectedReviewMediaId]);
+
   return {
     status,
     latestEvent: latestEvent as RealtimeEventEnvelope | undefined,

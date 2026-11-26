@@ -51,7 +51,7 @@ export function MediaReviewsPanel({
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 id="media-reviews-title" className="text-2xl font-semibold">Reseñas</h2>
-          <p className="text-sm text-gray-500">{page.total} reseñas de la comunidad</p>
+          <p className="text-sm text-muted">{page.total} reseñas de la comunidad</p>
         </div>
         {canCreate && <Button type="button" onClick={openForm}>Escribir reseña</Button>}
       </header>
@@ -61,7 +61,7 @@ export function MediaReviewsPanel({
       {isLoading && reviews.length === 0 ? (
         <p role="status" className="text-sm">Cargando reseñas…</p>
       ) : reviews.length === 0 ? (
-        <p className="rounded-md border border-gray-300 p-4 text-sm text-gray-500">
+        <p className="rounded-xl border border-white/10 bg-surface p-4 text-sm text-muted">
           Aún no hay reseñas visibles para este elemento multimedia.
         </p>
       ) : (

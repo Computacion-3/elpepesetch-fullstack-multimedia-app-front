@@ -46,55 +46,62 @@ export function PermissionsPanel() {
 
     return (
         <section className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-3">
                 <h1 className="text-xl font-semibold">Permisos</h1>
                 <Button type="button" onClick={openNew}>
                     Nuevo permiso
                 </Button>
             </div>
             {errorMessage && !formOpen && <Alert variant="error">{errorMessage}</Alert>}
-            <table className="w-full text-left text-sm">
-                <thead>
-                    <tr>
-                        <th className="py-2">Nombre</th>
-                        <th className="py-2">Descripción</th>
-                        <th className="py-2">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {permissions.map((permission) => (
-                        <tr key={permission.id}>
-                            <td className="py-2">{permission.name}</td>
-                            <td className="py-2">{permission.description}</td>
-                            <td className="flex gap-2 py-2">
-                                <Button
-                                    type="button"
-                                    variant="secondary"
-                                    aria-label={`Editar ${permission.name}`}
-                                    onClick={() => openEdit(permission)}
-                                >
-                                    Editar
-                                </Button>
-                                <Button
-                                    type="button"
-                                    variant="secondary"
-                                    aria-label={`Eliminar ${permission.name}`}
-                                    onClick={() => setToDelete(permission)}
-                                >
-                                    Eliminar
-                                </Button>
-                            </td>
+            <div className="overflow-x-auto rounded-2xl border border-white/10 bg-surface">
+                <table className="w-full min-w-[38rem] text-left text-sm">
+                    <thead>
+                        <tr className="border-b border-white/10 text-xs uppercase tracking-wide text-muted">
+                            <th className="px-3 py-2">Nombre</th>
+                            <th className="px-3 py-2">Descripción</th>
+                            <th className="px-3 py-2">Acciones</th>
                         </tr>
-                    ))}
-                    {permissions.length === 0 && (
-                        <tr>
-                            <td colSpan={3} className="py-4 text-center">
-                                {isLoading ? 'Cargando…' : 'No hay permisos'}
-                            </td>
-                        </tr>
-                    )}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {permissions.map((permission) => (
+                            <tr
+                                key={permission.id}
+                                className="border-b border-white/10 last:border-b-0 hover:bg-white/5"
+                            >
+                                <td className="px-3 py-3">{permission.name}</td>
+                                <td className="px-3 py-3 text-muted">{permission.description}</td>
+                                <td className="px-3 py-2">
+                                    <div className="flex flex-wrap gap-2">
+                                        <Button
+                                            type="button"
+                                            variant="secondary"
+                                            aria-label={`Editar ${permission.name}`}
+                                            onClick={() => openEdit(permission)}
+                                        >
+                                            Editar
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            variant="secondary"
+                                            aria-label={`Eliminar ${permission.name}`}
+                                            onClick={() => setToDelete(permission)}
+                                        >
+                                            Eliminar
+                                        </Button>
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
+                        {permissions.length === 0 && (
+                            <tr>
+                                <td colSpan={3} className="px-3 py-8 text-center text-muted">
+                                    {isLoading ? 'Cargando…' : 'No hay permisos'}
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
             <Modal
                 open={formOpen}
                 title={editing ? 'Editar permiso' : 'Nuevo permiso'}

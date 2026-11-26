@@ -31,12 +31,12 @@ export function GenreForm({ genre, loading, onSave, onCancel }: GenreFormProps) 
     }
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-gray-300 p-5">
+        <form onSubmit={handleSubmit} className="space-y-4 rounded-2xl border border-white/10 bg-surface p-5">
             <h2 className="text-lg font-semibold">{genre ? 'Editar género' : 'Crear género'}</h2>
             <TextField id="genre-name" label="Nombre" required maxLength={50} value={name} onChange={(event) => setName(event.target.value)} />
             <div className="flex flex-col gap-1">
-                <label htmlFor="genre-description" className="text-sm font-medium">Descripción (opcional)</label>
-                <textarea id="genre-description" rows={3} maxLength={255} value={description} onChange={(event) => setDescription(event.target.value)} className="rounded-md border border-gray-400 px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-brand" />
+                <label htmlFor="genre-description" className="text-sm font-medium text-foreground">Descripción (opcional)</label>
+                <textarea id="genre-description" rows={3} maxLength={255} value={description} onChange={(event) => setDescription(event.target.value)} className="w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2.5 text-sm text-foreground placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" />
             </div>
             <div className="flex gap-2">
                 <Button type="submit" loading={loading}>{genre ? 'Guardar' : 'Crear género'}</Button>

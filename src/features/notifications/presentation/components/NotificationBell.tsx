@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { Bell } from 'lucide-react';
 import { useNotifications } from '../hooks/use-notifications';
 import { useRealtime } from '@/src/features/realtime/presentation/hooks/use-realtime';
 
@@ -49,12 +50,13 @@ export function NotificationBell() {
 
   return (
     <>
-      <Link href="/notifications" className="relative rounded-md px-3 py-2 text-sm font-medium hover:bg-gray-500/10" aria-label={`Notificaciones, ${unreadCount} sin leer`}>
-        Notificaciones
-        {unreadCount > 0 && <span className="ml-2 rounded-full bg-brand px-2 py-0.5 text-xs text-white">{unreadCount > 99 ? '99+' : unreadCount}</span>}
+      <Link href="/notifications" className="relative inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" aria-label={`Notificaciones, ${unreadCount} sin leer`}>
+        <Bell size={17} strokeWidth={1.8} aria-hidden="true" />
+        <span>Notificaciones</span>
+        {unreadCount > 0 && <span aria-hidden="true" className="rounded-full bg-brand px-2 py-0.5 text-xs font-bold text-[#17132b]">{unreadCount > 99 ? '99+' : unreadCount}</span>}
       </Link>
       {notice && (
-        <p className="fixed right-4 top-20 z-50 max-w-sm rounded-md border border-brand/40 bg-white px-4 py-3 text-sm text-gray-800 shadow-lg" role="status">
+        <p className="fixed right-4 top-20 z-50 max-w-sm rounded-xl border border-brand/40 bg-surface px-4 py-3 text-sm text-foreground shadow-lg" role="status">
           {notice}
         </p>
       )}

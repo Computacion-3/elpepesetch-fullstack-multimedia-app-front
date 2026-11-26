@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-import Link from 'next/link';
 import { useLibrary } from '../hooks/use-library';
 import type { LibraryEntryViewModel } from '../viewmodels/library-entry.viewmodel';
 import type {
@@ -132,40 +131,24 @@ export function LibraryView() {
   const genres = Array.from(new Map(library.items.flatMap((entry) => entry.genres).map((genre) => [genre.id, genre])).values());
 
   return (
-    <main className="min-h-screen bg-[#17132b] px-4 py-6 text-[#f3f0ff] sm:px-6 sm:py-9">
+    <main className="min-h-screen bg-background px-4 py-6 text-foreground sm:px-6 sm:py-9">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-9 flex items-center justify-between gap-4">
-          <Link
-            className="flex items-center gap-3 font-bold"
-            href="/"
-            aria-label="Elpepesetch, inicio"
-          >
-            <span className="grid size-9 place-items-center rounded-xl bg-[#3fd0c0] text-[#17132b]">
-              e
-            </span>
-            <span>elpepesetch</span>
-          </Link>
-          <span className="text-right text-sm text-[#a8a1cf]">
-            Tu colección multimedia
-          </span>
-        </div>
-
         <header className="mb-8 flex flex-col items-start justify-between gap-5 sm:flex-row sm:items-end">
           <div>
-            <span className="text-xs font-bold uppercase tracking-[0.13em] text-[#a8a1cf]">
+            <span className="text-xs font-bold uppercase tracking-[0.13em] text-muted">
               Tu espacio multimedia
             </span>
             <h1 className="mt-2 text-4xl font-bold tracking-tight sm:text-5xl">
               Mi biblioteca
             </h1>
-            <p className="mt-3 max-w-2xl text-[#a8a1cf]">
+            <p className="mt-3 max-w-2xl text-muted">
               Juegos, películas y libros que estás descubriendo, disfrutando o
               guardando para después.
             </p>
           </div>
           <button
             type="button"
-            className="min-h-11 rounded-xl bg-[#3fd0c0] px-5 font-bold text-[#17132b] transition hover:bg-[#67dfd1] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b9b3ff]"
+            className="min-h-11 rounded-xl bg-brand px-5 font-bold text-background transition hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
             onClick={openAddDialog}
             disabled={isPreparingAdd}
           >
@@ -174,17 +157,17 @@ export function LibraryView() {
         </header>
 
         <form
-          className="mb-7 grid gap-3 rounded-2xl border border-white/10 bg-[#241f42] p-4 sm:grid-cols-2 xl:grid-cols-4"
+          className="mb-7 grid gap-3 rounded-2xl border border-white/10 bg-surface p-4 sm:grid-cols-2 xl:grid-cols-4"
           onSubmit={applyFilters}
           aria-label="Filtrar biblioteca"
         >
           <label className="flex min-h-11 w-full items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-3 xl:col-span-2">
-            <span aria-hidden="true" className="text-[#a8a1cf]">
+            <span aria-hidden="true" className="text-muted">
               ⌕
             </span>
             <span className="sr-only">Buscar por título o creador</span>
             <input
-              className="w-full bg-transparent text-[#f3f0ff] outline-none placeholder:text-[#a8a1cf]"
+              className="w-full bg-transparent text-foreground outline-none placeholder:text-muted"
               type="search"
               placeholder="Buscar por título o creador"
               value={search}
@@ -194,7 +177,7 @@ export function LibraryView() {
           <label>
             <span className="sr-only">Filtrar por estado</span>
             <select
-              className="min-h-11 w-full rounded-xl border border-white/15 bg-[#17132b] px-3 text-[#f3f0ff]"
+              className="min-h-11 w-full rounded-xl border border-white/15 bg-background px-3 text-foreground"
               value={statusFilter}
               onChange={(event) =>
                 setStatusFilter(
@@ -212,7 +195,7 @@ export function LibraryView() {
           <label>
             <span className="sr-only">Filtrar por tipo</span>
             <select
-              className="min-h-11 w-full rounded-xl border border-white/15 bg-[#17132b] px-3 text-[#f3f0ff]"
+              className="min-h-11 w-full rounded-xl border border-white/15 bg-background px-3 text-foreground"
               value={typeFilter}
               onChange={(event) =>
                 setTypeFilter(
@@ -229,7 +212,7 @@ export function LibraryView() {
           <label>
             <span className="sr-only">Ordenar por</span>
             <select
-              className="min-h-11 w-full rounded-xl border border-white/15 bg-[#17132b] px-3 text-[#f3f0ff]"
+              className="min-h-11 w-full rounded-xl border border-white/15 bg-background px-3 text-foreground"
               value={sortBy}
               onChange={(event) => {
                 if (sortOptions.some((option) => option === event.target.value))
@@ -244,21 +227,21 @@ export function LibraryView() {
           </label>
           <label>
             <span className="sr-only">Filtrar por género</span>
-            <select className="min-h-11 w-full rounded-xl border border-white/15 bg-[#17132b] px-3 text-[#f3f0ff]" value={genreFilter} onChange={(event) => setGenreFilter(event.target.value)}>
+            <select className="min-h-11 w-full rounded-xl border border-white/15 bg-background px-3 text-foreground" value={genreFilter} onChange={(event) => setGenreFilter(event.target.value)}>
               <option value="">Todos los géneros</option>
               {genres.map((genre) => <option key={genre.id} value={genre.id}>{genre.name}</option>)}
             </select>
           </label>
-          <label className="flex min-h-11 items-center gap-2 rounded-xl border border-white/15 bg-[#17132b] px-3 text-sm">
+          <label           className="flex min-h-11 items-center gap-2 rounded-xl border border-white/15 bg-background px-3 text-sm">
             <input type="checkbox" checked={favoriteOnly} onChange={(event) => setFavoriteOnly(event.target.checked)} /> Favoritos
           </label>
           <label>
             <span className="sr-only">Filtrar por año</span>
-            <input className="min-h-11 w-full rounded-xl border border-white/15 bg-[#17132b] px-3 text-[#f3f0ff]" type="number" min="1900" max="2100" placeholder="Año" value={yearFilter} onChange={(event) => setYearFilter(event.target.value)} />
+            <input className="min-h-11 w-full rounded-xl border border-white/15 bg-background px-3 text-foreground placeholder:text-muted" type="number" min="1900" max="2100" placeholder="Año" value={yearFilter} onChange={(event) => setYearFilter(event.target.value)} />
           </label>
           <button
             type="button"
-            className="min-h-11 rounded-xl border border-white/20 px-4"
+            className="min-h-11 rounded-xl border border-white/20 px-4 transition hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
             aria-label={`Orden ${sortOrder === 'ASC' ? 'ascendente' : 'descendente'}`}
             onClick={() =>
               setSortOrder((order) => (order === 'ASC' ? 'DESC' : 'ASC'))
@@ -266,30 +249,30 @@ export function LibraryView() {
           >
             {sortOrder === 'ASC' ? '↑ ASC' : '↓ DESC'}
           </button>
-          <button type="submit" className="min-h-11 rounded-xl bg-[#b9b3ff] px-4 font-bold text-[#17132b]">
+          <button type="submit" className="min-h-11 rounded-xl bg-brand px-4 font-bold text-background hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
             Aplicar
           </button>
         </form>
 
         <section className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5" aria-label="Resumen de la página actual">
-          {summary.map((stat) => <div key={stat.label} className="rounded-2xl border border-white/10 bg-[#241f42] p-4"><p className="text-2xl font-bold">{stat.value}</p><p className="mt-1 text-xs text-[#a8a1cf]">{stat.label}</p></div>)}
+          {summary.map((stat) => <div key={stat.label} className="rounded-2xl border border-white/10 bg-surface p-4"><p className="text-2xl font-bold">{stat.value}</p><p className="mt-1 text-xs text-muted">{stat.label}</p></div>)}
         </section>
 
         <div className="mb-4 flex items-center justify-between gap-3">
           <h2 className="font-bold">Tus elementos</h2>
-          <span className="text-sm text-[#a8a1cf]">
+          <span className="text-sm text-muted">
             {library.meta.total} en total
           </span>
         </div>
 
-        {successMessage && <p className="mb-4 text-sm text-[#72e6d9]" role="status">{successMessage}</p>}
+        {successMessage && <p className="mb-4 text-sm text-emerald-300" role="status">{successMessage}</p>}
 
         {library.errorMessage && library.status === 'failed' ? (
-          <div className="alert alert-error" role="alert">
+          <div className="rounded-xl border border-red-400/50 bg-red-500/10 px-4 py-3 text-red-200" role="alert">
             <span>{library.errorMessage}</span>
             <button
               type="button"
-              className="btn btn-sm"
+              className="min-h-9 rounded-lg border border-white/20 px-3 text-sm hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-brand"
               onClick={() => library.reload()}
             >
               Intentar de nuevo
@@ -302,7 +285,7 @@ export function LibraryView() {
             aria-label="Cargando tu biblioteca"
           >
             {Array.from({ length: 6 }, (_, index) => (
-              <div key={index} className="card bg-base-100">
+              <div key={index} className="card bg-surface text-foreground">
                 <div className="skeleton h-40 w-full" />
                 <div className="card-body gap-3">
                   <div className="skeleton h-5 w-3/4" />
@@ -314,11 +297,11 @@ export function LibraryView() {
           </div>
         ) : library.items.length === 0 ? (
           <section
-            className="rounded-box border border-dashed border-base-300 bg-base-100 px-5 py-10 text-center"
+            className="rounded-2xl border border-dashed border-white/20 bg-surface px-5 py-10 text-center"
             aria-labelledby="empty-title"
           >
             <span
-              className="badge badge-primary badge-lg mb-4"
+              className="mb-4 inline-flex rounded-full bg-brand/15 px-4 py-2 font-semibold text-brand"
               aria-hidden="true"
             >
               ✳
@@ -326,21 +309,21 @@ export function LibraryView() {
             <h2 id="empty-title" className="text-lg font-bold">
               Tu próxima historia empieza aquí
             </h2>
-            <p className="mx-auto mb-5 mt-2 max-w-lg text-sm text-base-content/70">
+            <p className="mx-auto mb-5 mt-2 max-w-lg text-sm text-muted">
               No encontramos elementos con estos filtros. Prueba con otra
               búsqueda o añade algo a tu colección.
             </p>
             <div className="flex flex-wrap justify-center gap-2">
               <button
                 type="button"
-                className="btn btn-outline"
+                className="min-h-10 rounded-lg border border-white/20 px-4 text-sm font-medium hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-brand"
                 onClick={resetFilters}
               >
                 Limpiar filtros
               </button>
               <button
                 type="button"
-                className="btn btn-primary"
+                className="min-h-10 rounded-lg bg-brand px-4 text-sm font-semibold text-background hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-brand"
                 onClick={openAddDialog}
                 disabled={isPreparingAdd}
               >
@@ -368,7 +351,7 @@ export function LibraryView() {
             >
               <button
                 type="button"
-                className="btn btn-outline btn-sm"
+                className="min-h-9 rounded-lg border border-white/20 px-3 font-medium hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-brand"
                 disabled={(library.meta.page ?? 1) <= 1 || isLoading}
                 onClick={() =>
                   library.reload({
@@ -385,7 +368,7 @@ export function LibraryView() {
               </span>
               <button
                 type="button"
-                className="btn btn-outline btn-sm"
+                className="min-h-9 rounded-lg border border-white/20 px-3 font-medium hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-brand"
                 disabled={
                   library.meta.page >= library.meta.totalPages || isLoading
                 }
@@ -403,11 +386,11 @@ export function LibraryView() {
         )}
 
         {library.errorMessage && library.status !== 'failed' && (
-          <div className="alert alert-warning mt-5" role="alert">
+          <div className="mt-5 rounded-xl border border-amber-300/40 bg-amber-400/10 px-4 py-3 text-amber-100" role="alert">
             <span>{library.errorMessage}</span>
             <button
               type="button"
-              className="btn btn-ghost btn-sm"
+              className="min-h-9 rounded-lg px-3 text-sm hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-brand"
               onClick={library.clearError}
             >
               Cerrar aviso

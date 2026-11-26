@@ -6,8 +6,8 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 const variants = {
-    primary: 'bg-brand text-white hover:bg-brand-hover',
-    secondary: 'border border-gray-400 bg-transparent text-foreground hover:bg-gray-500/10',
+    primary: 'bg-brand text-[#17132b] hover:bg-brand-hover',
+    secondary: 'border border-white/20 bg-white/5 text-foreground hover:bg-white/10',
 };
 
 /** Botón con variantes y estado de carga. */
@@ -25,7 +25,7 @@ export function Button({
             type={type}
             disabled={disabled || loading}
             aria-busy={loading}
-            className={`rounded-md px-4 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant]} ${className}`}
+            className={`inline-flex min-h-10 items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant]} ${className}`}
             {...props}
         >
             {children}

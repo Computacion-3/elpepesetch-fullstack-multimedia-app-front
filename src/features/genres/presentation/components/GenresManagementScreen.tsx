@@ -31,7 +31,7 @@ export function GenresManagementScreen() {
             <header>
                 <p className="text-sm font-semibold uppercase tracking-wide text-brand">Administración</p>
                 <h1 className="text-3xl font-bold">Gestión de géneros</h1>
-                <p className="mt-2 text-gray-600">Organiza los géneros usados en el catálogo y en las propuestas.</p>
+                <p className="mt-2 text-muted">Organiza los géneros usados en el catálogo y en las propuestas.</p>
             </header>
             {genres.errorMessage && <Alert variant="error">{genres.errorMessage}</Alert>}
             <GenreForm
@@ -43,12 +43,12 @@ export function GenresManagementScreen() {
             />
             {genres.isLoading && <p role="status">Cargando géneros…</p>}
             {genres.status === 'succeeded' && genres.items.length === 0 && <p>Aún no hay géneros creados.</p>}
-            <ul className="divide-y divide-gray-300 rounded-lg border border-gray-300">
+            <ul className="divide-y divide-white/10 rounded-2xl border border-white/10 bg-surface">
                 {[...genres.items].sort((a, b) => a.name.localeCompare(b.name)).map((genre) => (
                     <li key={genre.id} className="flex flex-wrap items-center justify-between gap-4 p-4">
                         <div>
                             <h2 className="font-semibold">{genre.name}</h2>
-                            <p className="text-sm text-gray-600">{genre.description || 'Sin descripción.'}</p>
+                            <p className="text-sm text-muted">{genre.description || 'Sin descripción.'}</p>
                         </div>
                         <div className="flex gap-2">
                             <Button variant="secondary" onClick={() => setEditing(genre)}>Editar</Button>

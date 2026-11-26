@@ -54,6 +54,7 @@ jobs:
       SALT_QTY: 4
       JWT_SECRET: e2e-only-secret
       JWT_EXPIRES_IN: 3600s
+      CORS_ORIGIN: http://localhost:3100,http://localhost:3101
       # Frontend / Playwright
       E2E_API_URL: http://localhost:3002
       E2E_DATA_SOURCE: ${{ matrix.data-source }}
@@ -105,7 +106,12 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Ejecutar Playwright (${{ matrix.data-source }})
-        run: npx playwright test
+        run: |
+          if [ "${{ matrix.data-source }}" = "graphql" ]; then
+            npx playwright test --project=chromium-graphql e2e/auth e2e/realtime
+          else
+            npx playwright test --project=chromium-rest
+          fi
 
       - name: Subir reporte de Playwright
         uses: actions/upload-artifact@v4

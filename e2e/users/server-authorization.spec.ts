@@ -33,7 +33,7 @@ test.describe('Autorización por permisos (authorities) y revalidación en el se
     test('AC1 / AC9: con solo users:manage ve y abre Usuarios, pero no Roles ni Permisos', async ({ page }) => {
         await loginViaUi(page, { email: operator.email, password: TEST_PASSWORD });
 
-        const nav = page.getByRole('navigation', { name: 'Administración' });
+        const nav = page.getByRole('navigation', { name: 'Administración', exact: true });
         await expect(nav.getByRole('link')).toHaveText(['Usuarios']);
 
         await nav.getByRole('link', { name: 'Usuarios' }).click();
