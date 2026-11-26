@@ -1,7 +1,12 @@
 import type { SocketTicket } from '../../domain/entities/socket-ticket';
 import { User } from '../../domain/entities/user';
-import type { RegisterDraft } from '../../domain/entities/user';
-import type { RegisterRequestDto, SocketTokenResponseDto, UserResponseDto } from '../dtos/auth.dto';
+import type { ProfileDraft, RegisterDraft } from '../../domain/entities/user';
+import type {
+    RegisterRequestDto,
+    SocketTokenResponseDto,
+    UpdateProfileRequestDto,
+    UserResponseDto,
+} from '../dtos/auth.dto';
 
 /** Translates between backend DTOs and domain entities. */
 export class AuthMapper {
@@ -9,7 +14,16 @@ export class AuthMapper {
         const permissions = (dto.role.rolePermissions ?? []).flatMap((rp) =>
             rp.permission ? [rp.permission.name] : [],
         );
-        return new User(dto.id, dto.username, dto.email, dto.fullName ?? null, dto.role.name, permissions);
+        // Un nombre o biografía vacíos cuentan como "sin dato" (el perfil permite borrarlos).
+        return new User(
+            dto.id,
+            dto.username,
+            dto.email,
+            dto.fullName?.trim() || null,
+            dto.role.name,
+            permissions,
+            dto.bio?.trim() || null,
+        );
     }
 
     static toSocketTicket(dto: SocketTokenResponseDto): SocketTicket {
@@ -24,6 +38,17 @@ export class AuthMapper {
         };
         const fullName = draft.fullName?.trim();
         if (fullName) body.fullName = fullName;
+        return body;
+    }
+
+    /** Solo copia los campos presentes; nombre y biografía vacíos se envían para poder borrarlos. */
+    static toUpdateProfileRequest(draft: ProfileDraft): UpdateProfileRequestDto {
+        const body: UpdateProfileRequestDto = {};
+        if (draft.username !== undefined) body.username = draft.username.trim();
+        if (draft.email !== undefined) body.email = draft.email.trim();
+        if (draft.fullName !== undefined) body.fullName = draft.fullName.trim();
+        if (draft.bio !== undefined) body.bio = draft.bio.trim();
+        if (draft.password !== undefined) body.password = draft.password;
         return body;
     }
 }

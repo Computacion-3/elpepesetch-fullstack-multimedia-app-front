@@ -3,7 +3,7 @@ import type { PayloadAction } from '@reduxjs/toolkit';
 import type { ActionResult } from '@/src/shared/domain/action-result';
 import { describeError } from '@/src/shared/domain/errors';
 import type { SocketTicket } from '../../domain/entities/socket-ticket';
-import type { LoginCredentials, RegisterDraft } from '../../domain/entities/user';
+import type { LoginCredentials, ProfileDraft, RegisterDraft } from '../../domain/entities/user';
 import type { AuthUserViewModel } from '../viewmodels/auth.viewmodel';
 
 /**
@@ -18,6 +18,7 @@ export interface AuthDependencies {
     getSocketToken: () => Promise<ActionResult<SocketTicket>>;
     refreshCurrentUser: () => Promise<ActionResult<AuthUserViewModel>>;
     expireSession: () => Promise<void>;
+    updateProfile: (draft: ProfileDraft) => Promise<ActionResult<AuthUserViewModel>>;
 }
 
 export type RequestStatus = 'idle' | 'loading' | 'succeeded' | 'failed';
@@ -27,6 +28,9 @@ export interface AuthState {
     status: RequestStatus;
     errorMessage: string | null;
     sessionEndedReason: 'account-deactivated' | null;
+    /** Estado propio del formulario de perfil, para no mezclarlo con el de login/registro. */
+    profileStatus: RequestStatus;
+    profileError: string | null;
 }
 
 const initialState: AuthState = {
@@ -34,6 +38,8 @@ const initialState: AuthState = {
     status: 'idle',
     errorMessage: null,
     sessionEndedReason: null,
+    profileStatus: 'idle',
+    profileError: null,
 };
 
 const createAppThunk = createAsyncThunk.withTypes<{
@@ -96,6 +102,20 @@ export const refreshCurrentUserMutation = createAppThunk(
     },
 );
 
+/** Mutation: edita el perfil propio; el usuario del store se reemplaza con la respuesta del backend. */
+export const updateProfileMutation = createAppThunk(
+    'auth/updateProfile',
+    async (draft: ProfileDraft, { extra, rejectWithValue }) => {
+        try {
+            const result = await extra.auth.updateProfile(draft);
+            if (!result.ok) return rejectWithValue(result.message);
+            return result.data;
+        } catch (error) {
+            return rejectWithValue(describeError(error, 'No se pudo actualizar tu perfil'));
+        }
+    },
+);
+
 /** Limpia la sesión local cuando el backend informa que la cuenta fue desactivada. */
 export const forceLogoutMutation = createAppThunk(
     'auth/forceLogout',
@@ -121,6 +141,10 @@ export const authSlice = createSlice({
         clearError: (state) => {
             state.errorMessage = null;
             if (state.status === 'failed') state.status = 'idle';
+        },
+        clearProfileFeedback: (state) => {
+            state.profileError = null;
+            state.profileStatus = 'idle';
         },
     },
     extraReducers: (builder) => {
@@ -162,6 +186,20 @@ export const authSlice = createSlice({
                 state.errorMessage = action.payload ?? action.error.message ?? 'Ocurrió un error';
             });
 
+        builder
+            .addCase(updateProfileMutation.pending, (state) => {
+                state.profileStatus = 'loading';
+                state.profileError = null;
+            })
+            .addCase(updateProfileMutation.fulfilled, (state, action) => {
+                state.profileStatus = 'succeeded';
+                state.user = action.payload;
+            })
+            .addCase(updateProfileMutation.rejected, (state, action) => {
+                state.profileStatus = 'failed';
+                state.profileError = action.payload ?? action.error.message ?? 'Ocurrió un error';
+            });
+
         builder.addCase(refreshCurrentUserMutation.fulfilled, (state, action) => {
             state.user = action.payload;
         });
@@ -172,4 +210,4 @@ export const authSlice = createSlice({
     },
 });
 
-export const { hydrateUser, clearError: clearAuthError } = authSlice.actions;
+export const { hydrateUser, clearError: clearAuthError, clearProfileFeedback } = authSlice.actions;

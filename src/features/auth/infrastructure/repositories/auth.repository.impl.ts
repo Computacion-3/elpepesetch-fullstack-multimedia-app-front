@@ -1,6 +1,6 @@
 import { toDomainError } from '@/src/shared/infrastructure/error-translator';
 import type { SocketTicket } from '../../domain/entities/socket-ticket';
-import type { LoginCredentials, RegisterDraft, User } from '../../domain/entities/user';
+import type { LoginCredentials, ProfileDraft, RegisterDraft, User } from '../../domain/entities/user';
 import type { AuthRepository } from '../../domain/repositories/auth.repository';
 import type { AuthDatasource } from '../datasources/auth.datasource';
 import { AuthMapper } from '../mappers/auth.mapper';
@@ -47,6 +47,14 @@ export class AuthRepositoryImpl implements AuthRepository {
     async getSocketTicket(accessToken: string): Promise<SocketTicket> {
         try {
             return AuthMapper.toSocketTicket(await this.datasource.socketToken(accessToken));
+        } catch (err) {
+            throw toDomainError(err);
+        }
+    }
+
+    async updateProfile(accessToken: string, draft: ProfileDraft): Promise<void> {
+        try {
+            await this.datasource.updateProfile(accessToken, AuthMapper.toUpdateProfileRequest(draft));
         } catch (err) {
             throw toDomainError(err);
         }

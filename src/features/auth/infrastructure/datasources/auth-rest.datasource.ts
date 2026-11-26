@@ -4,6 +4,7 @@ import type {
     LoginResponseDto,
     RegisterRequestDto,
     SocketTokenResponseDto,
+    UpdateProfileRequestDto,
     UserResponseDto,
 } from '../dtos/auth.dto';
 import type { AuthDatasource } from './auth.datasource';
@@ -30,5 +31,9 @@ export class AuthRestDatasource implements AuthDatasource {
 
     socketToken(token: string): Promise<SocketTokenResponseDto> {
         return this.http.post<SocketTokenResponseDto>('/auth/socket-token', undefined, token);
+    }
+
+    async updateProfile(token: string, body: UpdateProfileRequestDto): Promise<void> {
+        await this.http.patch<UserResponseDto>('/users/me', body, token);
     }
 }

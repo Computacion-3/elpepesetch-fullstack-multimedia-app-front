@@ -4,6 +4,7 @@ import type {
     LoginResponseDto,
     RegisterRequestDto,
     SocketTokenResponseDto,
+    UpdateProfileRequestDto,
     UserResponseDto,
 } from '../dtos/auth.dto';
 import type { AuthDatasource } from './auth.datasource';
@@ -12,6 +13,7 @@ const LOGIN = `mutation Login($input: LoginInput!) { login(input: $input) { acce
 const REGISTER = `mutation Register($input: RegisterInput!) { register(input: $input) { id username email fullName bio role { id name } } }`;
 const LOGOUT = `mutation { logout }`;
 const SOCKET_TOKEN = `mutation { socketToken { token expiresIn } }`;
+const UPDATE_PROFILE = `mutation UpdateProfile($input: UpdateProfileInput!) { updateProfile(input: $input) { id } }`;
 const ME = `{ me { id username email fullName bio role { id name rolePermissions { id permission { id name description } } } } }`;
 
 interface GraphQLResponse<T> {
@@ -41,6 +43,10 @@ export class AuthGraphQLDatasource implements AuthDatasource {
 
     async socketToken(token: string): Promise<SocketTokenResponseDto> {
         return (await this.execute<{ socketToken: SocketTokenResponseDto }>(SOCKET_TOKEN, undefined, token)).socketToken;
+    }
+
+    async updateProfile(token: string, body: UpdateProfileRequestDto): Promise<void> {
+        await this.execute(UPDATE_PROFILE, { input: body }, token);
     }
 
     private async execute<T>(query: string, variables?: object, token?: string): Promise<T> {

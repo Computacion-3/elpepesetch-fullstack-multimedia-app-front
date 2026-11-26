@@ -3,6 +3,7 @@ import type {
     LoginResponseDto,
     RegisterRequestDto,
     SocketTokenResponseDto,
+    UpdateProfileRequestDto,
     UserResponseDto,
 } from '../dtos/auth.dto';
 
@@ -13,4 +14,5 @@ export interface AuthDatasource {
     logout(token: string): Promise<void>;
     me(token: string): Promise<UserResponseDto>;
     socketToken(token: string): Promise<SocketTokenResponseDto>;
+    updateProfile(token: string, body: UpdateProfileRequestDto): Promise<void>;
 }
