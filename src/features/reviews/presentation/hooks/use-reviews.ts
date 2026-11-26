@@ -9,6 +9,7 @@ import {
     deleteReviewMutation,
     fetchReviewMediaOptionsQuery,
     fetchReviewsByMediaQuery,
+    hideReviewFromSocket,
     setReviewsPage,
     setSelectedMediaId,
     updateReviewMutation,
@@ -77,6 +78,21 @@ export function useReviews() {
         },
         [dispatch],
     );
+
+    /** Recarga reseñas solo si el evento corresponde al medio seleccionado. */
+    const refreshForMedia = useCallback(async (mediaItemId: string): Promise<void> => {
+        if (mediaItemId !== selectedMediaId) return;
+        await dispatch(fetchReviewsByMediaQuery({
+            mediaItemId,
+            page: page.page,
+            limit: page.limit,
+        }));
+    }, [dispatch, page.limit, page.page, selectedMediaId]);
+
+    /** Refleja el cambio de visibilidad recibido por Socket.IO. */
+    const applyVisibilityChange = useCallback((payload: Parameters<typeof hideReviewFromSocket>[0]) => {
+        dispatch(hideReviewFromSocket(payload));
+    }, [dispatch]);
 
     /** Publica una nueva reseña sobre el elemento seleccionado y recarga el listado. */
     const create = useCallback(
@@ -151,6 +167,8 @@ export function useReviews() {
         loadReviews,
         selectMedia,
         changePage,
+        refreshForMedia,
+        applyVisibilityChange,
         create,
         update,
         remove,
