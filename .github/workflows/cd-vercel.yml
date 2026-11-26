@@ -1,0 +1,178 @@
+name: CD Vercel
+
+# Despliegue continuo del frontend en Vercel, apuntando al backend desplegado en Render.
+# Se ejecuta cuando las E2E pasan en un push a master (o a mano desde Actions):
+#   1. Verifica que el backend de Render esté sano (/health) y lo despierta si estaba dormido.
+#   2. Compila en Actions con API_URL / NEXT_PUBLIC_WS_URL apuntando a Render.
+#   3. Despliega a producción SIN asignar el dominio (--skip-domain).
+#   4. Smoke tests contra ese despliegue: páginas, redirecciones y E2E de login/acceso contra Render.
+#   5. Solo si todo pasa, lo promueve al dominio de producción. Si algo falla, producción no cambia.
+on:
+  workflow_run:
+    workflows: [ "Playwright E2E" ]
+    types: [ completed ]
+    branches: [ "master" ]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-vercel-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: production
+      url: ${{ vars.FRONTEND_URL }}
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      BACKEND_URL: ${{ vars.RENDER_SERVICE_URL }}
+      DATA_SOURCE: ${{ vars.NEXT_PUBLIC_DATA_SOURCE || 'rest' }}
+      DEPLOY_COMMIT: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+    steps:
+      - name: Comprobar configuración
+        run: |
+          missing=""
+          for v in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID BACKEND_URL; do
+            [ -z "${!v}" ] && missing="$missing $v"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Faltan:$missing (secrets VERCEL_*, variable RENDER_SERVICE_URL)"; exit 1
+          fi
+          case "$DATA_SOURCE" in rest|graphql) ;; *) echo "::error::NEXT_PUBLIC_DATA_SOURCE debe ser rest o graphql"; exit 1;; esac
+          echo "BACKEND_URL=${BACKEND_URL%/}" >> "$GITHUB_ENV"
+
+      - name: Clonar el commit a desplegar
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.DEPLOY_COMMIT }}
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Instalar Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Backend de Render sano
+        run: |
+          # En el plan gratuito Render duerme el servicio: el primer request puede tardar ~1 min.
+          for i in $(seq 1 30); do
+            body=$(curl -s --max-time 60 "$BACKEND_URL/health" || true)
+            if echo "$body" | grep -q '"status":"ok"'; then
+              echo "Backend OK: $body"; exit 0
+            fi
+            echo "Esperando backend ($i/30)… ${body:0:120}"; sleep 10
+          done
+          echo "::error::$BACKEND_URL/health no respondió sano: el frontend no se despliega contra un backend caído"; exit 1
+
+      - name: Traer configuración del proyecto Vercel
+        run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+
+      - name: Fijar las variables que apuntan a Render
+        run: |
+          # Las del workflow mandan sobre las del dashboard: el build queda atado al backend de Render.
+          f=.vercel/.env.production.local
+          touch "$f"
+          sed -i -E '/^(API_URL|NEXT_PUBLIC_DATA_SOURCE|NEXT_PUBLIC_WS_URL)=/d' "$f"
+          {
+            echo "API_URL=\"$BACKEND_URL\""
+            echo "NEXT_PUBLIC_DATA_SOURCE=\"$DATA_SOURCE\""
+            echo "NEXT_PUBLIC_WS_URL=\"$BACKEND_URL\""
+          } >> "$f"
+
+      - name: Compilar
+        run: vercel build --prod --token="$VERCEL_TOKEN"
+
+      - name: Verificar que el build apunta a Render
+        run: |
+          # NEXT_PUBLIC_WS_URL se incrusta en el bundle del navegador: si no aparece, el build quedó mal configurado.
+          if ! grep -rqF "$BACKEND_URL" .vercel/output; then
+            echo "::error::La URL de Render no aparece en .vercel/output"; exit 1
+          fi
+          if grep -rqF "localhost:3002" .vercel/output/static 2>/dev/null; then
+            echo "::warning::El bundle del navegador todavía contiene localhost:3002"
+          fi
+
+      - name: Desplegar (sin asignar el dominio todavía)
+        id: deploy
+        run: |
+          url=$(vercel deploy --prebuilt --prod --skip-domain \
+                  --env API_URL="$BACKEND_URL" \
+                  --meta githubCommitSha="$DEPLOY_COMMIT" \
+                  --token="$VERCEL_TOKEN")
+          echo "Despliegue: $url"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      - name: Smoke tests HTTP del despliegue
+        env:
+          URL: ${{ steps.deploy.outputs.url }}
+          BYPASS: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: |
+          h=(); [ -n "$BYPASS" ] && h=(-H "x-vercel-protection-bypass: $BYPASS")
+          code=$(curl -s -o /tmp/login.html -w '%{http_code}' "${h[@]}" "$URL/login")
+          [ "$code" = 200 ] || { echo "::error::/login respondió $code (¿Deployment Protection sin VERCEL_AUTOMATION_BYPASS_SECRET?)"; exit 1; }
+          grep -q 'Iniciar sesión' /tmp/login.html || { echo "::error::/login no renderiza el formulario"; exit 1; }
+          loc=$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "${h[@]}" "$URL/users")
+          echo "$loc" | grep -qE '^30[0-9] .*/login' || { echo "::error::/users sin sesión debía redirigir a /login y respondió: $loc"; exit 1; }
+          echo "HTTP OK: /login 200 y /users → /login"
+
+      - name: Instalar dependencias y Chromium para los E2E de humo
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: E2E de humo contra el despliegue (login real contra Render)
+        env:
+          E2E_BASE_URL: ${{ steps.deploy.outputs.url }}
+          E2E_API_URL: ${{ env.BACKEND_URL }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        # Solo pruebas de lectura: no crean datos en producción.
+        run: npx playwright test e2e/auth/login.spec.ts e2e/auth/route-protection.spec.ts e2e/users/access-control.spec.ts
+
+      - name: Promover a producción
+        run: vercel promote "${{ steps.deploy.outputs.url }}" --timeout=5m --token="$VERCEL_TOKEN"
+
+      - name: Verificar el dominio de producción
+        if: ${{ vars.FRONTEND_URL != '' }}
+        run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' "${{ vars.FRONTEND_URL }}/login")
+          [ "$code" = 200 ] || { echo "::error::${{ vars.FRONTEND_URL }}/login respondió $code"; exit 1; }
+
+      - name: Resumen
+        if: ${{ always() }}
+        run: |
+          {
+            echo "## ${{ job.status == 'success' && '✅ Frontend desplegado en Vercel' || '❌ Despliegue en Vercel fallido (producción sin cambios)' }}"
+            echo
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Commit | \`${DEPLOY_COMMIT:0:7}\` |"
+            echo "| Despliegue | ${{ steps.deploy.outputs.url || '—' }} |"
+            echo "| Producción | ${{ vars.FRONTEND_URL || '—' }} |"
+            echo "| Backend (Render) | $BACKEND_URL |"
+            echo "| Fuente de datos | \`$DATA_SOURCE\` |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Subir reporte de Playwright
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-vercel
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
