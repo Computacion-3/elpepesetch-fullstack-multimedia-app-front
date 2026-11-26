@@ -10,6 +10,7 @@ export function ActivityView() {
   const activity = useActivityLogs();
   const { loadPage, status } = activity;
   useEffect(() => { if (status === 'idle') void loadPage(1); }, [loadPage, status]);
+  useEffect(() => { if (activity.hasNewActivities) void loadPage(1); }, [activity.hasNewActivities, loadPage]);
   return <section className="space-y-6" aria-labelledby="activity-title">
     <header><h1 id="activity-title" className="text-3xl font-bold">Actividad reciente</h1><p className="mt-2 text-gray-600">Un registro de tus acciones en la biblioteca y la comunidad.</p></header>
     {activity.hasNewActivities ? <Alert variant="success">Llegó nueva actividad. Actualizando el historial…</Alert> : null}

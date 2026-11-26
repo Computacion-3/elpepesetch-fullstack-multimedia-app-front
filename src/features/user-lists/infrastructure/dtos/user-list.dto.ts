@@ -19,7 +19,7 @@ export interface UserListMediaDto {
   platform: string | null;
   averageRating: number | string;
   ratingsCount: number;
-  genres: { id: string; name: string }[];
+  genres?: { id: string; name: string }[];
   approvalStatus?: 'APPROVED' | 'PENDING' | 'REJECTED';
 }
 

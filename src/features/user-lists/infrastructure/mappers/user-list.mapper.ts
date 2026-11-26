@@ -15,14 +15,18 @@ export class UserListMapper {
         id: dto.owner.id,
         username: dto.ownerUsername ?? dto.owner.username,
       },
-      items: dto.items.map((item) => ({
-        ...item,
-        cover: item.title.slice(0, 2).toUpperCase() || '??',
-        coverUrl: item.coverUrl,
-        averageRating: Number(item.averageRating),
-        approvalStatus: item.approvalStatus,
-        genreIds: item.genres.map((genre) => genre.id),
-      })),
+      items: dto.items.map((item) => {
+        const genres = item.genres ?? [];
+        return {
+          ...item,
+          cover: item.title.slice(0, 2).toUpperCase() || '??',
+          coverUrl: item.coverUrl,
+          averageRating: Number(item.averageRating),
+          approvalStatus: item.approvalStatus,
+          genres,
+          genreIds: genres.map((genre) => genre.id),
+        };
+      }),
     };
     return new UserList(props);
   }

@@ -53,6 +53,15 @@ export type ApiLibraryEntry = {
     mediaItem: { id: string; title: string };
 };
 
+export type ApiUserList = {
+    id: string;
+    name: string;
+    description: string | null;
+    visibility: 'PRIVATE' | 'PUBLIC';
+    owner: { id: number; username: string };
+    items: Array<{ id: string; title: string }>;
+};
+
 export function apiBaseUrl(): string {
     return process.env.E2E_API_URL ?? 'http://localhost:3002';
 }
@@ -315,4 +324,42 @@ export function getPersonalStatsAs(account: Account): Promise<ApiPersonalStats> 
 /** Consulta la biblioteca de una cuenta para verificar lo persistido después del flujo UI. */
 export function getLibraryAs(account: Account): Promise<Paginated<ApiLibraryEntry>> {
     return callAsAccount(account, 'GET', '/library?page=1&limit=50');
+}
+
+export function getMyListsAs(account: Account): Promise<ApiUserList[]> {
+    return callAsAccount(account, 'GET', '/lists');
+}
+
+export function getPublicListsAs(account: Account, page = 1, limit = 10): Promise<Paginated<ApiUserList>> {
+    return callAsAccount(account, 'GET', `/lists/public?page=${page}&limit=${limit}`);
+}
+
+export function createUserListAs(
+    account: Account,
+    body: { name: string; description?: string | null; visibility?: 'PRIVATE' | 'PUBLIC' },
+): Promise<ApiUserList> {
+    return callAsAccount(account, 'POST', '/lists', body);
+}
+
+export function getUserListAs(account: Account, id: string): Promise<ApiUserList> {
+    return callAsAccount(account, 'GET', `/lists/${encodeURIComponent(id)}`);
+}
+
+export async function requestStatusAs(
+    account: Account,
+    method: string,
+    path: string,
+    data?: unknown,
+): Promise<number> {
+    const ctx = await request.newContext({ baseURL: apiBaseUrl() });
+    try {
+        const token = await apiLogin(ctx, account);
+        return (await ctx.fetch(path, {
+            method,
+            data,
+            headers: { Authorization: `Bearer ${token}` },
+        })).status();
+    } finally {
+        await ctx.dispose();
+    }
 }

@@ -11,7 +11,7 @@ export function UserListCard({
   onDelete?: () => void;
 }) {
   return (
-    <article className="flex h-full flex-col gap-4 rounded-2xl border border-white/10 bg-[#241f42] p-5">
+    <article className="flex h-full min-w-0 flex-col gap-4 rounded-2xl border border-white/10 bg-[#241f42] p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 className="truncate text-lg font-bold">

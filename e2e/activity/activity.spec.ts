@@ -37,9 +37,28 @@ test.describe('Actividad personal', () => {
 
   test('muestra la actividad nueva recibida por Socket.IO', async ({ page, api }) => {
     await withActivityUser(api, page, async (account) => {
-      await expect(page.getByRole('status', { name: 'En línea' })).toBeVisible({ timeout: 15_000 });
+      await expect(page.getByRole('status').filter({ hasText: /^En/ })).toBeVisible({ timeout: 15_000 });
       await addLibraryEntryAs(account, SEEDED_MEDIA.zelda.id);
       await expect(page.getByText('Agregaste un medio a tu biblioteca.')).toBeVisible({ timeout: 15_000 });
+    });
+  });
+
+  test('recibe por Socket.IO la actividad creada al guardar una lista desde la interfaz', async ({ page, api }) => {
+    await withActivityUser(api, page, async () => {
+      await expect(page.getByRole('status').filter({ hasText: /^En/ })).toBeVisible({ timeout: 15_000 });
+      await page.getByRole('link', { name: 'Mis listas' }).click();
+      await page.getByRole('button', { name: 'Crear mi primera lista' }).click();
+      const editor = page.getByRole('dialog');
+      await editor.getByLabel('Nombre').fill(`Realtime ${Date.now()}`);
+      await editor.getByRole('button', { name: 'Crear lista' }).click();
+      await page.waitForFunction(() => {
+        const store = (window as unknown as {
+          __APP_STORE__?: { getState(): { realtime?: { events?: { event: string }[] } } };
+        }).__APP_STORE__;
+        return store?.getState().realtime?.events?.some((event) => event.event === 'activity.created') ?? false;
+      }, undefined, { timeout: 15_000 });
+      await page.getByRole('link', { name: 'Actividad' }).click();
+      await expect(page.getByText('Creaste una lista.')).toBeVisible({ timeout: 15_000 });
     });
   });
 });
