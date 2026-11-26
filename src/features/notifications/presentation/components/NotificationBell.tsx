@@ -3,27 +3,24 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { Bell } from 'lucide-react';
-import { useAppDispatch, useAppSelector } from '@/src/store/hooks';
-import { syncNotifications } from '../store/notifications.slice';
 import { useNotifications } from '../hooks/use-notifications';
-import { selectRealtimeEvents } from '@/src/features/realtime/presentation/store/realtime.selectors';
-import type { RealtimeEventEnvelope, RealtimeEventPayloads } from '@/src/features/realtime/domain/entities/realtime-event';
+import { useRealtime } from '@/src/features/realtime/presentation/hooks/use-realtime';
 
 /** Resume los eventos que necesitan un aviso visible inmediato. */
-function describeLiveNotice(event: RealtimeEventEnvelope | undefined): string | null {
+function describeLiveNotice(event: ReturnType<typeof useRealtime>['latestEvent']): string | null {
   if (!event) return null;
   if (event.event === 'media.moderated') {
-    const payload = event.payload as RealtimeEventPayloads['media.moderated'];
+    const payload = event.payload as { title: string; approvalStatus: 'APPROVED' | 'REJECTED'; rejectionReason?: string };
     const result = payload.approvalStatus === 'APPROVED' ? 'fue aprobada' : 'fue rechazada';
     const reason = payload.rejectionReason ? ` Motivo: ${payload.rejectionReason}` : '';
     return `Tu propuesta «${payload.title}» ${result}.${reason}`;
   }
   if (event.event === 'review.visibility.changed') {
-    const payload = event.payload as RealtimeEventPayloads['review.visibility.changed'];
+    const payload = event.payload as { hiddenReason: string };
     return `Una reseña fue ocultada. Motivo: ${payload.hiddenReason}`;
   }
   if (event.event === 'account.updated') {
-    const payload = event.payload as RealtimeEventPayloads['account.updated'];
+    const payload = event.payload as { role: 'USER' | 'MODERATOR' | 'ADMIN' };
     return `Tu rol cambió a ${payload.role}.`;
   }
   return null;
@@ -31,12 +28,11 @@ function describeLiveNotice(event: RealtimeEventEnvelope | undefined): string | 
 
 /** Enlace a la bandeja con el total de avisos no leídos. */
 export function NotificationBell() {
-  const dispatch = useAppDispatch();
-  const { unreadCount } = useNotifications();
-  const latestEvent = useAppSelector((state) => selectRealtimeEvents(state)[0]);
+  const { unreadCount, sync } = useNotifications();
+  const { latestEvent } = useRealtime();
   const [visibleEventAt, setVisibleEventAt] = useState<string | null>(null);
 
-  useEffect(() => { void dispatch(syncNotifications()); }, [dispatch]);
+  useEffect(() => { void sync(); }, [sync]);
 
   useEffect(() => {
     if (!latestEvent) return;
