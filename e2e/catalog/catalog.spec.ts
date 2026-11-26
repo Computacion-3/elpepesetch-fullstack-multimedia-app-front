@@ -32,8 +32,9 @@ test.describe('Catálogo — navegación, filtros y detalle como USER', () => {
         await expect(page).toHaveURL(/\/catalog$/);
         await expect(page.getByRole('heading', { name: 'Catálogo multimedia' })).toBeVisible();
 
-        // Verifica que los elementos aprobados del seed cargan y aplica filtros de tipo y búsqueda
-        await expect(page.getByRole('heading', { name: SEEDED_MEDIA.matrix.title })).toBeVisible();
+        // El catálogo pagina de 12 en 12 por título: The Matrix queda en la página 2 con el seed actual,
+        // así que se comprueba un aprobado de la primera página y luego se filtra hasta Matrix.
+        await expect(page.getByRole('heading', { name: SEEDED_MEDIA.hades.title, exact: true })).toBeVisible();
         await page.getByLabel('Tipo').selectOption('MOVIE');
         await page.getByLabel('Buscar por título o creador').fill('Matrix');
         await expect(page.getByRole('heading', { name: SEEDED_MEDIA.matrix.title })).toBeVisible();
