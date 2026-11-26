@@ -1,6 +1,7 @@
-import Link from 'next/link';
 import { getSession } from '@/src/lib/dal';
 import { PERMISSIONS } from '@/src/shared/permissions';
+import { NavLink } from '../_shell/nav-link';
+import { sidebarSectionClass, sidebarSectionTitleClass } from '../_shell/nav-styles';
 
 /**
  * Navegación del catálogo y moderación de propuestas/géneros (Persona 2).
@@ -19,15 +20,12 @@ export async function CatalogNav() {
     if (links.length === 0) return null;
 
     return (
-        <nav aria-label="Administración del catálogo" className="flex flex-wrap items-center gap-1">
+        <nav aria-label="Administración del catálogo" className={sidebarSectionClass}>
+            <p className={sidebarSectionTitleClass}>Gestión del catálogo</p>
             {links.map((link) => (
-                <Link
-                    key={link.href}
-                    href={link.href}
-                    className="rounded-lg px-3 py-2 text-sm font-medium text-brand transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-                >
+                <NavLink key={link.href} href={link.href}>
                     {link.label}
-                </Link>
+                </NavLink>
             ))}
         </nav>
     );

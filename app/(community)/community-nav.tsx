@@ -1,50 +1,42 @@
-import Link from 'next/link';
 import { getSession } from '@/src/lib/dal';
 import { PERMISSIONS } from '@/src/shared/permissions';
+import { NavLink } from '../_shell/nav-link';
+import { sidebarSectionClass, sidebarSectionTitleClass } from '../_shell/nav-styles';
 
-const linkClassName =
-    'rounded-lg px-3 py-2 text-sm font-medium text-brand transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand';
-
-/**
- * Navegación de comunidad: `Comunidad` (listas propias, listas públicas y actividad) para toda sesión
- * y `Moderación de comunidad` (`Moderación de reportes`) solo con `reviews:moderate`.
- * Se mantiene separada de `AdminNav` (`Administración`) para respetar sus controles de acceso.
- */
+/** Barra superior "Comunidad": listas propias, listas públicas y actividad, para toda sesión. */
 export async function CommunityNav() {
     const session = await getSession();
-    if (!session) return null;
+    if (!session) return <span />;
 
-    const communityLinks = [
+    const links = [
         { href: '/lists', label: 'Mis listas' },
         { href: '/community/lists', label: 'Explorar listas' },
         { href: '/activity', label: 'Actividad' },
     ];
-    const moderationLinks = [
-        {
-            href: '/reports',
-            label: 'Moderación de reportes',
-            visible: session.user.hasPermission(PERMISSIONS.REVIEWS_MODERATE),
-        },
-    ].filter((link) => link.visible);
 
     return (
-        <>
-            <nav aria-label="Comunidad" className="flex flex-wrap items-center gap-1">
-                {communityLinks.map((link) => (
-                    <Link key={link.href} href={link.href} className={linkClassName}>
-                        {link.label}
-                    </Link>
-                ))}
-            </nav>
-            {moderationLinks.length > 0 && (
-                <nav aria-label="Moderación de comunidad" className="flex flex-wrap items-center gap-1">
-                    {moderationLinks.map((link) => (
-                        <Link key={link.href} href={link.href} className={linkClassName}>
-                            {link.label}
-                        </Link>
-                    ))}
-                </nav>
-            )}
-        </>
+        <nav aria-label="Comunidad" className="flex min-w-0 items-center gap-1 overflow-x-auto">
+            {links.map((link) => (
+                <NavLink key={link.href} href={link.href} variant="top">
+                    {link.label}
+                </NavLink>
+            ))}
+        </nav>
+    );
+}
+
+/**
+ * Sección "Moderación de comunidad" de la barra lateral: solo con `reviews:moderate`.
+ * Se mantiene separada de `AdminNav` (`Administración`) para respetar sus controles de acceso.
+ */
+export async function ModerationNav() {
+    const session = await getSession();
+    if (!session?.user.hasPermission(PERMISSIONS.REVIEWS_MODERATE)) return null;
+
+    return (
+        <nav aria-label="Moderación de comunidad" className={sidebarSectionClass}>
+            <p className={sidebarSectionTitleClass}>Moderación</p>
+            <NavLink href="/reports">Moderación de reportes</NavLink>
+        </nav>
     );
 }

@@ -1,7 +1,8 @@
 import { Suspense } from 'react';
-import AppHeader from '@/app/app-header';
+import AppShell from '@/app/app-shell';
 import { HomeDashboard } from '@/src/features/stats/presentation/components/HomeDashboard';
 import { requireSession } from '@/src/lib/dal';
+import { Spinner } from '@/src/shared/ui/Spinner';
 
 async function AuthenticatedHome() {
     const { user } = await requireSession();
@@ -10,19 +11,12 @@ async function AuthenticatedHome() {
 
 export default function Home() {
     return (
-        <div className="flex min-h-full flex-col">
-            <AppHeader />
+        <AppShell>
             <main className="w-full flex-1 px-4 py-7 sm:px-6 sm:py-10">
-                <Suspense
-                    fallback={
-                        <p role="status" className="mx-auto max-w-6xl text-sm text-muted">
-                            Cargando tu inicio…
-                        </p>
-                    }
-                >
+                <Suspense fallback={<Spinner label="Cargando tu inicio" size="lg" className="py-20" />}>
                     <AuthenticatedHome />
                 </Suspense>
             </main>
-        </div>
+        </AppShell>
     );
 }
