@@ -18,9 +18,9 @@ export function MediaCatalogScreen() {
                 <div>
                     <p className="text-sm font-semibold uppercase tracking-wide text-brand">Descubre</p>
                     <h1 className="text-3xl font-bold">Catálogo multimedia</h1>
-                    <p className="mt-2 text-gray-600">Juegos, películas y libros para explorar.</p>
+                    <p className="mt-2 text-muted">Juegos, películas y libros para explorar.</p>
                 </div>
-                <Link href="/catalog/proponer" className="rounded-md bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-hover">Proponer un elemento</Link>
+                <Link href="/catalog/proponer" className="inline-flex min-h-11 items-center rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-background transition hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">Proponer un elemento</Link>
             </header>
 
             <MediaFilters query={media.query} onChange={media.setFilters}>
@@ -30,7 +30,7 @@ export function MediaCatalogScreen() {
             {media.errorMessage && <Alert variant="error">{media.errorMessage}</Alert>}
             {media.isLoading && <p role="status">Cargando catálogo…</p>}
             {!media.isLoading && media.listStatus === 'succeeded' && media.items.length === 0 && (
-                <p className="rounded-lg border border-dashed border-gray-400 p-8 text-center">No encontramos elementos con esos filtros.</p>
+                <p className="rounded-2xl border border-dashed border-white/20 bg-surface p-8 text-center text-muted">No encontramos elementos con esos filtros.</p>
             )}
 
             {media.items.length > 0 && (
@@ -40,7 +40,7 @@ export function MediaCatalogScreen() {
             )}
 
             <footer className="flex flex-wrap items-center justify-between gap-4">
-                <p className="text-sm text-gray-600">{media.meta.total} elementos</p>
+                <p className="text-sm text-muted">{media.meta.total} elementos</p>
                 <Pagination page={media.meta.page} totalPages={media.meta.totalPages} onChange={(page) => media.setFilters({ page })} />
             </footer>
         </section>

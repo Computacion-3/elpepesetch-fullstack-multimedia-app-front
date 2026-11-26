@@ -48,7 +48,7 @@ export function RolesPanel() {
 
     return (
         <section className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-3">
                 <h1 className="text-2xl font-semibold">Roles</h1>
                 <Button type="button" onClick={openCreate}>
                     Nuevo rol
@@ -57,68 +57,68 @@ export function RolesPanel() {
             {errorMessage && !formOpen && !permissionsRole && (
                 <Alert variant="error">{errorMessage}</Alert>
             )}
-            <table className="w-full text-left text-sm">
-                <thead>
-                    <tr>
-                        <th className="py-2">Nombre</th>
-                        <th className="py-2">Descripción</th>
-                        <th className="py-2">Permisos</th>
-                        <th className="py-2">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {roles.map((role) => (
-                        <tr key={role.id} className="border-t">
-                            <td className="py-2">{role.name}</td>
-                            <td className="py-2">{role.description}</td>
-                            <td className="py-2">{role.permissionCount}</td>
-                            <td className="flex gap-2 py-2">
-                                <Button
-                                    type="button"
-                                    variant="secondary"
-                                    aria-label={`Editar ${role.name}`}
-                                    onClick={() => openEdit(role)}
-                                >
-                                    Editar
-                                </Button>
-                                <Button
-                                    type="button"
-                                    variant="secondary"
-                                    aria-label={`Permisos de ${role.name}`}
-                                    onClick={() => {
-                                        clearError();
-                                        setPermissionsRole(role);
-                                    }}
-                                >
-                                    Permisos
-                                </Button>
-                                <Button
-                                    type="button"
-                                    variant="secondary"
-                                    aria-label={`Eliminar ${role.name}`}
-                                    onClick={() => setToDelete(role)}
-                                >
-                                    Eliminar
-                                </Button>
-                            </td>
+            <div className="overflow-x-auto rounded-2xl border border-white/10 bg-surface">
+                <table className="w-full min-w-[44rem] text-left text-sm">
+                    <thead>
+                        <tr className="border-b border-white/10 text-xs uppercase tracking-wide text-muted">
+                            <th className="px-3 py-2">Nombre</th>
+                            <th className="px-3 py-2">Descripción</th>
+                            <th className="px-3 py-2">Permisos</th>
+                            <th className="px-3 py-2">Acciones</th>
                         </tr>
-                    ))}
-                    {roles.length === 0 && !isLoading && (
-                        <tr>
-                            <td colSpan={4} className="py-4 text-center">
-                                No hay roles
-                            </td>
-                        </tr>
-                    )}
-                    {roles.length === 0 && isLoading && (
-                        <tr>
-                            <td colSpan={4} className="py-4 text-center">
-                                Cargando…
-                            </td>
-                        </tr>
-                    )}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {roles.map((role) => (
+                            <tr
+                                key={role.id}
+                                className="border-t border-white/10 hover:bg-white/5"
+                            >
+                                <td className="px-3 py-3">{role.name}</td>
+                                <td className="px-3 py-3 text-muted">{role.description}</td>
+                                <td className="px-3 py-3">{role.permissionCount}</td>
+                                <td className="px-3 py-2">
+                                    <div className="flex flex-wrap gap-2">
+                                        <Button
+                                            type="button"
+                                            variant="secondary"
+                                            aria-label={`Editar ${role.name}`}
+                                            onClick={() => openEdit(role)}
+                                        >
+                                            Editar
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            variant="secondary"
+                                            aria-label={`Permisos de ${role.name}`}
+                                            onClick={() => {
+                                                clearError();
+                                                setPermissionsRole(role);
+                                            }}
+                                        >
+                                            Permisos
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            variant="secondary"
+                                            aria-label={`Eliminar ${role.name}`}
+                                            onClick={() => setToDelete(role)}
+                                        >
+                                            Eliminar
+                                        </Button>
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
+                        {roles.length === 0 && (
+                            <tr>
+                                <td colSpan={4} className="px-3 py-8 text-center text-muted">
+                                    {isLoading ? 'Cargando…' : 'No hay roles'}
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
             <Modal open={formOpen} title={editing ? 'Editar rol' : 'Nuevo rol'} onClose={closeForm}>
                 <RoleForm role={editing ?? undefined} onDone={closeForm} />
             </Modal>

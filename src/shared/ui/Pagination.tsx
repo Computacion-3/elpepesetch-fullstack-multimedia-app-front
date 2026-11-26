@@ -13,7 +13,7 @@ export function Pagination({ page, totalPages, onChange }: PaginationProps) {
     if (totalPages <= 1) return null;
 
     return (
-        <nav aria-label="Paginación" className="flex items-center justify-end gap-3">
+        <nav aria-label="Paginación" className="flex flex-wrap items-center justify-end gap-3">
             <Button variant="secondary" disabled={page <= 1} onClick={() => onChange(page - 1)}>
                 Anterior
             </Button>

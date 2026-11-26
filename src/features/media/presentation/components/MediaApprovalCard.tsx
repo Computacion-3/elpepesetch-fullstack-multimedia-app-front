@@ -31,14 +31,14 @@ export function MediaApprovalCard({ item, loading, onDecision }: MediaApprovalCa
     }
 
     return (
-        <article className="space-y-4 rounded-lg border border-gray-300 p-5">
+        <article className="space-y-4 rounded-2xl border border-white/10 bg-surface p-5">
             <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                     <h2 className="text-xl font-semibold">{item.title}</h2>
-                    <p className="text-sm text-gray-600">{item.type} · {item.creator} · {item.releaseYear}</p>
+                    <p className="text-sm text-muted">{item.type} · {item.creator} · {item.releaseYear}</p>
                     <p className="mt-1 text-sm">Propuesto por {item.createdBy?.username ?? 'usuario'}</p>
                 </div>
-                <p className="text-sm text-gray-600">{item.genres.map((genre) => genre.name).join(', ')}</p>
+                <p className="text-sm text-muted">{item.genres.map((genre) => genre.name).join(', ')}</p>
             </div>
             <p className="text-sm">{item.description || 'Sin descripción.'}</p>
             {error && <Alert variant="error">{error}</Alert>}
@@ -50,7 +50,7 @@ export function MediaApprovalCard({ item, loading, onDecision }: MediaApprovalCa
                     maxLength={255}
                     value={reason}
                     onChange={(event) => setReason(event.target.value)}
-                    className="rounded-md border border-gray-400 px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-brand"
+                    className="min-h-11 w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2.5 text-sm text-foreground placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
                 />
                 <div className="flex flex-wrap gap-2">
                     <Button loading={loading} onClick={() => void onDecision({ approvalStatus: 'APPROVED' })}>Aprobar</Button>

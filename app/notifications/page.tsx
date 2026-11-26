@@ -11,7 +11,7 @@ async function AuthenticatedNotifications() {
 /** Reserva el shell mientras se valida la sesión de la bandeja. */
 export default function NotificationsPage() {
   return (
-    <Suspense fallback={<p className="p-6 text-sm text-gray-500">Cargando notificaciones...</p>}>
+    <Suspense fallback={<p className="p-6 text-sm text-muted">Cargando notificaciones...</p>}>
       <AuthenticatedNotifications />
     </Suspense>
   );

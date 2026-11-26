@@ -21,10 +21,10 @@ function DistributionList({
     emptyText: string;
 }) {
     return (
-        <div className="flex flex-col gap-3 rounded-md border border-gray-300 p-4">
+        <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-surface p-4">
             <h3 className="text-base font-semibold">{title}</h3>
             {items.length === 0 ? (
-                <p className="text-sm text-gray-500">{emptyText}</p>
+                <p className="text-sm text-muted">{emptyText}</p>
             ) : (
                 <ul className="flex flex-col gap-2">
                     {items.map((item) => (
@@ -33,7 +33,7 @@ function DistributionList({
                                 <span>{item.label}</span>
                                 <span className="font-medium">{item.count}</span>
                             </div>
-                            <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+                            <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
                                 <div
                                     className="h-full bg-brand transition-all"
                                     style={{ width: `${item.percentage}%` }}
@@ -86,7 +86,7 @@ export function StatsDashboard({ canReadGlobal }: StatsDashboardProps) {
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                     <h1 className="text-2xl font-semibold">Estadísticas</h1>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-muted">
                         Resumen de tu colección multimedia y métricas de la plataforma.
                     </p>
                 </div>
@@ -109,20 +109,20 @@ export function StatsDashboard({ canReadGlobal }: StatsDashboardProps) {
                     personal && (
                         <>
                             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                                <div className="rounded-md border border-gray-300 p-4">
-                                    <p className="text-xs text-gray-500">Total en biblioteca</p>
+                                <div className="rounded-2xl border border-white/10 bg-surface p-4">
+                                    <p className="text-xs text-muted">Total en biblioteca</p>
                                     <p className="mt-1 text-2xl font-semibold">
                                         {personal.totalEntries}
                                     </p>
                                 </div>
-                                <div className="rounded-md border border-gray-300 p-4">
-                                    <p className="text-xs text-gray-500">Calificación promedio</p>
+                                <div className="rounded-2xl border border-white/10 bg-surface p-4">
+                                    <p className="text-xs text-muted">Calificación promedio</p>
                                     <p className="mt-1 text-2xl font-semibold">
                                         {personal.averageRatingLabel}
                                     </p>
                                 </div>
-                                <div className="rounded-md border border-gray-300 p-4">
-                                    <p className="text-xs text-gray-500">
+                                <div className="rounded-2xl border border-white/10 bg-surface p-4">
+                                    <p className="text-xs text-muted">
                                         Completados (últimos 12 meses)
                                     </p>
                                     <p className="mt-1 text-2xl font-semibold">
@@ -149,7 +149,7 @@ export function StatsDashboard({ canReadGlobal }: StatsDashboardProps) {
                                 />
                             </div>
 
-                            <div className="rounded-md border border-gray-300 p-4">
+                            <div className="rounded-2xl border border-white/10 bg-surface p-4">
                                 <h3 className="mb-3 text-base font-semibold">
                                     Finalizaciones mensuales (últimos 12 meses)
                                 </h3>
@@ -157,9 +157,9 @@ export function StatsDashboard({ canReadGlobal }: StatsDashboardProps) {
                                     {personal.completedByMonth.map((month) => (
                                         <div
                                             key={month.month}
-                                            className="flex flex-col gap-1 rounded-md border border-gray-200 p-2 text-center text-xs"
+                                            className="flex flex-col gap-1 rounded-xl border border-white/10 bg-white/5 p-2 text-center text-xs"
                                         >
-                                            <span className="text-gray-500">{month.label}</span>
+                                            <span className="text-muted">{month.label}</span>
                                             <span className="text-base font-semibold">
                                                 {month.count}
                                             </span>
@@ -173,7 +173,7 @@ export function StatsDashboard({ canReadGlobal }: StatsDashboardProps) {
             </div>
 
             {canReadGlobal && (
-                <div className="flex flex-col gap-4 border-t border-gray-300 pt-6">
+                <div className="flex flex-col gap-4 border-t border-white/10 pt-6">
                     <h2 className="text-lg font-semibold">Estadísticas globales</h2>
                     {globalError && <Alert variant="error">{globalError}</Alert>}
                     {isLoadingGlobal && !global ? (
@@ -182,28 +182,28 @@ export function StatsDashboard({ canReadGlobal }: StatsDashboardProps) {
                         global && (
                             <>
                                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
-                                    <div className="rounded-md border border-gray-300 p-4">
-                                        <p className="text-xs text-gray-500">Usuarios</p>
+                                    <div className="rounded-2xl border border-white/10 bg-surface p-4">
+                                        <p className="text-xs text-muted">Usuarios</p>
                                         <p className="mt-1 text-2xl font-semibold">
                                             {global.users}
                                         </p>
                                     </div>
-                                    <div className="rounded-md border border-gray-300 p-4">
-                                        <p className="text-xs text-gray-500">Catálogo total</p>
+                                    <div className="rounded-2xl border border-white/10 bg-surface p-4">
+                                        <p className="text-xs text-muted">Catálogo total</p>
                                         <p className="mt-1 text-2xl font-semibold">
                                             {global.totalMediaItems}
                                         </p>
                                     </div>
-                                    <div className="rounded-md border border-gray-300 p-4">
-                                        <p className="text-xs text-gray-500">
+                                    <div className="rounded-2xl border border-white/10 bg-surface p-4">
+                                        <p className="text-xs text-muted">
                                             Entradas en bibliotecas
                                         </p>
                                         <p className="mt-1 text-2xl font-semibold">
                                             {global.libraryEntries}
                                         </p>
                                     </div>
-                                    <div className="rounded-md border border-gray-300 p-4">
-                                        <p className="text-xs text-gray-500">Reseñas</p>
+                                    <div className="rounded-2xl border border-white/10 bg-surface p-4">
+                                        <p className="text-xs text-muted">Reseñas</p>
                                         <p className="mt-1 text-2xl font-semibold">
                                             {global.reviews}
                                         </p>

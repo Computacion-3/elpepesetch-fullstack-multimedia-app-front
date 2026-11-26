@@ -36,10 +36,10 @@ export function MediaApprovalScreen() {
             <header>
                 <p className="text-sm font-semibold uppercase tracking-wide text-brand">Administración</p>
                 <h1 className="text-3xl font-bold">Propuestas pendientes</h1>
-                <p className="mt-2 text-gray-600">Revisa cada propuesta y apruébala o indica el motivo del rechazo.</p>
+                <p className="mt-2 text-muted">Revisa cada propuesta y apruébala o indica el motivo del rechazo.</p>
             </header>
             {queueCounts && (
-                <p className="rounded-md border border-gray-300 px-4 py-3 text-sm text-gray-600" role="status">
+                <p className="rounded-xl border border-white/10 bg-surface px-4 py-3 text-sm text-muted" role="status">
                     Cola en vivo: {queueCounts.pendingMedia} propuestas y {queueCounts.openReports} reportes abiertos.
                 </p>
             )}
@@ -49,7 +49,7 @@ export function MediaApprovalScreen() {
             {media.errorMessage && <Alert variant="error">{media.errorMessage}</Alert>}
             {media.pendingStatus === 'loading' && <p role="status">Cargando propuestas…</p>}
             {media.pendingStatus === 'succeeded' && media.pendingItems.length === 0 && (
-                <p className="rounded-lg border border-dashed border-gray-400 p-8 text-center">No hay propuestas pendientes.</p>
+                <p className="rounded-2xl border border-dashed border-white/20 bg-surface px-6 py-10 text-center text-muted">No hay propuestas pendientes.</p>
             )}
             <div className="space-y-4">
                 {media.pendingItems.map((item) => (

@@ -12,19 +12,22 @@ export async function CommunityNav() {
     if (!session) return null;
 
     const links = [
-        { href: '/reviews', label: 'Reseñas', visible: true },
-        { href: '/stats', label: 'Estadísticas', visible: true },
         {
             href: '/reports',
             label: 'Moderación de reportes',
             visible: session.user.hasPermission(PERMISSIONS.REVIEWS_MODERATE),
         },
     ].filter((link) => link.visible);
+    if (links.length === 0) return null;
 
     return (
-        <nav aria-label="Comunidad y estadísticas" className="flex flex-wrap gap-4 text-sm">
+        <nav aria-label="Moderación de comunidad" className="flex flex-wrap items-center gap-1">
             {links.map((link) => (
-                <Link key={link.href} href={link.href} className="font-medium text-brand hover:underline">
+                <Link
+                    key={link.href}
+                    href={link.href}
+                    className="rounded-lg px-3 py-2 text-sm font-medium text-brand transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                >
                     {link.label}
                 </Link>
             ))}

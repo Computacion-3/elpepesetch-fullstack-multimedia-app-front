@@ -12,5 +12,5 @@ const labels = {
 /** Indica al usuario el estado actual del canal de actualizaciones. */
 export function RealtimeStatus() {
   const { status } = useRealtime();
-  return <span className="text-xs text-gray-500" role="status">{labels[status]}</span>;
+  return <span className="text-xs text-muted" role="status">{labels[status]}</span>;
 }

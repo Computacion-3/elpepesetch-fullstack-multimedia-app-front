@@ -12,9 +12,13 @@ export async function AdminNav() {
     ].filter((l) => session.user.hasPermission(l.permission));
     if (links.length === 0) return null;
     return (
-        <nav aria-label="Administración" className="flex gap-4 text-sm">
+        <nav aria-label="Administración" className="flex flex-wrap items-center gap-1">
             {links.map((l) => (
-                <Link key={l.href} href={l.href} className="font-medium text-brand hover:underline">
+                <Link
+                    key={l.href}
+                    href={l.href}
+                    className="rounded-lg px-3 py-2 text-sm font-medium text-brand transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                >
                     {l.label}
                 </Link>
             ))}

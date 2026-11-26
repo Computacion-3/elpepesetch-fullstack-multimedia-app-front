@@ -11,7 +11,7 @@ async function AuthenticatedLibrary() {
 /** Muestra la biblioteca cuando termina la validación de sesión. */
 export default function LibraryPage() {
   return (
-    <Suspense fallback={<p className="p-6 text-sm text-gray-500">Cargando biblioteca...</p>}>
+    <Suspense fallback={<p className="p-6 text-sm text-muted">Cargando biblioteca...</p>}>
       <AuthenticatedLibrary />
     </Suspense>
   );
