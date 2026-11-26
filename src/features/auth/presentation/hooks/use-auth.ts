@@ -9,6 +9,7 @@ import {
     loginMutation,
     logoutMutation,
     registerMutation,
+    refreshCurrentUserMutation,
 } from '../store/auth.slice';
 import {
     selectAuthError,
@@ -44,6 +45,12 @@ export function useAuth() {
         await dispatch(logoutMutation());
     }, [dispatch]);
 
+    /** Actualiza la sesión tras recibir un cambio de cuenta en tiempo real. */
+    const refreshCurrentUser = useCallback(async (): Promise<boolean> => {
+        const result = await dispatch(refreshCurrentUserMutation());
+        return refreshCurrentUserMutation.fulfilled.match(result);
+    }, [dispatch]);
+
     const hydrate = useCallback(
         (value: AuthUserViewModel | null) => {
             dispatch(hydrateUser(value));
@@ -69,6 +76,7 @@ export function useAuth() {
         login,
         register,
         logout,
+        refreshCurrentUser,
         hydrate,
         hasPermission,
         clearError,

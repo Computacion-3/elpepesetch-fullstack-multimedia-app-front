@@ -7,6 +7,8 @@ import {
     clearMediaError,
     clearSelectedMedia,
     createMediaItem,
+    applyMediaModeration,
+    applyMediaRating,
     fetchMedia,
     fetchMediaItem,
     fetchPendingMedia,
@@ -67,6 +69,16 @@ export function useMedia() {
     const clearDetail = useCallback(() => dispatch(clearSelectedMedia()), [dispatch]);
     const clearError = useCallback(() => dispatch(clearMediaError()), [dispatch]);
 
+    /** Refleja la calificación recibida por Socket.IO en los medios cargados. */
+    const applyRatingUpdate = useCallback((payload: Parameters<typeof applyMediaRating>[0]) => {
+        dispatch(applyMediaRating(payload));
+    }, [dispatch]);
+
+    /** Refleja la moderación recibida por Socket.IO en los medios cargados. */
+    const applyModerationUpdate = useCallback((payload: Parameters<typeof applyMediaModeration>[0]) => {
+        dispatch(applyMediaModeration(payload));
+    }, [dispatch]);
+
     const propose = useCallback(async (draft: MediaItemDraft): Promise<boolean> => {
         const succeeded = createMediaItem.fulfilled.match(await dispatch(createMediaItem(draft)));
         if (succeeded) await dispatch(fetchMedia(query));
@@ -99,6 +111,7 @@ export function useMedia() {
         items, selectedItem, pendingItems, query, meta, pendingMeta,
         listStatus, detailStatus, pendingStatus, mutationStatus, errorMessage,
         isLoading: listStatus === 'loading', isMutating: mutationStatus === 'loading',
-        setFilters, reload, loadPending, getById, clearDetail, propose, updateProposal, decide, clearError,
+        setFilters, reload, loadPending, getById, clearDetail, propose, updateProposal, decide,
+        applyRatingUpdate, applyModerationUpdate, clearError,
     };
 }
