@@ -3,7 +3,13 @@
 import { useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from '@/src/store/hooks';
 import type { NotificationQuery } from '../../domain/entities/notification';
-import { clearNotificationsError, fetchNotifications, markNotificationRead } from '../store/notifications.slice';
+import {
+  clearNotificationsError,
+  fetchNotifications,
+  incrementUnreadCount,
+  markNotificationRead,
+  syncNotifications,
+} from '../store/notifications.slice';
 import {
   selectNotifications,
   selectNotificationsError,
@@ -32,7 +38,30 @@ export function useNotifications() {
     return markNotificationRead.fulfilled.match(result);
   }, [dispatch]);
 
+  /** Sincroniza la bandeja con las notificaciones persistidas por el backend. */
+  const sync = useCallback(async () => {
+    const result = await dispatch(syncNotifications());
+    return syncNotifications.fulfilled.match(result);
+  }, [dispatch]);
+
+  /** Registra en el contador un aviso recibido por la conexión en vivo. */
+  const registerRealtimeNotification = useCallback(() => {
+    dispatch(incrementUnreadCount());
+  }, [dispatch]);
+
   const clearError = useCallback(() => dispatch(clearNotificationsError()), [dispatch]);
 
-  return { items, meta, query, status, unreadCount, errorMessage, load, markRead, clearError };
+  return {
+    items,
+    meta,
+    query,
+    status,
+    unreadCount,
+    errorMessage,
+    load,
+    markRead,
+    sync,
+    registerRealtimeNotification,
+    clearError,
+  };
 }

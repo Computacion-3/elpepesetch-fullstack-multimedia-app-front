@@ -3,45 +3,33 @@
 import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/src/features/auth/presentation/hooks/use-auth';
-import { useAppDispatch } from '@/src/store/hooks';
-import { useAppSelector } from '@/src/store/hooks';
-import { connectRealtime, disconnectRealtime, subscribeToMediaRoom } from '../store/realtime.slice';
-import { selectRealtimeEvents, selectRealtimeStatus, selectSubscribedMediaItemId } from '../store/realtime.selectors';
-import { incrementUnreadCount, syncNotifications } from '@/src/features/notifications/presentation/store/notifications.slice';
-import { applyMediaModeration, applyMediaRating } from '@/src/features/media/presentation/store/media.slice';
-import { fetchReviewsByMediaQuery, hideReviewFromSocket } from '@/src/features/reviews/presentation/store/reviews.slice';
-import {
-  selectReviewsCurrentPage,
-  selectReviewsLimit,
-  selectSelectedMediaId,
-} from '@/src/features/reviews/presentation/store/reviews.selectors';
-import { refreshCurrentUserMutation } from '@/src/features/auth/presentation/store/auth.slice';
-import { activityArrived } from '@/src/features/activity-logs/presentation/store/activity-logs.slice';
-import type { RealtimeEventPayloads } from '../../domain/entities/realtime-event';
+import { useRealtime } from '../hooks/use-realtime';
 
 /** Mantiene el socket durante la sesión y lo cierra al salir o desactivarse la cuenta. */
 export function RealtimeSessionManager() {
-  const dispatch = useAppDispatch();
   const router = useRouter();
   const { user, sessionEndedReason } = useAuth();
+  const {
+    status,
+    latestEvent,
+    subscribedMediaItemId,
+    connect,
+    disconnect,
+    syncAfterConnect,
+    handleEvent,
+  } = useRealtime();
   const userId = user?.id;
   const hadSession = useRef(false);
-  const status = useAppSelector(selectRealtimeStatus);
-  const latestEvent = useAppSelector((state) => selectRealtimeEvents(state)[0]);
-  const activeMediaId = useAppSelector(selectSubscribedMediaItemId);
-  const selectedReviewMediaId = useAppSelector(selectSelectedMediaId);
-  const reviewPage = useAppSelector(selectReviewsCurrentPage);
-  const reviewLimit = useAppSelector(selectReviewsLimit);
-  const activeMediaRef = useRef(activeMediaId);
+  const activeMediaRef = useRef(subscribedMediaItemId);
 
   useEffect(() => {
     if (!userId) {
-      void dispatch(disconnectRealtime());
+      void disconnect();
       return;
     }
-    void dispatch(connectRealtime());
-    return () => { void dispatch(disconnectRealtime()); };
-  }, [dispatch, userId]);
+    void connect();
+    return () => { void disconnect(); };
+  }, [connect, disconnect, userId]);
 
   useEffect(() => {
     if (user) {
@@ -58,44 +46,18 @@ export function RealtimeSessionManager() {
   }, [router, sessionEndedReason, user]);
 
   useEffect(() => {
-    activeMediaRef.current = activeMediaId;
-  }, [activeMediaId]);
+    activeMediaRef.current = subscribedMediaItemId;
+  }, [subscribedMediaItemId]);
 
   useEffect(() => {
     if (status !== 'connected') return;
     // Vuelve a pedir lo que llegó durante la desconexión y a entrar en la sala activa.
-    void dispatch(syncNotifications());
-    if (activeMediaRef.current) void dispatch(subscribeToMediaRoom(activeMediaRef.current));
-  }, [dispatch, status]);
+    syncAfterConnect(activeMediaRef.current);
+  }, [status, syncAfterConnect]);
 
   useEffect(() => {
-    if (!latestEvent) return;
-    if (latestEvent.event === 'media.moderated') {
-      dispatch(applyMediaModeration(latestEvent.payload as RealtimeEventPayloads['media.moderated']));
-      dispatch(incrementUnreadCount());
-    } else if (latestEvent.event === 'media.rating.updated') {
-      dispatch(applyMediaRating(latestEvent.payload as RealtimeEventPayloads['media.rating.updated']));
-    } else if (latestEvent.event === 'review.visibility.changed') {
-      const hidden = latestEvent.payload as RealtimeEventPayloads['review.visibility.changed'];
-      dispatch(hideReviewFromSocket({ reviewId: hidden.reviewId, mediaItemId: hidden.mediaItemId, hiddenReason: hidden.hiddenReason }));
-      dispatch(incrementUnreadCount());
-    } else if (
-      latestEvent.event === 'review.created' &&
-      latestEvent.mediaItemId === selectedReviewMediaId
-    ) {
-      // Recarga solo si el evento corresponde al medio visible en el panel de reseñas.
-      void dispatch(fetchReviewsByMediaQuery({
-        mediaItemId: latestEvent.mediaItemId,
-        page: reviewPage,
-        limit: reviewLimit,
-      }));
-    } else if (latestEvent.event === 'account.updated') {
-      void dispatch(refreshCurrentUserMutation());
-      dispatch(incrementUnreadCount());
-    } else if (latestEvent.event === 'activity.created') {
-      dispatch(activityArrived());
-    }
-  }, [dispatch, latestEvent, reviewPage, reviewLimit, selectedReviewMediaId]);
+    handleEvent(latestEvent);
+  }, [handleEvent, latestEvent]);
 
   return null;
 }

@@ -87,11 +87,14 @@ export default defineConfig([
           { from: el("pres-viewmodel"), allow: { to: el("pres-viewmodel", SAME_FEATURE) } },
 
           // Facade hooks: the only bridge between components and Redux.
+          // Realtime is the application-level facade for cross-feature socket events.
+          { from: el("pres-hook", { feature: "realtime" }), allow: { to: el("pres-store", OTHER_FEATURE) } },
           { from: el("pres-hook"), allow: { to: { element: { types: { anyOf: ["pres-store", "pres-viewmodel", "pres-hook"] }, captured: SAME_FEATURE } } } },
           { from: el("pres-hook"), allow: { to: el("domain", SAME_FEATURE), dependency: { kind: "type" } } },
           { from: el("pres-hook"), allow: { to: el("app-store") } },
 
           // Components: props, viewmodels, own hooks, other components. Domain only as types (params).
+          { from: el("pres-component"), allow: { to: el("pres-hook", OTHER_FEATURE) } },
           { from: el("pres-component"), allow: { to: { element: { types: { anyOf: ["pres-component", "pres-viewmodel", "pres-hook"] }, captured: SAME_FEATURE } } } },
           { from: el("pres-component"), allow: { to: el("pres-component", OTHER_FEATURE) } },
           { from: el("pres-component"), allow: { to: el("domain", SAME_FEATURE), dependency: { kind: "type" } } },
