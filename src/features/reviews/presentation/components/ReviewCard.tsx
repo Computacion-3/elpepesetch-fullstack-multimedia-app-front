@@ -34,7 +34,7 @@ export function ReviewCard({
     onReport,
 }: ReviewCardProps) {
     return (
-        <article className="flex flex-col gap-3 rounded-md border border-gray-300 p-4">
+        <article className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-surface p-4">
             <header className="flex flex-wrap items-start justify-between gap-2">
                 <div className="flex flex-col gap-1">
                     <div className="flex flex-wrap items-center gap-2">
@@ -42,12 +42,12 @@ export function ReviewCard({
                             {review.title || 'Reseña sin título'}
                         </h3>
                         {review.isHidden && (
-                            <span className="rounded-md border border-red-500 bg-red-50 px-2 py-0.5 text-xs font-medium text-red-800">
+                            <span className="rounded-full border border-red-400/40 bg-red-500/10 px-2.5 py-1 text-xs font-medium text-red-200">
                                 Oculta por moderación
                             </span>
                         )}
                     </div>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-muted">
                         Por <span className="font-medium">{review.authorDisplayName}</span> (@
                         {review.authorUsername}) · {review.formattedCreatedAt}
                     </p>
@@ -88,7 +88,7 @@ export function ReviewCard({
             </header>
 
             {review.isHidden && review.hiddenReason && (
-                <p className="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-xs text-red-800">
+                <p className="rounded-xl border border-red-400/40 bg-red-500/10 px-3 py-2 text-xs text-red-200">
                     Motivo de ocultamiento: {review.hiddenReason}
                 </p>
             )}

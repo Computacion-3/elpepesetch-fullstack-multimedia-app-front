@@ -61,6 +61,7 @@ test.describe('Administración de roles (/roles)', () => {
         await dialog.getByLabel('Nombre').fill(roleName);
         await dialog.getByRole('button', { name: 'Crear rol' }).click();
         await expect(dialog.getByRole('alert').filter({ hasText: MESSAGES.roleConflict })).toBeVisible();
+        expect(await api.requestStatus('POST', '/roles', { name: roleName, description: '' })).toBe(409);
         await page.keyboard.press('Escape');
         await expect(dialog).toBeHidden();
 
@@ -117,6 +118,7 @@ test.describe('Administración de roles (/roles)', () => {
             await expect(alertWithText(page, MESSAGES.roleInUse)).toBeVisible();
             await expect(rowOf(page, busyRole.name)).toHaveCount(1);
             expect(await api.roleByName(busyRole.name)).toBeDefined();
+            expect(await api.requestStatus('DELETE', `/roles/${busyRole.id}`)).toBe(409);
         } finally {
             await api.deleteUser(member.id);
             await api.deleteRole(busyRole.id);

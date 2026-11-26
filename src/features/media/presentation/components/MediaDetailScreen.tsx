@@ -42,17 +42,17 @@ export function MediaDetailScreen({ id, canEditProposal }: MediaDetailScreenProp
             {errorMessage && <Alert variant="error">{errorMessage}</Alert>}
             {item && (
                 <>
-                <article className="grid gap-6 md:grid-cols-[minmax(0,1fr)_2fr]">
+                <article className="grid gap-6 rounded-2xl border border-white/10 bg-surface p-5 sm:p-7 md:grid-cols-[minmax(0,1fr)_2fr]">
                     <div
                         role="img"
                         aria-label={item.coverUrl ? `Portada de ${item.title}` : 'Sin portada disponible'}
-                        className="min-h-72 rounded-lg bg-gray-100 bg-cover bg-center"
+                        className="min-h-72 rounded-xl bg-surface-raised bg-cover bg-center"
                         style={item.coverUrl ? { backgroundImage: `url("${item.coverUrl}")` } : undefined}
                     />
                     <div className="space-y-4">
                         <p className="text-sm font-semibold uppercase tracking-wide text-brand">{TYPE_LABELS[item.type]}</p>
                         <h1 className="text-3xl font-bold">{item.title}</h1>
-                        <p className="text-lg text-gray-600">{item.creator} · {item.releaseYear}</p>
+                        <p className="text-lg text-muted">{item.creator} · {item.releaseYear}</p>
                         <p>{item.description || 'Sin descripción.'}</p>
                         <p className="text-sm">Géneros: {item.genres.map((genre) => genre.name).join(', ') || 'Sin géneros'}</p>
                         <p>Calificación: ★ {item.averageRating.toFixed(1)} ({item.ratingsCount} calificaciones)</p>
@@ -64,7 +64,7 @@ export function MediaDetailScreen({ id, canEditProposal }: MediaDetailScreenProp
                         {canEditProposal && item.approvalStatus === 'PENDING' && (
                             <Link
                                 href={`/catalog/proponer?id=${encodeURIComponent(item.id)}`}
-                                className="inline-flex rounded-md bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-hover"
+                                className="inline-flex min-h-11 items-center rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-background transition hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
                             >
                                 Editar propuesta pendiente
                             </Link>

@@ -75,10 +75,19 @@ test.describe('Registro (/register)', () => {
         });
     }
 
-    test('AC3: un correo ya registrado muestra el conflicto 409 del backend', async ({ page }) => {
-        await fillRegister(page, { ...newUserData('dup'), email: ACCOUNTS.user.email });
+    test('AC3: un correo ya registrado muestra el conflicto 409 del backend', async ({ page, api }) => {
+        const data = { ...newUserData('dup'), email: ACCOUNTS.user.email };
+        await fillRegister(page, data);
 
         await expect(alertWithText(page, MESSAGES.userConflict)).toBeVisible();
         await expect(page).toHaveURL(/\/register$/);
+        expect(
+            await api.requestStatus('POST', '/auth/register', {
+                username: data.username,
+                email: data.email,
+                password: data.password,
+                fullName: data.fullName,
+            }),
+        ).toBe(409);
     });
 });

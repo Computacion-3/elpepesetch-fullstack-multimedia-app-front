@@ -80,7 +80,7 @@ export function ReportsModerationPanel() {
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                     <h1 className="text-2xl font-semibold">Moderación de reportes</h1>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-muted">
                         Revisa los reportes de la comunidad para ocultar reseñas infractoras o
                         descartar avisos improcedentes.
                     </p>
@@ -105,7 +105,7 @@ export function ReportsModerationPanel() {
             {isLoading && reports.length === 0 ? (
                 <p className="text-sm">Cargando reportes…</p>
             ) : reports.length === 0 ? (
-                <p className="rounded-md border border-gray-300 p-4 text-sm text-gray-500">
+                <p className="rounded-xl border border-white/10 bg-surface p-4 text-sm text-muted">
                     No hay reportes para el filtro seleccionado.
                 </p>
             ) : (
@@ -113,7 +113,7 @@ export function ReportsModerationPanel() {
                     {reports.map((report) => (
                         <article
                             key={report.id}
-                            className="flex flex-col gap-3 rounded-md border border-gray-300 p-4"
+                            className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-surface p-4"
                         >
                             <header className="flex flex-wrap items-start justify-between gap-2">
                                 <div className="flex flex-col gap-1">
@@ -121,22 +121,22 @@ export function ReportsModerationPanel() {
                                         <span className="text-sm font-semibold">
                                             {report.mediaTitle}
                                         </span>
-                                        <span className="rounded-md border border-gray-400 px-2 py-0.5 text-xs font-medium">
+                                        <span className="rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-xs font-medium text-muted">
                                             {report.reasonLabel}
                                         </span>
                                         <span
                                             className={`rounded-md border px-2 py-0.5 text-xs font-medium ${
                                                 report.isOpen
-                                                    ? 'border-amber-500 bg-amber-50 text-amber-800'
+                                                    ? 'border-amber-300/40 bg-amber-400/10 text-amber-100'
                                                     : report.status === 'RESOLVED'
-                                                      ? 'border-red-500 bg-red-50 text-red-800'
-                                                      : 'border-green-600 bg-green-50 text-green-800'
+                                                      ? 'border-red-400/40 bg-red-500/10 text-red-200'
+                                                      : 'border-emerald-400/40 bg-emerald-500/10 text-emerald-200'
                                             }`}
                                         >
                                             {report.statusLabel}
                                         </span>
                                     </div>
-                                    <p className="text-xs text-gray-500">
+                                    <p className="text-xs text-muted">
                                         Reportado por @{report.reporterUsername} el{' '}
                                         {report.formattedCreatedAt}
                                     </p>
@@ -165,22 +165,22 @@ export function ReportsModerationPanel() {
                                 )}
                             </header>
 
-                            <div className="rounded-md border border-gray-200 bg-gray-50/50 p-3 text-sm">
-                                <p className="text-xs font-medium text-gray-500">
+                            <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-sm">
+                                <p className="text-xs font-medium text-muted">
                                     Reseña de @{report.reviewAuthorUsername} — {report.reviewTitle}
                                 </p>
                                 <p className="mt-1 whitespace-pre-line">{report.reviewContent}</p>
                             </div>
 
                             {report.comment && (
-                                <p className="text-xs text-gray-600">
+                                <p className="text-xs text-muted">
                                     <span className="font-medium">Comentario del reporte:</span>{' '}
                                     {report.comment}
                                 </p>
                             )}
 
                             {!report.isOpen && (
-                                <p className="text-xs text-gray-500">
+                                <p className="text-xs text-muted">
                                     Resuelto por @{report.resolvedByUsername ?? 'moderador'}
                                     {report.formattedResolvedAt
                                         ? ` el ${report.formattedResolvedAt}`
@@ -209,7 +209,7 @@ export function ReportsModerationPanel() {
                 <form onSubmit={handleHideSubmit} className="flex flex-col gap-4">
                     {errorMessage && <Alert variant="error">{errorMessage}</Alert>}
                     {hideTarget && (
-                        <p className="text-xs text-gray-600">
+                        <p className="text-xs text-muted">
                             Reseña de @{hideTarget.reviewAuthorUsername}:{' '}
                             <span className="font-medium">{hideTarget.reviewTitle}</span>
                         </p>

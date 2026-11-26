@@ -50,7 +50,7 @@ export function ReportReviewForm({ reviewId, reviewPreview, onDone }: ReportRevi
     return (
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             {errorMessage && <Alert variant="error">{errorMessage}</Alert>}
-            <p className="rounded-md border border-gray-300 px-3 py-2 text-xs text-gray-600">
+            <p className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-muted">
                 Reseña seleccionada: <span className="font-medium">{reviewPreview}</span>
             </p>
             <Select

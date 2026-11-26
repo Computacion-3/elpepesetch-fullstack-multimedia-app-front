@@ -10,6 +10,9 @@ export function AuthHydrator({ user }: { user: AuthUserViewModel | null }) {
 
     useEffect(() => {
         hydrate(user);
+        if (process.env.NEXT_PUBLIC_E2E === 'true') {
+            document.documentElement.dataset.sessionHydrated = 'true';
+        }
     }, [hydrate, user]);
 
     return null;

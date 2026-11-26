@@ -97,23 +97,26 @@ export function LibraryEditorDialog({
   return (
     <dialog
       ref={dialogRef}
-      className="modal"
+      className="fixed inset-0 m-auto max-h-[90vh] w-[calc(100%-2rem)] max-w-2xl overflow-y-auto rounded-2xl border border-white/15 bg-surface p-0 text-foreground shadow-2xl backdrop:bg-[#0a0818]/80"
       aria-labelledby={titleId}
       onCancel={(event) => {
         event.preventDefault();
         onClose();
       }}
+      onClick={(event) => {
+        if (event.target === dialogRef.current) onClose();
+      }}
     >
-      <section className="modal-box max-h-[90vh] w-full max-w-2xl overflow-y-auto p-5 sm:p-7">
+      <section className="p-5 sm:p-7">
         <header className="mb-6 flex items-start justify-between gap-4">
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-base-content/60">
+            <span className="text-xs font-bold uppercase tracking-wider text-muted">
               {entry ? 'Tu colección' : 'Añadir a la colección'}
             </span>
             <h2 id={titleId} className="mt-1 text-2xl font-bold tracking-tight">
               {entry ? entry.title : 'Nuevo elemento'}
             </h2>
-            <p className="mt-2 text-sm text-base-content/70">
+            <p className="mt-2 text-sm text-muted">
               {entry
                 ? `${typeLabel[entry.type]} · ${entry.creator} · ${entry.releaseYear}`
                 : 'Elige un elemento del catálogo para agregarlo.'}
@@ -121,7 +124,7 @@ export function LibraryEditorDialog({
           </div>
           <button
             type="button"
-            className="btn btn-circle btn-ghost btn-sm"
+            className="grid size-9 place-items-center rounded-full text-muted hover:bg-white/10 hover:text-foreground focus-visible:outline-2 focus-visible:outline-brand"
             aria-label="Cerrar"
             onClick={onClose}
           >
@@ -131,32 +134,32 @@ export function LibraryEditorDialog({
 
         {entry && confirmDelete ? (
           <section
-            className="rounded-box border border-error/30 bg-error/5 p-4"
+            className="rounded-xl border border-red-400/40 bg-red-500/10 p-4"
             aria-labelledby="delete-title"
             aria-describedby="delete-copy"
           >
             <h3 id="delete-title" className="font-bold">
               ¿Eliminar de tu biblioteca?
             </h3>
-            <p id="delete-copy" className="mt-1 text-sm text-base-content/70">
+            <p id="delete-copy" className="mt-1 text-sm text-muted">
               Se quitará “{entry.title}” de tu biblioteca.
             </p>
             {error && (
-              <div className="alert alert-error mt-3" role="alert">
+              <div className="mt-3 rounded-xl border border-red-400/50 bg-red-500/10 px-4 py-3 text-red-200" role="alert">
                 {error}
               </div>
             )}
             <div className="mt-4 flex justify-end gap-2">
               <button
                 type="button"
-                className="btn btn-ghost"
+                className="min-h-10 rounded-lg border border-white/20 px-4 text-sm font-medium hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-brand"
                 onClick={() => setConfirmDelete(false)}
               >
                 Volver
               </button>
               <button
                 type="button"
-                className="btn btn-error"
+                className="min-h-10 rounded-lg border border-red-300/40 bg-red-500/15 px-4 text-sm font-semibold text-red-200 hover:bg-red-500/25 focus-visible:outline-2 focus-visible:outline-red-300"
                 disabled={busy}
                 onClick={handleDelete}
               >
@@ -182,9 +185,9 @@ export function LibraryEditorDialog({
 
             {entry && <div className="grid gap-4 sm:grid-cols-2">
               <label className="fieldset">
-                <span className="fieldset-legend">Estado</span>
+                <span className="text-sm font-medium">Estado</span>
                 <select
-                  className="select w-full"
+                  className="min-h-11 w-full rounded-lg border border-white/20 bg-background px-3 text-foreground focus-visible:outline-2 focus-visible:outline-brand"
                   aria-label="Estado"
                   value={status}
                   onChange={(event) => {
@@ -202,14 +205,14 @@ export function LibraryEditorDialog({
                 </select>
               </label>
               <label className="fieldset">
-                <span className="fieldset-legend">
+                <span className="text-sm font-medium">
                   Progreso
                   {entry
                     ? ` (${entry.type === 'BOOK' ? 'páginas' : entry.type === 'MOVIE' ? 'minutos' : 'horas'})`
                     : ''}
                 </span>
                 <input
-                  className="input w-full"
+                  className="min-h-11 w-full rounded-lg border border-white/20 bg-white/5 px-3 text-foreground focus-visible:outline-2 focus-visible:outline-brand"
                   aria-label="Progreso"
                   type="number"
                   min="0"
@@ -221,9 +224,9 @@ export function LibraryEditorDialog({
                 />
               </label>
               <label className="fieldset">
-                <span className="fieldset-legend">Calificación</span>
+                <span className="text-sm font-medium">Calificación</span>
                 <select
-                  className="select w-full"
+                  className="min-h-11 w-full rounded-lg border border-white/20 bg-background px-3 text-foreground focus-visible:outline-2 focus-visible:outline-brand"
                   aria-label="Calificación"
                   value={rating}
                   onChange={(event) => setRating(event.target.value)}
@@ -239,16 +242,16 @@ export function LibraryEditorDialog({
                   )}
                 </select>
                 {status === 'PENDING' && (
-                  <span className="label text-xs text-base-content/60">
+                  <span className="text-xs text-muted">
                     Las entradas pendientes no pueden tener calificación. Déjala
                     sin calificar para guardar este estado.
                   </span>
                 )}
               </label>
               <label className="fieldset">
-                <span className="fieldset-legend">Favorito</span>
+                <span className="text-sm font-medium">Favorito</span>
                 <select
-                  className="select w-full"
+                  className="min-h-11 w-full rounded-lg border border-white/20 bg-background px-3 text-foreground focus-visible:outline-2 focus-visible:outline-brand"
                   aria-label="Favorito"
                   value={String(isFavorite)}
                   onChange={(event) =>
@@ -262,9 +265,9 @@ export function LibraryEditorDialog({
             </div>}
 
             {entry && <label className="fieldset">
-              <span className="fieldset-legend">Notas</span>
+              <span className="text-sm font-medium">Notas</span>
               <textarea
-                className="textarea min-h-24 w-full resize-y"
+                className="min-h-24 w-full resize-y rounded-lg border border-white/20 bg-white/5 px-3 py-2.5 text-foreground placeholder:text-muted focus-visible:outline-2 focus-visible:outline-brand"
                 aria-label="Notas"
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}
@@ -273,7 +276,7 @@ export function LibraryEditorDialog({
             </label>}
 
             {error && (
-              <div className="alert alert-error" role="alert">
+              <div className="rounded-xl border border-red-400/50 bg-red-500/10 px-4 py-3 text-red-200" role="alert">
                 {error}
               </div>
             )}
@@ -282,7 +285,7 @@ export function LibraryEditorDialog({
               {entry ? (
                 <button
                   type="button"
-                  className="btn btn-error btn-outline"
+                  className="min-h-10 rounded-lg border border-red-300/40 px-4 text-sm font-medium text-red-200 hover:bg-red-500/10 focus-visible:outline-2 focus-visible:outline-red-300"
                   onClick={() => setConfirmDelete(true)}
                 >
                   Eliminar
@@ -291,14 +294,14 @@ export function LibraryEditorDialog({
               <div className="flex flex-col-reverse gap-2 sm:flex-row">
                 <button
                   type="button"
-                  className="btn btn-ghost"
+                  className="min-h-10 rounded-lg border border-white/20 px-4 text-sm font-medium hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-brand"
                   onClick={onClose}
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="btn btn-primary"
+                  className="min-h-10 rounded-lg bg-brand px-4 text-sm font-semibold text-background hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-50"
                   disabled={
                     busy || (!entry && !selectedMediaItemId)
                   }
@@ -320,11 +323,6 @@ export function LibraryEditorDialog({
           </form>
         )}
       </section>
-      <form method="dialog" className="modal-backdrop">
-        <button aria-label="Cerrar" onClick={onClose}>
-          close
-        </button>
-      </form>
     </dialog>
   );
 }
@@ -360,38 +358,38 @@ function LibraryMediaPicker({
     <section className="grid gap-3" aria-label="Seleccionar del catálogo multimedia">
       <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto]">
         <label className="fieldset">
-          <span className="fieldset-legend">Buscar en el catálogo</span>
-          <input className="input w-full" type="search" aria-label="Buscar en el catálogo" value={search} onChange={(event) => setSearch(event.target.value)} />
+          <span className="text-sm font-medium">Buscar en el catálogo</span>
+          <input className="min-h-11 w-full rounded-lg border border-white/20 bg-white/5 px-3 text-foreground placeholder:text-muted focus-visible:outline-2 focus-visible:outline-brand" type="search" aria-label="Buscar en el catálogo" value={search} onChange={(event) => setSearch(event.target.value)} />
         </label>
         <label className="fieldset">
-          <span className="fieldset-legend">Tipo</span>
-          <select className="select w-full" aria-label="Tipo de catálogo" value={type} onChange={(event) => setType(event.target.value)}>
+          <span className="text-sm font-medium">Tipo</span>
+          <select className="min-h-11 w-full rounded-lg border border-white/20 bg-background px-3 text-foreground focus-visible:outline-2 focus-visible:outline-brand" aria-label="Tipo de catálogo" value={type} onChange={(event) => setType(event.target.value)}>
             <option value="">Todos</option>
             <option value="GAME">Juegos</option>
             <option value="MOVIE">Películas</option>
             <option value="BOOK">Libros</option>
           </select>
         </label>
-        <button className="btn btn-secondary self-end" type="button" onClick={applyCatalogFilters}>Buscar</button>
+        <button className="min-h-11 rounded-lg bg-brand px-4 font-semibold text-background hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-brand" type="button" onClick={applyCatalogFilters}>Buscar</button>
       </div>
 
-      {media.errorMessage && <div role="alert" className="alert alert-error">{media.errorMessage}</div>}
+      {media.errorMessage && <div role="alert" className="rounded-xl border border-red-400/50 bg-red-500/10 px-4 py-3 text-red-200">{media.errorMessage}</div>}
       {media.isLoading ? <p role="status">Cargando catálogo…</p> : options.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-base-300 p-4 text-sm text-base-content/70">No hay elementos disponibles con esta búsqueda.</p>
+        <p className="rounded-xl border border-dashed border-white/20 p-4 text-sm text-muted">No hay elementos disponibles con esta búsqueda.</p>
       ) : (
         <>
           <label className="fieldset">
-            <span className="fieldset-legend">Elemento multimedia</span>
-            <select className="select w-full" aria-label="Elemento multimedia" value={selectedId} onChange={(event) => onSelect(event.target.value)} required>
+            <span className="text-sm font-medium">Elemento multimedia</span>
+            <select className="min-h-11 w-full rounded-lg border border-white/20 bg-background px-3 text-foreground focus-visible:outline-2 focus-visible:outline-brand" aria-label="Elemento multimedia" value={selectedId} onChange={(event) => onSelect(event.target.value)} required>
               <option value="">Selecciona un elemento</option>
               {options.map((item) => <option key={item.id} value={item.id}>{item.title} · {typeLabel[item.type]} · {item.creator}</option>)}
             </select>
           </label>
-          {selected && <p className="text-sm text-base-content/70">{selected.releaseYear} · {selected.genres.map((genre) => genre.name).join(', ')}</p>}
+          {selected && <p className="text-sm text-muted">{selected.releaseYear} · {selected.genres.map((genre) => genre.name).join(', ')}</p>}
           <nav className="flex items-center justify-between text-sm" aria-label="Paginación del catálogo">
-            <button type="button" className="btn btn-ghost btn-sm" disabled={media.meta.page <= 1 || media.isLoading} onClick={() => { onSelect(''); setMediaFilters({ page: media.meta.page - 1 }); }}>Anterior</button>
+            <button type="button" className="min-h-9 rounded-lg px-3 font-medium hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-brand disabled:opacity-50" disabled={media.meta.page <= 1 || media.isLoading} onClick={() => { onSelect(''); setMediaFilters({ page: media.meta.page - 1 }); }}>Anterior</button>
             <span>Página {media.meta.page} de {Math.max(1, media.meta.totalPages)}</span>
-            <button type="button" className="btn btn-ghost btn-sm" disabled={media.meta.page >= media.meta.totalPages || media.isLoading} onClick={() => { onSelect(''); setMediaFilters({ page: media.meta.page + 1 }); }}>Siguiente</button>
+            <button type="button" className="min-h-9 rounded-lg px-3 font-medium hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-brand disabled:opacity-50" disabled={media.meta.page >= media.meta.totalPages || media.isLoading} onClick={() => { onSelect(''); setMediaFilters({ page: media.meta.page + 1 }); }}>Siguiente</button>
           </nav>
         </>
       )}

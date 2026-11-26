@@ -114,13 +114,13 @@ export function MediaProposalForm({ mediaId }: MediaProposalFormProps) {
             <header>
                 <p className="text-sm font-semibold uppercase tracking-wide text-brand">Catálogo</p>
                 <h1 className="text-3xl font-bold">{mediaId ? 'Editar propuesta pendiente' : 'Proponer un elemento'}</h1>
-                <p className="mt-2 text-gray-600">Las propuestas nuevas quedan pendientes hasta que un moderador las revise.</p>
+                <p className="mt-2 text-muted">Las propuestas nuevas quedan pendientes hasta que un moderador las revise.</p>
             </header>
             {media.errorMessage && <Alert variant="error">{media.errorMessage}</Alert>}
             {saved && <Alert variant="success">Propuesta enviada. Puedes consultar su estado desde el catálogo.</Alert>}
             {!isReady && <p role="status">Cargando propuesta…</p>}
             {isReady && (
-                <form className="space-y-5" onSubmit={handleSubmit}>
+                <form className="space-y-5 rounded-2xl border border-white/10 bg-surface p-5 sm:p-7" onSubmit={handleSubmit}>
                     <TextField id="proposal-title" label="Título" required maxLength={150} value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} />
                     <Select id="proposal-type" label="Tipo" value={form.type} onChange={(event) => setForm({ ...form, type: event.target.value as MediaType })} options={[
                         { value: 'GAME', label: 'Videojuego' }, { value: 'MOVIE', label: 'Película' }, { value: 'BOOK', label: 'Libro' },
@@ -129,8 +129,8 @@ export function MediaProposalForm({ mediaId }: MediaProposalFormProps) {
                     <TextField id="proposal-year" label="Año de lanzamiento" type="number" required min={1900} max={2100} value={form.releaseYear} onChange={(event) => setForm({ ...form, releaseYear: event.target.value })} />
                     <TextField id="proposal-cover" label="URL de portada" type="url" maxLength={500} value={form.coverUrl} onChange={(event) => setForm({ ...form, coverUrl: event.target.value })} />
                     <div className="flex flex-col gap-1">
-                        <label htmlFor="proposal-description" className="text-sm font-medium">Descripción</label>
-                        <textarea id="proposal-description" rows={4} value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} className="rounded-md border border-gray-400 px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-brand" />
+                        <label htmlFor="proposal-description" className="text-sm font-medium text-foreground">Descripción</label>
+                        <textarea id="proposal-description" rows={4} value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} className="w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2.5 text-sm text-foreground placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand" />
                     </div>
                     {form.type === 'GAME' && <TextField id="proposal-platform" label="Plataforma" maxLength={60} value={form.platform} onChange={(event) => setForm({ ...form, platform: event.target.value })} />}
                     {form.type === 'MOVIE' && <TextField id="proposal-duration" label="Duración en minutos" type="number" min={1} value={form.durationMinutes} onChange={(event) => setForm({ ...form, durationMinutes: event.target.value })} />}

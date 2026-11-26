@@ -39,27 +39,27 @@ export function RolePermissionsForm({ roleId, onDone }: { roleId: number; onDone
         return (
             <div className="flex flex-col gap-4">
                 {errorMessage && <Alert variant="error">{errorMessage}</Alert>}
-                <p className="text-sm text-gray-600">Cargando permisos…</p>
+                <p className="text-sm text-muted">Cargando permisos…</p>
             </div>
         );
     }
 
     return (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-surface p-5">
             {errorMessage && <Alert variant="error">{errorMessage}</Alert>}
             <ul className="flex max-h-96 flex-col gap-3 overflow-y-auto">
                 {permissions.map((permission) => (
-                    <li key={permission.id} className="flex items-start gap-2">
+                    <li key={permission.id} className="flex items-start gap-2 rounded-lg border border-white/10 bg-white/5 p-3">
                         <input
                             type="checkbox"
                             id={`role-permission-${permission.id}`}
-                            className="mt-1"
+                            className="mt-1 accent-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
                             checked={checkedIds.includes(permission.id)}
                             onChange={() => toggle(permission.id)}
                         />
                         <label htmlFor={`role-permission-${permission.id}`} className="flex flex-col">
                             <span className="font-bold">{permission.name}</span>
-                            <span className="text-xs text-gray-500">{permission.description}</span>
+                            <span className="text-xs text-muted">{permission.description}</span>
                         </label>
                     </li>
                 ))}

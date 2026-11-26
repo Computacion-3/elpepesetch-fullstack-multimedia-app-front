@@ -123,7 +123,7 @@ export function ReviewsPanel({
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                     <h1 className="text-2xl font-semibold">Reseñas de la comunidad</h1>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-muted">
                         Consulta opiniones por título, publica tu reseña o reporta contenido
                         inapropiado.
                     </p>
@@ -164,7 +164,7 @@ export function ReviewsPanel({
             {isLoading && reviews.length === 0 ? (
                 <p className="text-sm">Cargando reseñas…</p>
             ) : reviews.length === 0 ? (
-                <p className="rounded-md border border-gray-300 p-4 text-sm text-gray-500">
+                <p className="rounded-xl border border-white/10 bg-surface p-4 text-sm text-muted">
                     Aún no hay reseñas visibles para este elemento multimedia.
                 </p>
             ) : (

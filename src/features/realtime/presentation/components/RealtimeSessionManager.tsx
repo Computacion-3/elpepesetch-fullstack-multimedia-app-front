@@ -16,6 +16,7 @@ import {
   selectSelectedMediaId,
 } from '@/src/features/reviews/presentation/store/reviews.selectors';
 import { refreshCurrentUserMutation } from '@/src/features/auth/presentation/store/auth.slice';
+import { activityArrived } from '@/src/features/activity-logs/presentation/store/activity-logs.slice';
 import type { RealtimeEventPayloads } from '../../domain/entities/realtime-event';
 
 /** Mantiene el socket durante la sesión y lo cierra al salir o desactivarse la cuenta. */
@@ -91,6 +92,8 @@ export function RealtimeSessionManager() {
     } else if (latestEvent.event === 'account.updated') {
       void dispatch(refreshCurrentUserMutation());
       dispatch(incrementUnreadCount());
+    } else if (latestEvent.event === 'activity.created') {
+      dispatch(activityArrived());
     }
   }, [dispatch, latestEvent, reviewPage, reviewLimit, selectedReviewMediaId]);
 

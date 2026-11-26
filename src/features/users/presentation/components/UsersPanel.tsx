@@ -55,7 +55,7 @@ export function UsersPanel({ currentUserId }: { currentUserId: number }) {
 
     return (
         <section className="flex flex-col gap-4">
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
                 <h1 className="text-2xl font-semibold">Usuarios</h1>
                 <Button type="button" onClick={openCreate}>
                     Nuevo usuario
